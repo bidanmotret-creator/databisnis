@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Keuangan — SentuhanMomen3D</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="globalLoadingOverlay" style="position:fixed; inset:0; z-index:9999; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+    <div style="width:48px; height:48px; border:4px solid #e2e8f0; border-top-color:#4f46e5; border-radius:50%; animation:spinLoadingOverlay 0.8s linear infinite;"></div>
+    <div style="font-size:14px; font-weight:600; color:#475569;">Memuat data keuangan...</div>
+</div>
+<style>@keyframes spinLoadingOverlay { to { transform: rotate(360deg); } }</style>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">💰</div>
+      <div class="brand-text"><strong>Laporan Keuangan</strong><span>SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <button class="nav-item active"><span class="nav-ico">💰</span> Laporan Keuangan</button>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">Laporan Keuangan</div>
+    </div>
+
+    <div class="content-inner">
+
+<div id="tabKeuangan" class="tab-content">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+        <button type="button" id="btnExportPdfKeuangan" class="btn-pdf-global" onclick="exportLaporanKeuanganLengkapPDF()">
+            📥 Export PDF Laporan Lengkap
+        </button>
+    </div>
+    <style>
+        .fin-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px; margin-bottom:18px; }
+        .fin-kpi-card { border-radius:14px; padding:20px; color:#fff; position:relative; overflow:hidden; box-shadow:0 6px 16px rgba(0,0,0,0.12); transition:transform 0.15s ease; }
+        .fin-kpi-card:hover { transform:translateY(-2px); }
+        .fin-kpi-card::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 60%); pointer-events:none; }
+        .fin-kpi-pendapatan { background:linear-gradient(160deg,#34d399,#059669); }
+        .fin-kpi-beban { background:linear-gradient(160deg,#fb7185,#be123c); }
+        .fin-kpi-laba-untung { background:linear-gradient(160deg,#60a5fa,#4338ca); }
+        .fin-kpi-laba-rugi { background:linear-gradient(160deg,#f87171,#7f1d1d); }
+        .fin-kpi-kasops { background:linear-gradient(160deg,#38bdf8,#0369a1); }
+        .fin-kpi-kasinv { background:linear-gradient(160deg,#fbbf24,#b45309); }
+        .fin-kpi-kasdan { background:linear-gradient(160deg,#a78bfa,#6d28d9); }
+        .fin-kpi-kastotal-plus { background:linear-gradient(160deg,#34d399,#065f46); }
+        .fin-kpi-kastotal-minus { background:linear-gradient(160deg,#f87171,#7f1d1d); }
+        .fin-kpi-aktiva { background:linear-gradient(160deg,#60a5fa,#1d4ed8); }
+        .fin-kpi-pasiva { background:linear-gradient(160deg,#fbbf24,#b45309); }
+        .fin-kpi-label { font-size:11.5px; opacity:0.92; text-transform:uppercase; letter-spacing:0.5px; position:relative; z-index:1; font-weight:700; }
+        .fin-kpi-val { font-size:23px; font-weight:900; margin-top:6px; position:relative; z-index:1; }
+        .fin-kpi-sub { font-size:11px; margin-top:8px; opacity:0.95; position:relative; z-index:1; font-weight:600; }
+        .fin-kpi-card details.fin-kpi-info { margin-top:10px; font-size:11px; position:relative; z-index:1; }
+        .fin-kpi-card summary { cursor:pointer; opacity:0.9; list-style:none; }
+        .fin-kpi-card summary::-webkit-details-marker { display:none; }
+        .fin-kpi-card summary::before { content:'📘 Apa artinya ini? '; }
+        .fin-kpi-card details[open] summary::before { content:'📘 Sembunyikan '; }
+        .fin-kpi-card .fin-kpi-penjelasan { margin-top:6px; line-height:1.5; opacity:0.95; }
+
+        .fin-insight-box { background:linear-gradient(135deg,#0f172a,#1e293b); border-radius:14px; padding:22px; color:#fff; margin-bottom:22px; }
+        .fin-insight-title { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; margin-bottom:12px; font-weight:700; }
+        .fin-insight-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.08); font-size:13.5px; line-height:1.6; }
+        .fin-insight-item:last-child { border-bottom:none; }
+        .fin-badge-status { display:inline-block; padding:5px 14px; border-radius:20px; font-size:12.5px; font-weight:800; }
+
+        .preset-tgl-row .btn-preset-tgl { padding:7px 14px; border-radius:20px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; font-size:12px; font-weight:700; cursor:pointer; margin-right:6px; margin-bottom:6px; }
+        .preset-tgl-row .btn-preset-tgl:hover { background:#eff6ff; border-color:#3b82f6; color:#1d4ed8; }
+        .cs-modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center; }
+        .cs-modal-overlay.active { display:flex; }
+        .cs-modal-box { background:#fff; border-radius:14px; padding:24px; max-width:600px; width:92%; max-height:85vh; overflow-y:auto; }
+        .komparasi-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+        .komparasi-card { background:#fff; border-radius:12px; padding:18px; border:1px solid #cbd5e1; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
+        .komparasi-card h4 { margin:0 0 10px 0; color:#0f172a; font-size:13.5px; text-transform:uppercase; }
+        .komparasi-table { width:100%; border-collapse:collapse; font-size:12px; }
+        .komparasi-table th { background:#f1f5f9; padding:8px 6px; text-align:left; font-weight:700; border-bottom:2px solid #cbd5e1; }
+        .komparasi-table td { padding:8px 6px; border-bottom:1px solid #f1f5f9; }
+        .komparasi-num { text-align:right; }
+        .komparasi-persen-pos { color:#059669; font-weight:700; }
+        .komparasi-persen-neg { color:#dc2626; font-weight:700; }
+        .sign-off-form { background:#eff6ff; border-radius:12px; padding:16px; }
+        .sign-off-form label { display:block; font-weight:700; color:#1e40af; margin-bottom:4px; font-size:12px; }
+        .sign-off-form input, .sign-off-form select, .sign-off-form textarea { width:100%; padding:8px; border-radius:6px; border:1px solid #bfdbfe; margin-bottom:10px; box-sizing:border-box; }
+        .sign-off-form textarea { resize:vertical; min-height:60px; font-family:inherit; }
+
+        .rs-search{width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid #cbd5e1;margin-bottom:14px;font-size:13px;}
+        .rs-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+        .rs-table th{background:#0f172a;color:#fff;text-align:left;padding:10px;position:sticky;top:0;}
+        .rs-table td{padding:9px 10px;border-bottom:1px solid #f1f5f9;}
+        .rs-debit{color:#059669;font-weight:700;}
+        .rs-kredit{color:#dc2626;font-weight:700;}
+        .rs-wrap{max-height:520px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;}
+
+        .audit-summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:18px;}
+        .audit-kpi{padding:16px; border-radius:10px; color:#fff; text-align:center;}
+        .audit-kpi .n{font-size:24px; font-weight:900;}
+        .audit-kpi .l{font-size:11px; text-transform:uppercase; opacity:.9; margin-top:4px;}
+        .audit-kpi.kritis{background:linear-gradient(160deg,#f87171,#b91c1c);}
+        .audit-kpi.peringatan{background:linear-gradient(160deg,#fbbf24,#b45309);}
+        .audit-kpi.info{background:linear-gradient(160deg,#60a5fa,#1d4ed8);}
+        .audit-kpi.aman{background:linear-gradient(160deg,#34d399,#047857);}
+        .audit-item{background:#fff; border:1px solid #e2e8f0; border-left:5px solid #cbd5e1; border-radius:8px; padding:14px 16px; margin-bottom:10px;}
+        .audit-item.kritis{border-left-color:#dc2626;}
+        .audit-item.peringatan{border-left-color:#d97706;}
+        .audit-item.info{border-left-color:#2563eb;}
+        .audit-item .judul{font-weight:700; font-size:13.5px; color:#0f172a; margin-bottom:4px;}
+        .audit-item .detail{font-size:12px; color:#475569; line-height:1.6;}
+        .audit-badge{display:inline-block; padding:2px 9px; border-radius:12px; font-size:10.5px; font-weight:700; margin-right:8px;}
+        .audit-badge.kritis{background:#fee2e2; color:#991b1b;}
+        .audit-badge.peringatan{background:#fef3c7; color:#92400e;}
+        .audit-badge.info{background:#dbeafe; color:#1e40af;}
+
+        .is-line{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed #e2e8f0; font-size:13.5px;}
+        .is-line.sub{padding-left:18px; color:#64748b; font-size:12.5px;}
+        .is-line.total{border-top:2px solid #0f172a; border-bottom:none; font-weight:800; padding-top:12px; margin-top:4px;}
+        .is-line b{color:#0f172a;}
+
+        .dl-form-grid{display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:10px; align-items:end; margin-bottom:16px;}
+        .dl-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+        .dl-table th{background:#0f172a; color:#fff; padding:9px 10px; text-align:left; position:sticky; top:0;}
+        .dl-table td{padding:8px 10px; border-bottom:1px solid #f1f5f9;}
+        .dl-ending-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;}
+        .dl-ending-card{border-radius:12px; padding:18px; color:#fff; text-align:center;}
+        .dl-ending-card.profit{background:linear-gradient(160deg,#60a5fa,#4338ca);}
+        .dl-ending-card.cash{background:linear-gradient(160deg,#34d399,#047857);}
+        .dl-ending-card .l{font-size:11px; text-transform:uppercase; opacity:.9;}
+        .dl-ending-card .n{font-size:26px; font-weight:900; margin-top:6px;}
+
+        .dupont-tree{display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:center; margin:20px 0;}
+        .dupont-box{background:#fff; border:2px solid #cbd5e1; border-radius:10px; padding:14px 18px; text-align:center; min-width:140px;}
+        .dupont-box .l{font-size:10.5px; color:#64748b; text-transform:uppercase; font-weight:700;}
+        .dupont-box .n{font-size:18px; font-weight:900; color:#0f172a; margin-top:4px;}
+        .dupont-op{font-size:22px; color:#94a3b8; font-weight:900;}
+
+        .ek-form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:16px;}
+    </style>
+
+    <div class="sub-tab-menu" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto;">
+        <button class="sub-tab-btn active" onclick="bukaSubTab('subJurnal', this)" style="white-space: nowrap;">📝 Jurnal</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subLabaRugi', this)" style="white-space: nowrap;">📈 Income Statement</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subArusKas', this)" style="white-space: nowrap;">💸 Cash Statement</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subNeraca', this)" style="white-space: nowrap;">⚖️ Neraca</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subDecisions', this)" style="white-space: nowrap;">🧩 Decisions · Activities · Numbers</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subDupont', this); hitungDupont(dataJurnalGlobal);" style="white-space: nowrap;">🧮 Analisis DuPont</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subEkuitas', this)" style="white-space: nowrap;">🏛️ Ekuitas & Investor</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subCostStructure', this)" style="white-space: nowrap;">📊 Cost Structure</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subKomparasi', this)" style="white-space: nowrap;">📊 Komparasi & Sign-Off</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subTrenBulanan', this)" style="white-space: nowrap;">📅 Tren Bulanan/Mingguan</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subRosetta', this); renderRosettaWorksheet();" style="white-space: nowrap;">🪨 Rosetta Stone</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subAuditSop', this)" style="white-space: nowrap;">🩺 Audit SOP Otomatis</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subPanduanAI', this)" style="white-space: nowrap;">🎓 Panduan & SOP (AI)</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subStok', this); renderStokPersediaan();" style="white-space: nowrap;">📦 Stok & Persediaan</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subTutupBuku', this); renderTutupBuku();" style="white-space: nowrap;">🔒 Tutup Buku</button>
+        <button class="sub-tab-btn" onclick="bukaSubTab('subNotifikasi', this)" style="white-space: nowrap;">📲 Notifikasi Otomatis</button>
+    </div>
+
+    <div class="filter-panel card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:12px; color:#64748b; font-weight:bold; margin-bottom:8px;">⚡ Pilih Cepat Periode</label>
+            <div class="preset-tgl-row" id="grupPresetTglKeuangan">
+                <button type="button" class="btn-preset-tgl" data-preset="hari_ini" onclick="terapkanRentangCepat('filterTglMulai','filterTglSelesai','hari_ini', terapkanFilter, 'grupPresetTglKeuangan')">Hari Ini</button>
+                <button type="button" class="btn-preset-tgl" data-preset="7_hari" onclick="terapkanRentangCepat('filterTglMulai','filterTglSelesai','7_hari', terapkanFilter, 'grupPresetTglKeuangan')">7 Hari</button>
+                <button type="button" class="btn-preset-tgl" data-preset="30_hari" onclick="terapkanRentangCepat('filterTglMulai','filterTglSelesai','30_hari', terapkanFilter, 'grupPresetTglKeuangan')">30 Hari</button>
+                <button type="button" class="btn-preset-tgl" data-preset="bulan_ini" onclick="terapkanRentangCepat('filterTglMulai','filterTglSelesai','bulan_ini', terapkanFilter, 'grupPresetTglKeuangan')">Bulan Ini</button>
+                <button type="button" class="btn-preset-tgl" onclick="terapkanBulanLaluKeuangan()">Bulan Lalu</button>
+                <button type="button" class="btn-preset-tgl" onclick="terapkanTahunIniKeuangan()">Tahun Ini</button>
+                <input type="month" class="input-bulan-preset" style="padding:7px 10px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:12px; font-weight:700; color:#475569;" onchange="terapkanBulanPilihan('filterTglMulai','filterTglSelesai', this.value, terapkanFilter, 'grupPresetTglKeuangan')">
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+            <div>
+                <label style="display: block; font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 5px;">Mulai Tanggal</label>
+                <input type="date" id="filterTglMulai" class="eos-input" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 5px;">Sampai Tanggal</label>
+                <input type="date" id="filterTglSelesai" class="eos-input" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+            </div>
+            <div style="flex-grow: 1; min-width: 200px;">
+                <label style="display: block; font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 5px;">Cari Akun (Buku Besar)</label>
+                <input type="text" id="filterAkun" list="listAkun" placeholder="Ketik kode atau nama akun..." class="eos-input" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%;">
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; padding-bottom:10px;">
+                <input type="checkbox" id="filterSembunyikanPribadi" onchange="terapkanFilter()" style="width:18px; height:18px; cursor:pointer;">
+                <label for="filterSembunyikanPribadi" style="font-size:12px; color:#475569; font-weight:bold; cursor:pointer; white-space:nowrap;">👤 Sembunyikan Pribadi</label>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="terapkanFilter()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);">🔍 Filter Data</button>
+                <button type="button" onclick="resetFilter()" style="padding: 10px 20px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold;">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subJurnal" class="sub-content active">
+        <div class="card" style="padding: 25px; background: #fff; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+            <h3 style="margin-top: 0; color: #0f172a; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📝 Input Transaksi Jurnal (Double-Entry)</h3>
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #475569; font-size: 13px;">Tanggal</label>
+                    <input type="date" id="jTgl" class="eos-input" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label style="font-weight: bold; color: #475569; font-size: 13px;">Deskripsi</label>
+                    <input type="text" id="jDesc" class="eos-input" placeholder="Contoh: Pembayaran Sesi Newborn Client A" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #10b981; font-size: 13px;">🟢 Akun Utama (Debit)</label>
+                    <input type="text" id="jAkunUtama" list="listAkun" class="eos-input" placeholder="Pilih akun yang bertambah..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f0fdf4;">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #ef4444; font-size: 13px;">🔴 Akun Pasangan (Kredit)</label>
+                    <input type="text" id="jAkunPasangan" list="listAkun" class="eos-input" placeholder="Pilih sumber dana..." style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fef2f2;">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #0f172a; font-size: 13px;">Jumlah Nominal (Rp)</label>
+                    <input type="number" id="jDebit" class="eos-input" placeholder="Masukkan angka tanpa titik..." value="0" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                </div>
+            </div>
+
+            <div id="boxCustomerPicker" style="display:none; margin-top:16px; padding:16px; background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px;">
+                <label style="font-weight:700; color:#166534; font-size:13px; display:block; margin-bottom:6px;">
+                    🧑‍💼 Customer (WAJIB untuk transaksi Pendapatan) <span style="color:#dc2626;">*</span>
+                </label>
+                <input type="text" id="jCustomerPicker" list="listCustomerLeads" placeholder="Ketik nama atau No HP customer..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #86efac;">
+                <datalist id="listCustomerLeads"></datalist>
+                <div id="customerPreviewInfo" style="display:none; margin-top:8px; padding:8px 12px; border-radius:6px; font-size:12px;"></div>
+                <p style="font-size:11px; color:#166534; margin:6px 0 0 0;">Data diambil dari Database Klien (CRM Leads). Kalau daftar saran tidak muncul, <a href="#" onclick="refreshDatalistCustomerManual(); return false;">klik di sini untuk refresh</a>.</p>
+            </div>
+
+            <div id="boxVendorPicker" style="display:none; margin-top:16px; padding:16px; background:#fff7ed; border:1.5px solid #fdba74; border-radius:10px;">
+                <label style="font-weight:700; color:#9a3412; font-size:13px; display:block; margin-bottom:6px;">
+                    🏭 Vendor / Supplier (WAJIB untuk Pembelian/Pengadaan) <span style="color:#dc2626;">*</span>
+                </label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="jVendorPicker" list="listVendor" placeholder="Ketik nama vendor/supplier..." style="flex:1; padding:10px; border-radius:6px; border:1px solid #fdba74;">
+                    <button type="button" onclick="bukaModalTambahVendor()" style="padding:10px 14px; border-radius:6px; border:1px solid #ea580c; background:#fff; color:#ea580c; font-weight:700; cursor:pointer; white-space:nowrap;">+ Vendor Baru</button>
+                </div>
+                <datalist id="listVendor"></datalist>
+            </div>
+
+            <datalist id="listAkun"></datalist>
+            <button onclick="simpanJurnal(this)" class="btn-submit" style="margin-top: 20px; width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer;">🚀 Posting Jurnal Otomatis</button>
+        </div>
+
+        <div class="card" style="padding: 25px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom:10px;">
+                <h3 style="margin: 0; color: #0f172a;">📖 Riwayat Jurnal (Buku Besar)</h3>
+                <button type="button" class="btn-pdf-global" style="margin:0; padding:6px 14px; font-size:12px;" onclick="exportSatuBagianKeuanganPDF('subJurnal', 'Jurnal', this)">📥 PDF</button>
+            </div>
+            <div class="table-responsive" style="max-height: 450px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <table class="financial-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead style="position: sticky; top: 0; z-index: 2; background: #1e293b; color: white; font-size: 13px;">
+                        <tr>
+                            <th style="padding: 12px;">ID Jurnal</th><th style="padding: 12px;">Tanggal</th><th style="padding: 12px;">Kode</th>
+                            <th style="padding: 12px;">Nama Akun</th><th style="padding: 12px;">Deskripsi</th><th style="padding: 12px;">Kategori</th>
+                            <th style="padding: 12px;">Tipe</th><th style="padding: 12px; text-align: right;">Debit</th><th style="padding: 12px; text-align: right;">Kredit</th>
+                            <th style="padding: 12px;">Sumber</th><th style="padding: 12px;">Status Audit</th><th style="padding: 12px;">Bukti</th><th style="padding: 12px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listPreviewJurnal"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="subLabaRugi" class="sub-content" style="display: none;">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button type="button" class="btn-pdf-global" style="margin:0; padding:6px 14px; font-size:12px;" onclick="exportSatuBagianKeuanganPDF('subLabaRugi', 'Income Statement', this)">📥 Export PDF</button>
+        </div>
+        <div id="insightLabaRugi" class="fin-insight-box"></div>
+
+        <div class="fin-kpi-grid">
+            <div class="fin-kpi-card fin-kpi-pendapatan">
+                <div class="fin-kpi-label">💰 Total Pendapatan</div>
+                <div class="fin-kpi-val" id="val_pendapatan">Rp 0</div>
+                <div class="fin-kpi-sub" id="val_pendapatan_sub">&nbsp;</div>
+            </div>
+            <div class="fin-kpi-card fin-kpi-beban">
+                <div class="fin-kpi-label">📉 Total Beban</div>
+                <div class="fin-kpi-val" id="val_beban">Rp 0</div>
+                <div class="fin-kpi-sub" id="val_beban_sub">&nbsp;</div>
+            </div>
+            <div class="fin-kpi-card fin-kpi-laba-untung" id="kpiCardLaba">
+                <div class="fin-kpi-label">🏆 Laba Bersih</div>
+                <div class="fin-kpi-val" id="val_laba">Rp 0</div>
+                <div class="fin-kpi-sub" id="val_laba_sub">&nbsp;</div>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 24px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom:20px;">
+            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📄 Income Statement — Skedul Lengkap</h4>
+            <div class="is-line"><span>Sales (Penjualan)</span><b id="is_sales">Rp 0</b></div>
+            <div style="padding:10px 0 4px 0; font-weight:700; color:#0f172a; font-size:12.5px; text-transform:uppercase;">Cost of Goods Sold (COGS)</div>
+            <div class="is-line sub"><span>Beginning Inventory</span><span id="is_beginv">Rp 0</span></div>
+            <div class="is-line sub"><span>+ Purchase (Pembelian/HPP periode ini)</span><span id="is_purchase">Rp 0</span></div>
+            <div class="is-line sub" style="font-weight:700; color:#334155;"><span>= Total Available for Sale</span><span id="is_available">Rp 0</span></div>
+            <div class="is-line sub"><span>− Ending Inventory</span><span id="is_endinv">Rp 0</span></div>
+            <div class="is-line" style="font-weight:700;"><span>= COGS</span><b id="is_cogs">Rp 0</b></div>
+            <div class="is-line total"><span>Gross Profit (Laba Kotor)</span><b id="is_grossprofit">Rp 0</b></div>
+            <div class="is-line sub"><span>Gross Margin</span><span id="is_grossmargin">-</span></div>
+            <div class="is-line"><span>Expenses (Beban Operasional)</span><b id="is_expenses">Rp 0</b></div>
+            <div class="is-line total"><span>NET INCOME (Laba Bersih)</span><b id="is_netincome">Rp 0</b></div>
+            <p style="font-size:11px; color:#94a3b8; margin-top:10px;">Beginning/Ending Inventory dihitung dari saldo akun berkategori "Persediaan/Inventory/Stok". Purchase dihitung dari akun beban berkategori "Pembelian/HPP/COGS/Bahan Baku".</p>
+            <div id="is_catatan_sop" style="margin-top:14px; padding:12px 16px; background:#eef2ff; color:#3730a3; border-radius:8px; font-size:12.5px;"></div>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📋 Rincian Expenses Operasional</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead><tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:11px;"><th style="padding:10px; text-align:left;">Akun</th><th style="padding:10px; text-align:right;">Nominal</th></tr></thead>
+                <tbody id="is_rincian_expenses"></tbody>
+            </table>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-top:20px;">
+            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📋 Rincian Transaksi Pembentuk Laba Rugi</h4>
+            <div class="table-responsive">
+                <table class="table-data" style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead style="background: #f8fafc; color: #475569; font-size: 13px; text-transform: uppercase;">
+                        <tr><th style="padding: 12px 10px;">Tanggal</th><th style="padding: 12px 10px;">Akun</th><th style="padding: 12px 10px;">Deskripsi</th><th style="padding: 12px 10px;">Kategori</th><th style="padding: 12px 10px; text-align: right;">Nilai (Rp)</th></tr>
+                    </thead>
+                    <tbody id="listDetailLabaRugi"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-top:20px;">
+            <h4 style="margin-top:0; color:#0f172a;">🤖 Analisis Akhir AI (Gemini)</h4>
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#4338ca;" onclick="jalankanAnalisisGemini()">✨ Buat Analisis AI dari Data Periode Ini</button>
+            <div id="geminiLoading" style="display:none; margin-top:10px; font-size:12.5px; color:#64748b;">⏳ Menganalisis dengan Gemini...</div>
+            <div id="geminiOutput" style="white-space:pre-wrap; font-size:13.5px; line-height:1.75; background:#f1f5f9; border-radius:10px; padding:16px; margin-top:14px; display:none;"></div>
+        </div>
+    </div>
+
+    <div id="subArusKas" class="sub-content" style="display: none;">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button type="button" class="btn-pdf-global" style="margin:0; padding:6px 14px; font-size:12px;" onclick="exportSatuBagianKeuanganPDF('subArusKas', 'Cash Statement', this)">📥 Export PDF</button>
+        </div>
+        <div id="insightArusKas" class="fin-insight-box"></div>
+
+        <div class="fin-kpi-grid">
+            <div class="fin-kpi-card fin-kpi-kasops"><div class="fin-kpi-label">⚙️ Operasional (OCF)</div><div class="fin-kpi-val" id="val_kas_ops">Rp 0</div></div>
+            <div class="fin-kpi-card fin-kpi-kasinv"><div class="fin-kpi-label">🏗️ Investasi (ICF)</div><div class="fin-kpi-val" id="val_kas_inv">Rp 0</div></div>
+            <div class="fin-kpi-card fin-kpi-kasdan"><div class="fin-kpi-label">🏦 Pendanaan (FCF)</div><div class="fin-kpi-val" id="val_kas_dan">Rp 0</div></div>
+            <div class="fin-kpi-card fin-kpi-kastotal-plus" id="kpiCardKasTotal"><div class="fin-kpi-label">💧 Mutasi Kas Bersih</div><div class="fin-kpi-val" id="val_total_kas">Rp 0</div></div>
+        </div>
+
+        <div class="card" style="padding: 24px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom:20px;">
+            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">💵 Cash Statement — Skedul Bertahap</h4>
+            <div class="is-line"><span>Operating Cash Flow (OCF)</span><b id="cs_ocf">Rp 0</b></div>
+            <div class="is-line"><span>Investing Cash Flow (ICF)</span><b id="cs_icf">Rp 0</b></div>
+            <div class="is-line"><span>Financing Cash Flow (FCF)</span><b id="cs_fcf">Rp 0</b></div>
+            <div class="is-line total"><span>NET CASH FLOW</span><b id="cs_net">Rp 0</b></div>
+            <div id="cs_catatan_sop" style="margin-top:14px; padding:12px 16px; background:#eef2ff; color:#3730a3; border-radius:8px; font-size:12.5px;"></div>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom:16px;">
+            <h4 style="margin-top: 0; color: #0369a1;">⚙️ Skedul Operasional</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Tgl</th><th style="padding:8px; text-align:left;">Akun</th><th style="padding:8px; text-align:left;">Deskripsi</th><th style="padding:8px; text-align:right;">Nilai</th></tr></thead>
+                <tbody id="cs_skedul_ops"></tbody>
+            </table>
+        </div>
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom:16px;">
+            <h4 style="margin-top: 0; color: #b45309;">🏗️ Skedul Investasi</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Tgl</th><th style="padding:8px; text-align:left;">Akun</th><th style="padding:8px; text-align:left;">Deskripsi</th><th style="padding:8px; text-align:right;">Nilai</th></tr></thead>
+                <tbody id="cs_skedul_inv"></tbody>
+            </table>
+        </div>
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <h4 style="margin-top: 0; color: #6d28d9;">🏦 Skedul Pendanaan</h4>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Tgl</th><th style="padding:8px; text-align:left;">Akun</th><th style="padding:8px; text-align:left;">Deskripsi</th><th style="padding:8px; text-align:right;">Nilai</th></tr></thead>
+                <tbody id="cs_skedul_dan"></tbody>
+            </table>
+        </div>
+
+        <div style="background:#f1f5f9; border-radius:14px; padding:18px; margin-top:16px; border:1px dashed #94a3b8;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <div style="font-weight:700; color:#475569; font-size:13px;">👤 Pribadi / Rumah Tangga (di luar hitungan bisnis)</div>
+                <div style="font-size:18px; font-weight:900; color:#475569;" id="val_kas_pribadi">Rp 0</div>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px dashed #94a3b8; margin-top:16px;">
+            <h4 style="margin-top: 0; color: #475569; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">👤 Rincian Mutasi PRIBADI</h4>
+            <table class="table-data" style="width: 100%; text-align: left; border-collapse: collapse;">
+                <thead style="background: #eef2f5; color: #64748b; font-size: 13px; text-transform: uppercase;">
+                    <tr><th style="padding: 10px;">Tanggal</th><th style="padding: 10px;">Akun</th><th style="padding: 10px;">Deskripsi</th><th style="padding: 10px;">Kategori</th><th style="padding: 10px; text-align: right;">Uang Masuk</th><th style="padding: 10px; text-align: right;">Uang Keluar</th></tr>
+                </thead>
+                <tbody id="listDetailArusKasPribadi"></tbody>
+            </table>
+        </div>
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-top:16px; display:none;">
+            <table><tbody id="listDetailArusKas"></tbody></table>
+        </div>
+    </div>
+
+    <div id="subNeraca" class="sub-content" style="display: none;">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button type="button" class="btn-pdf-global" style="margin:0; padding:6px 14px; font-size:12px;" onclick="exportSatuBagianKeuanganPDF('subNeraca', 'Neraca', this)">📥 Export PDF Neraca</button>
+        </div>
+        <div id="insightNeraca" class="fin-insight-box"></div>
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #0f172a;">⚖️ Neraca Keuangan (Balance Sheet)</h3>
+                <span id="neraca_status" style="padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e2e8f0; color: #475569;">Menghitung...</span>
+            </div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 280px;">
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-top: 4px solid #3b82f6; height: 100%;">
+                        <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;">AKTIVA (Kekayaan)</h4>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span style="color: #475569; font-size: 14px;">Kas & Bank</span><strong id="val_neraca_kas">Rp 0</strong></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span style="color: #475569; font-size: 14px;">Piutang & Aset Lancar</span><strong id="val_neraca_piutang">Rp 0</strong></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;"><span style="color: #475569; font-size: 14px;">Inventaris & Aset Tetap</span><strong id="val_neraca_aset_tetap">Rp 0</strong></div>
+                        <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 2px solid #cbd5e1;"><span style="font-weight: 800; color: #1e293b; font-size: 15px;">TOTAL AKTIVA</span><strong id="val_neraca_total_aktiva" style="color: #3b82f6; font-size: 16px; font-weight: 900;">Rp 0</strong></div>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 280px;">
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-top: 4px solid #f59e0b; height: 100%;">
+                        <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;">PASIVA (Sumber Dana)</h4>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span style="color: #475569; font-size: 14px;">Kewajiban / Hutang</span><strong id="val_neraca_hutang" style="color: #ef4444;">Rp 0</strong></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;"><span style="color: #475569; font-size: 14px;">Modal Awal Pemilik</span><strong id="val_neraca_modal">Rp 0</strong></div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;"><span style="color: #475569; font-size: 14px;">Laba (Rugi) Berjalan</span><strong id="val_neraca_laba_berjalan" style="color: #10b981;">Rp 0</strong></div>
+                        <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 2px solid #cbd5e1;"><span style="font-weight: 800; color: #1e293b; font-size: 15px;">TOTAL PASIVA</span><strong id="val_neraca_total_pasiva" style="color: #f59e0b; font-size: 16px; font-weight: 900;">Rp 0</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="background:#f1f5f9; border-radius:14px; padding:18px; margin-top:16px; border:1px dashed #94a3b8;">
+            <div style="font-weight:700; color:#475569; font-size:13px; margin-bottom:10px;">👤 Kekayaan Pribadi (di luar Neraca bisnis)</div>
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div><span style="font-size:11px; color:#64748b;">Kas Pribadi</span><div style="font-size:16px; font-weight:800; color:#475569;" id="val_neraca_aset_pribadi">Rp 0</div></div>
+                <div><span style="font-size:11px; color:#64748b;">Hutang Pribadi</span><div style="font-size:16px; font-weight:800; color:#475569;" id="val_neraca_kewajiban_pribadi">Rp 0</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="subDecisions" class="sub-content" style="display: none;">
+        <h3 style="margin-top:0;">🧩 Decisions → Activities → Numbers</h3>
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
+            <h4 style="margin-top:0;">➕ Catat Keputusan/Aktivitas Baru</h4>
+            <div class="dl-form-grid">
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Nama Keputusan/Aktivitas</label><input type="text" id="dlInputNama" placeholder="Cth: Naikkan harga paket Newborn" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Kategori</label>
+                    <select id="dlInputKategori" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option>Pricing</option><option>Inventory</option><option>Marketing</option><option>Operasional</option><option>Investasi</option><option>Pendanaan</option><option>Lainnya</option>
+                    </select>
+                </div>
+                <div><label style="font-size:11px; font-weight:700; color:#059669;">Dampak Profit (Rp)</label><input type="number" id="dlInputProfit" placeholder="0" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div><label style="font-size:11px; font-weight:700; color:#2563eb;">Dampak Cash (Rp)</label><input type="number" id="dlInputCash" placeholder="0" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <button type="button" class="btn-submit" style="width:auto; margin:0; height:38px;" onclick="dlTambahBaris()">➕ Tambah</button>
+            </div>
+        </div>
+
+        <div class="dl-ending-grid">
+            <div class="dl-ending-card profit"><div class="l">Ending Profit</div><div class="n" id="dlEndingProfit">0</div></div>
+            <div class="dl-ending-card cash"><div class="l">Ending Cash</div><div class="n" id="dlEndingCash">0</div></div>
+        </div>
+
+        <div class="fin-insight-box"><div class="fin-insight-title">💡 Gap Analysis</div><div class="fin-insight-item" id="dlGapInsight">Belum ada data.</div></div>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+            <table class="dl-table">
+                <thead><tr><th>Tanggal</th><th>Keputusan / Aktivitas</th><th style="text-align:right;">Profit</th><th style="text-align:right;">Cash</th><th style="text-align:right;">Kum. Profit</th><th style="text-align:right;">Kum. Cash</th><th>Aksi</th></tr></thead>
+                <tbody id="dlTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="subDupont" class="sub-content" style="display: none;">
+        <h3 style="margin-top:0;">🧮 Analisis DuPont — ROE Breakdown</h3>
+        <div class="dupont-tree">
+            <div class="dupont-box"><div class="l">Net Profit Margin</div><div class="n" id="dp_npm">0%</div></div>
+            <div class="dupont-op">×</div>
+            <div class="dupont-box"><div class="l">Asset Turnover</div><div class="n" id="dp_ato">0x</div></div>
+            <div class="dupont-op">×</div>
+            <div class="dupont-box"><div class="l">Equity Multiplier</div><div class="n" id="dp_em">0x</div></div>
+            <div class="dupont-op">=</div>
+            <div class="dupont-box" style="border-color:#4338ca; background:#eef2ff;"><div class="l">ROE</div><div class="n" id="dp_roe" style="color:#4338ca;">0%</div></div>
+        </div>
+
+        <div class="fin-kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
+            <div class="fin-kpi-card fin-kpi-pendapatan"><div class="fin-kpi-label">Pendapatan</div><div class="fin-kpi-val" id="dp_pendapatan" style="font-size:16px;">Rp 0</div></div>
+            <div class="fin-kpi-card fin-kpi-laba-untung"><div class="fin-kpi-label">Laba Bersih</div><div class="fin-kpi-val" id="dp_laba" style="font-size:16px;">Rp 0</div></div>
+            <div class="fin-kpi-card fin-kpi-aktiva"><div class="fin-kpi-label">Total Aset</div><div class="fin-kpi-val" id="dp_aset" style="font-size:16px;">Rp 0</div></div>
+            <div class="fin-kpi-card fin-kpi-pasiva"><div class="fin-kpi-label">Total Ekuitas</div><div class="fin-kpi-val" id="dp_ekuitas" style="font-size:16px;">Rp 0</div></div>
+            <div class="fin-kpi-card" style="background:linear-gradient(160deg,#a78bfa,#6d28d9);"><div class="fin-kpi-label">ROA</div><div class="fin-kpi-val" id="dp_roa" style="font-size:16px;">0%</div></div>
+        </div>
+
+        <div class="fin-insight-box"><div class="fin-insight-title">📘 Penjelasan & Interpretasi</div><div id="dp_interpretasi"></div></div>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-top:16px;">
+            <h4 style="margin-top:0; color:#0f172a;">🤖 Rekomendasi Keputusan dari AI (Gemini)</h4>
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#4338ca;" onclick="jalankanAnalisisDupontGemini()">✨ Analisis DuPont dengan AI</button>
+            <div id="dpGeminiLoading" style="display:none; margin-top:10px; font-size:12.5px; color:#64748b;">⏳ Menganalisis dengan Gemini...</div>
+            <div id="dpGeminiOutput" style="white-space:pre-wrap; font-size:13.5px; line-height:1.75; background:#f1f5f9; border-radius:10px; padding:16px; margin-top:14px; display:none;"></div>
+        </div>
+    </div>
+
+    <div id="subEkuitas" class="sub-content" style="display: none;">
+        <h3 style="margin-top:0;">🏛️ Ekuitas & Kesiapan Investor</h3>
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
+            <h4 style="margin-top:0;">⚙️ Input Skenario</h4>
+            <div class="ek-form-grid">
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Jumlah Lembar Saham Pemilik Saat Ini</label><input type="number" id="ekLembarPemilik" value="1000" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Nilai Nominal per Lembar (Rp)</label><input type="number" id="ekNilaiPerLembar" value="100000" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Valuasi Pre-Money (Rp)</label><input type="number" id="ekValuasiPreMoney" placeholder="Cth: 500000000" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">% Saham Ditawarkan ke Investor</label><input type="number" id="ekPersenDitawarkan" placeholder="Cth: 15" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+            </div>
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#0f172a;" onclick="ekHitungCapTable()">🧮 Hitung Simulasi</button>
+        </div>
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+            <h4 style="margin-top:0;">📋 Hasil Simulasi Cap Table</h4>
+            <div id="ekHasilSimulasi"><p style="color:#94a3b8; font-style:italic;">Isi form di atas lalu klik "Hitung Simulasi".</p></div>
+        </div>
+        <div id="ekCatatanSop" class="fin-insight-box" style="margin-top:16px;"></div>
+        <div class="card" style="padding:18px; background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; margin-top:16px; font-size:12px; color:#92400e; line-height:1.7;">
+            ⚠️ Ini simulasi kasar untuk gambaran awal, BUKAN nasihat hukum/keuangan formal.
+        </div>
+    </div>
+
+    <div id="subCostStructure" class="sub-content" style="display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+            <div>
+                <h3 style="margin:0;">📊 Cost Structure & Anggaran Biaya</h3>
+                <p style="color:#64748b; font-size:12.5px; margin:4px 0 0 0;">Bandingkan realisasi beban terhadap target anggaran bulanan.</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-submit" style="width:auto; margin:0; background:#0f172a;" onclick="csBukaPengaturanAnggaran()">⚙️ Atur Anggaran</button>
+                <button type="button" class="btn-pdf-global" style="margin:0; padding:8px 14px; font-size:12px;" onclick="exportSatuBagianKeuanganPDF('subCostStructure', 'Cost Structure', this)">📥 PDF</button>
+            </div>
+        </div>
+        <div id="insightCostStructure" class="fin-insight-box"></div>
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead style="background:#0f172a; color:#fff; font-size:12.5px;">
+                    <tr><th style="padding:12px; text-align:left;">Akun Beban</th><th style="padding:12px;">Anggaran</th><th style="padding:12px;">Realisasi</th><th style="padding:12px;">% Terpakai</th><th style="padding:12px;">Progress</th><th style="padding:12px;">Status</th></tr>
+                </thead>
+                <tbody id="tabelCostStructure"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="csModalSet" class="cs-modal-overlay">
+        <div class="cs-modal-box">
+            <div class="mi-modal-title">Atur Anggaran Biaya Tahun <input type="number" id="csSetTahun" style="width:90px; padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+            <div id="csSetBody"></div>
+            <div class="co-modal-close-row">
+                <button type="button" class="btn-co-secondary" style="flex:none; padding:10px 20px;" onclick="csTutupPengaturan()">Batal</button>
+                <button type="button" id="csBtnSimpanSet" class="btn-co-primary" style="flex:none; padding:10px 20px;" onclick="csSimpanPengaturan()">Simpan Anggaran</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subKomparasi" class="sub-content" style="display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; gap:10px; flex-wrap:wrap;">
+            <div><h3 style="margin:0 0 10px 0;">📊 Komparasi Laporan & Validasi</h3><p style="color:#64748b; font-size:12.5px; margin:0;">Bandingkan laporan antar bulan/tahun, cek integritas, beri persetujuan formal.</p></div>
+            <button type="button" class="btn-pdf-global" style="margin:0; padding:8px 14px; font-size:12px;" onclick="exportSatuBagianKeuanganPDF('subKomparasi', 'Komparasi Laporan', this)">📥 Export PDF</button>
+        </div>
+        <div class="komparasi-card" style="grid-column:1/-1;">
+            <h4>📅 Pilih Periode untuk Komparasi</h4>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Tahun</label><input type="number" id="kompTahun" value="2026" style="width:90px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Bulan (1-12)</label><input type="number" id="kompBulan" value="8" min="1" max="12" style="width:90px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <button type="button" class="btn-submit" style="width:auto; margin:0;" onclick="loadLaporanKomparasi()">🔍 Muat & Bandingkan</button>
+            </div>
+        </div>
+        <div class="komparasi-card"><h4>📈 Month-over-Month (MoM)</h4><table class="komparasi-table"><thead><tr><th>Metrik</th><th class="komparasi-num">Bulan Lalu</th><th class="komparasi-num">Bulan Ini</th><th class="komparasi-num">Selisih</th><th class="komparasi-num">% Perubahan</th></tr></thead><tbody id="tableMoM"></tbody></table></div>
+        <div class="komparasi-card"><h4>📊 Year-over-Year (YoY)</h4><table class="komparasi-table"><thead><tr><th>Metrik</th><th class="komparasi-num">Tahun Lalu</th><th class="komparasi-num">Tahun Ini</th><th class="komparasi-num">Selisih</th><th class="komparasi-num">% Perubahan</th></tr></thead><tbody id="tableYoY"></tbody></table></div>
+        <div class="komparasi-card" style="grid-column:1/-1;"><h4>✅ Validasi Integritas Laporan</h4><div id="validasiIntegritas" style="font-size:12px; line-height:1.8; color:#475569;"></div></div>
+        <div class="komparasi-card" style="grid-column:1/-1;">
+            <h4>✍️ Persetujuan Laporan Bulan Ini</h4>
+            <div class="sign-off-form">
+                <label>Nama Verifikator (Akuntan/Owner):</label><input type="text" id="signoffNama" placeholder="Misal: Siti Fatimah, S.Ak">
+                <label>Catatan Audit / Temuan:</label><textarea id="signoffCatatan" placeholder="Misal: Semua jurnal sudah diverifikasi..."></textarea>
+                <button type="button" class="btn-submit" style="width:100%; background:#059669;" onclick="simpanSignOffLaporan()">✅ Verifikasi & Setujui Laporan Bulan Ini</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subTrenBulanan" class="sub-content" style="display: none;">
+        <style>
+            .tren-toggle-row { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+            .tren-toggle-group { display:flex; gap:6px; flex-wrap:wrap; }
+            .tren-toggle-btn { padding:8px 16px; border-radius:20px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; font-size:12.5px; font-weight:700; cursor:pointer; }
+            .tren-toggle-btn.active { background:#0f172a; color:#fff; border-color:#0f172a; }
+            .tren-eos-btn { padding:7px 14px; border-radius:20px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; font-weight:700; cursor:pointer; }
+            .tren-eos-btn.active { background:#4338ca; color:#fff; }
+            .tren-table-wrap { overflow-x:auto; border-radius:12px; border:1px solid #e2e8f0; }
+            .tren-table { width:100%; border-collapse:collapse; font-size:11.5px; white-space:nowrap; }
+            .tren-table th { padding:10px; text-align:right; position:sticky; top:0; z-index:3; color:#fff; }
+            .tren-table th:first-child { text-align:left; position:sticky; left:0; z-index:4; background:#0f172a; }
+            .tren-table td { padding:7px 10px; text-align:right; border-bottom:1px solid #f1f5f9; }
+            .tren-table td:first-child { text-align:left; font-weight:600; position:sticky; left:0; background:#fff; z-index:1; border-right:2px solid #e2e8f0; }
+            .tren-nilai-neg { color:#dc2626; }
+            .tren-nilai-pos { color:#166534; }
+            .tren-section-header td { color:#fff; font-weight:800; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; padding:10px; }
+            .tren-section-header td:first-child { background:inherit; }
+            .tren-section-pendapatan { background:linear-gradient(90deg,#059669,#10b981); }
+            .tren-section-beban { background:linear-gradient(90deg,#be123c,#f43f5e); }
+            .tren-section-operasional { background:linear-gradient(90deg,#0369a1,#38bdf8); }
+            .tren-section-investasi { background:linear-gradient(90deg,#b45309,#fbbf24); }
+            .tren-section-pendanaan { background:linear-gradient(90deg,#6d28d9,#a78bfa); }
+            .tren-subtotal-row td { font-weight:800; background:#f1f5f9; border-top:1.5px solid #cbd5e1; border-bottom:2px solid #cbd5e1; }
+            .tren-subtotal-row td:first-child { background:#f1f5f9; }
+            .tren-final-row td { font-weight:900; font-size:12.5px; background:#0f172a; color:#fff; }
+            .tren-final-row td:first-child { background:#0f172a; }
+        </style>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; gap:10px; flex-wrap:wrap;">
+            <div>
+                <h3 style="margin:0 0 8px 0;">📅 Tren Bulanan & Mingguan per Akun</h3>
+                <p style="color:#64748b; font-size:12.5px; margin:0;">Bandingkan tiap akun dari waktu ke waktu, dengan grafik & filter cepat ala EOS.</p>
+            </div>
+            <button type="button" class="btn-pdf-global" style="margin:0; padding:8px 14px; font-size:12px;" onclick="exportSatuBagianKeuanganPDF('subTrenBulanan', 'Tren Bulanan Mingguan', this)">📥 Export PDF</button>
+        </div>
+
+        <div class="tren-toggle-row">
+            <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Tahun</label><input type="number" id="trenTahun" value="2026" style="width:100px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+            <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Periode</label>
+                <div class="tren-toggle-group">
+                    <button type="button" class="tren-toggle-btn active" data-periode="bulanan" onclick="trenGantiPeriode('bulanan', this)">📆 Bulanan</button>
+                    <button type="button" class="tren-toggle-btn" data-periode="mingguan" onclick="trenGantiPeriode('mingguan', this)">🗓️ Mingguan</button>
+                </div>
+            </div>
+            <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Sumber</label>
+                <div class="tren-toggle-group">
+                    <button type="button" class="tren-toggle-btn active" data-mode="bisnis" onclick="trenGantiMode('bisnis', this)">🏢 Bisnis</button>
+                    <button type="button" class="tren-toggle-btn" data-mode="pribadi" onclick="trenGantiMode('pribadi', this)">👤 Pribadi</button>
+                </div>
+            </div>
+            <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Laporan</label>
+                <div class="tren-toggle-group">
+                    <button type="button" class="tren-toggle-btn active" data-jenis="labarugi" onclick="trenGantiJenis('labarugi', this)">📈 Laba Rugi</button>
+                    <button type="button" class="tren-toggle-btn" data-jenis="aruskas" onclick="trenGantiJenis('aruskas', this)">💸 Arus Kas</button>
+                </div>
+            </div>
+            <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Tampilan</label>
+                <div class="tren-toggle-group">
+                    <button type="button" class="tren-toggle-btn active" data-tampilan="rupiah" onclick="trenGantiTampilan('rupiah', this)">Rp Nominal</button>
+                    <button type="button" class="tren-toggle-btn" data-tampilan="persen" onclick="trenGantiTampilan('persen', this)">% dari Sales</button>
+                </div>
+            </div>
+            <button type="button" class="btn-submit" style="width:auto; margin:0;" onclick="renderTrenBulanan()">🔍 Tampilkan</button>
+        </div>
+
+        <div id="trenMingguanEosBar" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
+            <span style="font-size:11px; font-weight:700; color:#475569; margin-right:4px;">⚡ Filter Cepat ala EOS L10:</span>
+            <button type="button" class="tren-eos-btn" data-preset="minggu_ini" onclick="trenFilterEosCepat('minggu_ini')">Minggu Ini</button>
+            <button type="button" class="tren-eos-btn" data-preset="minggu_lalu" onclick="trenFilterEosCepat('minggu_lalu')">Minggu Lalu</button>
+            <button type="button" class="tren-eos-btn" data-preset="4_minggu" onclick="trenFilterEosCepat('4_minggu')">4 Minggu Terakhir</button>
+            <button type="button" class="tren-eos-btn" data-preset="13_minggu" onclick="trenFilterEosCepat('13_minggu')">13 Minggu (1 Kuartal Rock)</button>
+        </div>
+
+        <div class="card" style="padding:16px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:16px;">
+            <div style="height:280px;"><canvas id="chartTrenBulanan"></canvas></div>
+        </div>
+
+        <div id="insightTrenBulanan" class="fin-insight-box" style="display:none;"></div>
+
+        <div class="tren-table-wrap">
+            <table class="tren-table" id="tabelTrenBulanan">
+                <thead><tr id="theadTrenBulanan"></tr></thead>
+                <tbody id="tbodyTrenBulanan"></tbody>
+            </table>
+        </div>
+        <p style="font-size:11px; color:#94a3b8; margin-top:8px;">💡 Klik judul kategori (Pendapatan/Beban/dst.) di tabel untuk buka/tutup rincian akunnya.</p>
+    </div>
+
+    <div id="subRosetta" class="sub-content" style="display: none;">
+        <style>
+            .rw-eos-btn.active, .rw-periode-btn.active { outline: 2px solid #4338ca; outline-offset: 1px; }
+        </style>
+        <h3 style="margin-top:0;">🪨 Rosetta Stone — Worksheet Transaksi</h3>
+        <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">
+            Setiap baris = 1 transaksi. Lihat bagaimana satu keputusan bergerak serentak di <strong>Assets</strong>,
+            <strong>Liabilities</strong>, dan <strong>Owner Equity</strong> — ditandai
+            <span style="color:#2563eb; font-weight:700;">O</span> (Operating) /
+            <span style="color:#b45309; font-weight:700;">I</span> (Investing) /
+            <span style="color:#6d28d9; font-weight:700;">F</span> (Financing).
+        </p>
+
+        <div class="card" style="padding:16px 20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:16px;">
+            <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;">
+                <div>
+                    <label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Tampilkan Periode</label>
+                    <div style="display:flex; gap:6px;">
+                        <button type="button" class="rw-periode-btn active" data-periode="semua" onclick="rwGantiPeriode('semua', this)" style="padding:8px 14px; border-radius:20px; border:1.5px solid #cbd5e1; background:#0f172a; color:#fff; font-size:12px; font-weight:700; cursor:pointer;">Semua (ikut filter atas)</button>
+                        <button type="button" class="rw-periode-btn" data-periode="bulanan" onclick="rwGantiPeriode('bulanan', this)" style="padding:8px 14px; border-radius:20px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; font-size:12px; font-weight:700; cursor:pointer;">📆 Bulanan</button>
+                        <button type="button" class="rw-periode-btn" data-periode="mingguan" onclick="rwGantiPeriode('mingguan', this)" style="padding:8px 14px; border-radius:20px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; font-size:12px; font-weight:700; cursor:pointer;">🗓️ Mingguan</button>
+                    </div>
+                </div>
+                <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Tahun</label>
+                    <input type="number" id="rwTahun" value="2026" style="width:90px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+                </div>
+                <div id="rwBulanPicker" style="display:none;">
+                    <label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Bulan</label>
+                    <select id="rwBulan" style="padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+                        <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+                        <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+                        <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                    </select>
+                </div>
+                <div id="rwMingguPicker" style="display:none;">
+                    <label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Minggu ke- (1-53)</label>
+                    <input type="number" id="rwMinggu" min="1" max="53" value="1" style="width:90px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
+                </div>
+                <button type="button" class="btn-submit" style="width:auto; margin:0;" onclick="rwTerapkanManual()">🔍 Terapkan</button>
+            </div>
+            <div id="rwMingguEosBar" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#475569; margin-right:4px;">⚡ Cepat:</span>
+                <button type="button" class="rw-eos-btn" data-preset="minggu_ini" onclick="rwFilterEosCepat('minggu_ini')" style="padding:6px 12px; border-radius:16px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:11.5px; font-weight:700; cursor:pointer;">Minggu Ini</button>
+                <button type="button" class="rw-eos-btn" data-preset="minggu_lalu" onclick="rwFilterEosCepat('minggu_lalu')" style="padding:6px 12px; border-radius:16px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:11.5px; font-weight:700; cursor:pointer;">Minggu Lalu</button>
+            </div>
+            <div id="rwLabelPeriodeAktif" style="margin-top:12px; font-size:12px; font-weight:700; color:#0f172a; background:#f1f5f9; padding:8px 12px; border-radius:8px;"></div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#0f172a;" onclick="renderRosettaWorksheet()">🔄 Refresh Worksheet</button>
+        </div>
+
+        <div class="tren-table-wrap" style="margin-bottom:20px;">
+            <table class="tren-table" id="tabelRosettaWs">
+                <thead><tr id="theadRosettaWs"></tr></thead>
+                <tbody id="tbodyRosettaWs"></tbody>
+            </table>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-bottom:24px;">
+            <div class="card" style="padding:18px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <h4 style="margin-top:0; color:#0f172a;">⚖️ Cek Keseimbangan</h4>
+                <div id="rwCheckBalance"></div>
+            </div>
+            <div class="card" style="padding:18px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <h4 style="margin-top:0; color:#0f172a;">💵 Ringkasan OCF / ICF / FCF</h4>
+                <div id="rwOifSummary"></div>
+            </div>
+            <div class="card" style="padding:18px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <h4 style="margin-top:0; color:#0f172a;">📈 Pembentukan Net Income</h4>
+                <div id="rwNetIncomeBuild"></div>
+            </div>
+        </div>
+
+        <details style="margin-bottom:10px;">
+            <summary style="cursor:pointer; font-weight:700; color:#0f172a; padding:10px 0;">📖 Kamus Cepat Debit/Kredit per Skenario</summary>
+            <input type="text" class="rs-search" id="rsSearch" placeholder="🔍 Cari skenario transaksi..." onkeyup="renderRosettaStone()">
+            <div class="rs-wrap">
+                <table class="rs-table">
+                    <thead><tr><th style="width:30%;">Skenario Transaksi</th><th>Debit</th><th>Kredit</th><th>Catatan Nominal</th></tr></thead>
+                    <tbody id="rsBody"></tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+
+    <div id="subAuditSop" class="sub-content" style="display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div><h3 style="margin:0;">🩺 Audit SOP Otomatis</h3><p style="color:#64748b; font-size:12.5px; margin:4px 0 0 0;">Memindai seluruh jurnal untuk mendeteksi pola yang menyalahi SOP.</p></div>
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#0f172a;" onclick="jalankanAuditSOP()">🔍 Jalankan Audit Sekarang</button>
+        </div>
+        <div class="audit-summary" id="auditSummaryBox"></div>
+        <div id="auditHasilList"></div>
+    </div>
+
+    <div id="subPanduanAI" class="sub-content" style="display: none;">
+        <style>
+            .panduan-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:20px; align-items:start; }
+            @media (max-width: 900px) { .panduan-grid { grid-template-columns:1fr; } }
+            .panduan-chatbox { height:420px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:12px; }
+            .panduan-input-row { display:flex; gap:8px; }
+            .panduan-input-row textarea { flex:1; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1; font-family:inherit; font-size:13px; resize:none; }
+            .panduan-quick-q { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+            .panduan-quick-q button { font-size:11px; padding:6px 12px; border-radius:16px; border:1px solid #c7d2fe; background:#eef2ff; color:#4338ca; cursor:pointer; font-weight:600; }
+            .panduan-quick-q button:hover { background:#e0e7ff; }
+        </style>
+        <h3 style="margin-top:0;">🎓 Panduan & SOP — Tanya AI</h3>
+        <div class="panduan-grid">
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <h4 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+                    💬 Tanya Bebas
+                    <button type="button" onclick="panduanBersihkanChat()" style="font-size:11px; padding:5px 10px; border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; cursor:pointer; font-weight:600;">🗑️ Bersihkan</button>
+                </h4>
+                <div class="panduan-quick-q">
+                    <button type="button" onclick="document.getElementById('panduanChatInput').value='Apa bedanya Beban dan Aset? Kapan sesuatu dicatat sebagai salah satunya?'; panduanKirimChat();">Beban vs Aset?</button>
+                    <button type="button" onclick="document.getElementById('panduanChatInput').value='Bagaimana cara mencatat DP klien yang benar sesuai SOP?'; panduanKirimChat();">Cara catat DP?</button>
+                    <button type="button" onclick="document.getElementById('panduanChatInput').value='Jelaskan kenapa Laba Rugi dan Arus Kas bisa beda angkanya.'; panduanKirimChat();">Laba vs Kas beda?</button>
+                    <button type="button" onclick="document.getElementById('panduanChatInput').value='Bagaimana cara kerja alokasi Profit First tiap bulan?'; panduanKirimChat();">Profit First?</button>
+                </div>
+                <div class="panduan-chatbox" id="panduanChatBox"></div>
+                <div class="panduan-input-row">
+                    <textarea id="panduanChatInput" rows="2" placeholder="Tulis pertanyaan seputar SOP, cara input jurnal, atau akun yang cocok..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); panduanKirimChat();}"></textarea>
+                    <button type="button" class="btn-submit" style="width:auto; margin:0;" onclick="panduanKirimChat()">Kirim</button>
+                </div>
+            </div>
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <h4 style="margin-top:0;">🎯 Sarankan Akun untuk Transaksi Ini</h4>
+                <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Deskripsi Transaksi</label>
+                <textarea id="panduanDeskripsiTransaksi" rows="3" placeholder="Cth: Beli kamera Sony A7 III seharga 25 juta, dibayar tunai dari kas studio" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-family:inherit; font-size:13px; margin-bottom:10px;"></textarea>
+                <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Nominal (opsional, Rp)</label>
+                <input type="number" id="panduanNominalTransaksi" placeholder="25000000" style="width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:14px;">
+                <button type="button" class="btn-submit" style="width:100%; margin:0; background:#4338ca;" onclick="panduanSarankanAkun()">✨ Sarankan Akun</button>
+                <div id="panduanSaranLoading" style="display:none; margin-top:10px; font-size:12.5px; color:#64748b; text-align:center;">⏳ Menganalisis transaksi...</div>
+                <div id="panduanSaranOutput" style="display:none; margin-top:16px; padding:16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalTambahVendor" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:14px; padding:24px; max-width:420px; width:92%;">
+            <h3 style="margin-top:0; color:#0f172a;">🏭 Tambah Vendor/Supplier Baru</h3>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Nama Vendor *</label>
+                <input type="text" id="vdrNama" placeholder="Cth: Toko Kamera Sentosa" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Kontak (No HP/Email)</label>
+                <input type="text" id="vdrKontak" placeholder="0812xxxxxxx" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Kategori</label>
+                <select id="vdrKategori" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">
+                    <option>Peralatan/Aset</option><option>Bahan Habis Pakai</option><option>Jasa Edit/Freelance</option>
+                    <option>Sewa/Studio</option><option>Transport/Logistik</option><option>Lainnya</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modalTambahVendor').style.display='none'" style="padding:10px 18px; background:#f1f5f9; color:#475569; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Batal</button>
+                <button type="button" onclick="simpanVendorBaru()" style="padding:10px 18px; background:#ea580c; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">💾 Simpan Vendor</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subStok" class="sub-content" style="display: none;">
+        <style>
+            .stok-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:18px; }
+            .stok-kpi { padding:16px; border-radius:10px; color:#fff; text-align:center; }
+            .stok-kpi.total { background:linear-gradient(160deg,#60a5fa,#1d4ed8); }
+            .stok-kpi.minimum { background:linear-gradient(160deg,#f87171,#b91c1c); }
+            .stok-kpi.nilai { background:linear-gradient(160deg,#34d399,#047857); }
+            .stok-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+            .stok-table th { background:#0f172a; color:#fff; padding:9px 10px; text-align:left; }
+            .stok-table td { padding:8px 10px; border-bottom:1px solid #f1f5f9; }
+            .stok-alert-row { background:#fef2f2; }
+            .stok-tab-menu { display:flex; gap:8px; margin-bottom:16px; border-bottom:2px solid #e2e8f0; padding-bottom:8px; flex-wrap:wrap; }
+            .stok-tab-btn { padding:7px 14px; border-radius:16px; border:1px solid #cbd5e1; background:#fff; color:#475569; font-size:12px; font-weight:700; cursor:pointer; }
+            .stok-tab-btn.active { background:#0f172a; color:#fff; }
+            .stok-sub { display:none; }
+            .stok-sub.active { display:block; }
+        </style>
+
+        <h3 style="margin-top:0;">📦 Stok & Persediaan</h3>
+        <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">Master barang, resep paket (BOM), kartu stok, dan proses penjualan yang otomatis mengurangi stok + posting COGS ke jurnal.</p>
+
+        <div class="stok-kpi-grid" id="stokKpiGrid"></div>
+
+        <div class="stok-tab-menu">
+            <button type="button" class="stok-tab-btn active" onclick="stokBukaSub('stokSubDaftar', this)">📋 Daftar Barang</button>
+            <button type="button" class="stok-tab-btn" onclick="stokBukaSub('stokSubKartu', this)">📇 Kartu Stok</button>
+            <button type="button" class="stok-tab-btn" onclick="stokBukaSub('stokSubBOM', this)">🧾 Resep Paket (BOM)</button>
+            <button type="button" class="stok-tab-btn" onclick="stokBukaSub('stokSubProses', this)">🏷️ Proses Penjualan</button>
+            <button type="button" class="stok-tab-btn" onclick="stokBukaSub('stokSubManual', this)">➕ Mutasi Manual</button>
+        </div>
+
+        <div id="stokSubDaftar" class="stok-sub active">
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:16px;">
+                <h4 style="margin-top:0;">➕ Tambah Barang Baru</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:12px;">
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Nama Barang</label><input type="text" id="stokBrgNama" placeholder="Cth: Kertas Foto A4" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Satuan</label><input type="text" id="stokBrgSatuan" placeholder="pcs/lembar/roll" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Stok Minimum</label><input type="number" id="stokBrgMinimum" placeholder="10" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Harga Beli Standar (Rp)</label><input type="number" id="stokBrgHarga" placeholder="15000" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Kategori</label><input type="text" id="stokBrgKategori" placeholder="Cetak/Bahan/dll" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <button type="button" class="btn-submit" style="width:auto; margin:0;" onclick="stokTambahBarang()">💾 Simpan Barang</button>
+            </div>
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <table class="stok-table">
+                    <thead><tr><th>Nama Barang</th><th>Satuan</th><th>Stok Saat Ini</th><th>Stok Minimum</th><th>Harga Beli Standar</th><th>Nilai Persediaan</th></tr></thead>
+                    <tbody id="stokTabelDaftar"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="stokSubKartu" class="stok-sub">
+            <div style="margin-bottom:12px;">
+                <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Pilih Barang</label>
+                <select id="stokKartuPilihBarang" onchange="renderKartuStok()" style="padding:9px; border-radius:6px; border:1px solid #cbd5e1; min-width:250px;"></select>
+            </div>
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <table class="stok-table">
+                    <thead><tr><th>Tanggal</th><th>Jenis</th><th>Qty</th><th>Ref</th><th>Keterangan</th><th>Sumber</th><th>Saldo Berjalan</th></tr></thead>
+                    <tbody id="stokTabelKartu"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="stokSubBOM" class="stok-sub">
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:16px;">
+                <h4 style="margin-top:0;">🧾 Tambah Resep Barang untuk 1 Paket</h4>
+                <p style="color:#64748b; font-size:12px; margin-top:-6px;">Nama Paket HARUS SAMA PERSIS dengan nama paket yang dipakai di Database Klien.</p>
+                <div style="display:grid; grid-template-columns:2fr 2fr 1fr auto; gap:10px; align-items:end;">
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Nama Paket</label><input type="text" id="bomNamaPaket" placeholder="Cth: Newborn Premium" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Barang</label><select id="bomPilihBarang" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></select></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Qty per Paket</label><input type="number" id="bomQty" placeholder="1" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <button type="button" class="btn-submit" style="width:auto; margin:0; height:38px;" onclick="stokTambahBOM()">➕ Tambah</button>
+                </div>
+            </div>
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <table class="stok-table">
+                    <thead><tr><th>Nama Paket</th><th>Barang</th><th>Qty per Paket</th><th>Aksi</th></tr></thead>
+                    <tbody id="stokTabelBOM"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="stokSubProses" class="stok-sub">
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <h4 style="margin-top:0;">🏷️ Proses Penjualan (Kurangi Stok Otomatis)</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:14px;">
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Customer</label><input type="text" id="prosesCustomer" list="listCustomerLeads" placeholder="Ketik nama/No HP..." style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Nama Paket</label><input type="text" id="prosesNamaPaket" list="listNamaPaketBOM" placeholder="Harus sama persis dgn BOM" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"><datalist id="listNamaPaketBOM"></datalist></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Jumlah Paket Terjual</label><input type="number" id="prosesFaktorQty" value="1" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Tanggal</label><input type="date" id="prosesTanggal" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                    <input type="checkbox" id="prosesPosJurnal" checked style="width:18px; height:18px;">
+                    <label for="prosesPosJurnal" style="font-size:12.5px; font-weight:600; color:#475569;">Sekalian posting jurnal COGS otomatis</label>
+                </div>
+                <div id="prosesAkunBox" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+                    <div><label style="font-size:11px; font-weight:700; color:#dc2626;">Akun COGS (Debit)</label><input type="text" id="prosesAkunCOGS" list="listAkun" placeholder="Cth: 511 - Beban - HPP Produksi" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#059669;">Akun Persediaan (Kredit)</label><input type="text" id="prosesAkunPersediaan" list="listAkun" placeholder="Cth: 113 - Aset - Persediaan Bahan" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <button type="button" class="btn-submit" style="width:auto; margin:0; background:#ea580c;" onclick="stokProsesPenjualan()">🏷️ Proses & Kurangi Stok</button>
+                <div id="prosesHasil" style="display:none; margin-top:16px; padding:16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;"></div>
+            </div>
+        </div>
+
+        <div id="stokSubManual" class="stok-sub">
+            <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <h4 style="margin-top:0;">➕ Mutasi Stok Manual (Barang Masuk/Keluar/Adjustment)</h4>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:14px;">
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Tanggal</label><input type="date" id="mutasiTgl" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Barang</label><select id="mutasiPilihBarang" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></select></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Jenis</label><select id="mutasiJenis" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"><option value="Masuk">Masuk (Pembelian)</option><option value="Keluar">Keluar (Pemakaian/Rusak)</option></select></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Qty</label><input type="number" id="mutasiQty" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Vendor (kalau Masuk)</label><input type="text" id="mutasiVendor" list="listVendor" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div><label style="font-size:11px; font-weight:700; color:#475569;">Keterangan</label><input type="text" id="mutasiKeterangan" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <button type="button" class="btn-submit" style="width:auto; margin:0;" onclick="stokMutasiManual()">💾 Simpan Mutasi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subTutupBuku" class="sub-content" style="display: none;">
+        <style>
+            .tb-status-badge { display:inline-block; padding:4px 12px; border-radius:14px; font-size:11.5px; font-weight:800; }
+            .tb-status-terbuka { background:#dcfce7; color:#166534; }
+            .tb-status-ditutup { background:#fee2e2; color:#991b1b; }
+        </style>
+        <h3 style="margin-top:0;">🔒 Tutup Buku Bulanan</h3>
+        <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">Mengunci jurnal 1 bulan + posting jurnal penutup ke akun <strong>320 Laba Ditahan</strong>.</p>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
+            <h4 style="margin-top:0;">🔒 Tutup Periode Baru</h4>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:14px;">
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Tahun</label><input type="number" id="tbTahun" value="2026" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Bulan</label>
+                    <select id="tbBulan" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;">
+                        <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option><option value="4">April</option>
+                        <option value="5">Mei</option><option value="6">Juni</option><option value="7">Juli</option><option value="8">Agustus</option>
+                        <option value="9">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+                    </select>
+                </div>
+                <div><label style="font-size:11px; font-weight:700; color:#475569;">Nama Penanggung Jawab</label><input type="text" id="tbPenanggungJawab" placeholder="Cth: Siti Fatimah, S.Ak" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+            </div>
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#dc2626;" onclick="tbTutupBuku()">🔒 Tutup Buku Periode Ini</button>
+        </div>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+            <h4 style="margin-top:0;">📜 Riwayat Tutup Buku</h4>
+            <table class="stok-table">
+                <thead><tr><th>Periode</th><th>Status</th><th>Pendapatan</th><th>Beban</th><th>Laba Bersih</th><th>Ditutup Oleh</th><th>Tgl Ditutup</th><th>Aksi</th></tr></thead>
+                <tbody id="tbTabelRiwayat"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="subNotifikasi" class="sub-content" style="display: none;">
+        <h3 style="margin-top:0;">📲 Notifikasi Otomatis — Telegram & WhatsApp (Fonnte)</h3>
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:16px;">
+            <h4 style="margin-top:0;">🔧 Setup Channel</h4>
+            <div style="background:#eff6ff; border-radius:8px; padding:14px; margin-bottom:16px; font-size:12px; color:#1e3a8a; line-height:1.7;">
+                Token rahasia (<code>TELEGRAM_BOT_TOKEN</code>, <code>FONNTE_TOKEN</code>) diset di Script Properties Apps Script, bukan di sini.
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div style="padding:14px; background:#f0f9ff; border-radius:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#0369a1; margin-bottom:10px;">
+                        <input type="checkbox" id="notifKirimTelegram" style="width:18px; height:18px;"> 📨 Kirim ke Telegram
+                    </label>
+                    <label style="font-size:11px; font-weight:700; color:#475569;">Chat ID Telegram</label>
+                    <input type="text" id="notifTelegramChatId" placeholder="Cth: 123456789" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;">
+                </div>
+                <div style="padding:14px; background:#fff7ed; border-radius:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#9a3412; margin-bottom:10px;">
+                        <input type="checkbox" id="notifKirimFonnte" style="width:18px; height:18px;"> 💬 Kirim ke WhatsApp (Fonnte)
+                    </label>
+                    <label style="font-size:11px; font-weight:700; color:#475569;">Nomor Target WA</label>
+                    <input type="text" id="notifFonnteTarget" placeholder="Cth: 6281234567890" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;">
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:16px;">
+            <h4 style="margin-top:0;">⏰ Jadwal Pengiriman</h4>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:16px;">
+                <div style="padding:14px; border:1px solid #e2e8f0; border-radius:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#0f172a;">
+                        <input type="checkbox" id="notifAktifHarian" style="width:18px; height:18px;"> 📅 Ringkasan Harian
+                    </label>
+                    <button type="button" onclick="notifTestKirim('harian')" style="margin-top:8px; font-size:11px; padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; cursor:pointer;">🧪 Test Kirim</button>
+                </div>
+                <div style="padding:14px; border:1px solid #e2e8f0; border-radius:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#0f172a;">
+                        <input type="checkbox" id="notifAktifMingguan" style="width:18px; height:18px;"> 🗓️ Ringkasan Mingguan
+                    </label>
+                    <button type="button" onclick="notifTestKirim('mingguan')" style="margin-top:8px; font-size:11px; padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; cursor:pointer;">🧪 Test Kirim</button>
+                </div>
+                <div style="padding:14px; border:1px solid #e2e8f0; border-radius:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#0f172a;">
+                        <input type="checkbox" id="notifAktifBulanan" style="width:18px; height:18px;"> 📆 Ringkasan Bulanan
+                    </label>
+                    <button type="button" onclick="notifTestKirim('bulanan')" style="margin-top:8px; font-size:11px; padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; cursor:pointer;">🧪 Test Kirim</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn-submit" style="width:auto; margin:0;" onclick="notifSimpanPengaturan()">💾 Simpan Pengaturan</button>
+                <button type="button" class="btn-submit" style="width:auto; margin:0; background:#059669;" onclick="notifPasangTrigger()">▶️ Aktifkan Jadwal Otomatis</button>
+                <button type="button" class="btn-submit" style="width:auto; margin:0; background:#dc2626;" onclick="notifHapusTrigger()">⏹️ Nonaktifkan Semua Jadwal</button>
+                <span id="notifStatusTrigger" style="font-size:12px; font-weight:700;"></span>
+            </div>
+            <div id="notifHasilTest" style="display:none; margin-top:14px; padding:12px 16px; border-radius:8px; font-size:12.5px;"></div>
+        </div>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-top:16px;">
+            <h4 style="margin-top:0;">🤖 Bot Telegram Interaktif</h4>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn-submit" style="width:auto; margin:0; background:#059669;" onclick="notifPasangWebhook()">🤖 Aktifkan Bot Interaktif</button>
+                <button type="button" class="btn-submit" style="width:auto; margin:0; background:#dc2626;" onclick="notifHapusWebhook()">⏹️ Nonaktifkan Bot Interaktif</button>
+            </div>
+            <div id="notifHasilWebhook" style="display:none; margin-top:14px; padding:12px 16px; border-radius:8px; font-size:12.5px;"></div>
+        </div>
+    </div>
+</div>
+
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+  let dataGlobal = [];
+  let dataFinance = { journal: [], accounts: [], inventaris: [], anggaran: [], vendors: [], barang: [], bom: [], mutasiStok: [], tutupBuku: [], pengaturanNotifikasi: {}, triggerNotifikasiAktif: false };
+  let dataJurnalGlobal = [];
+  let dataAnggaranBiaya = [];
+  let snapshotLaporanGlobal = { bulanan: [], quarterly: [], tahunan: [] };
+</script>
+
+<script src="utils.js"></script>
+<script src="ui-finance.js"></script>
+<script src="api.js"></script>
+
+</body>
+</html>
