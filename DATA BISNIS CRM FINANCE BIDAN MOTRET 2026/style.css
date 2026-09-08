@@ -51,6 +51,87 @@ input[type=text], input[type=number], input[type=date], input[type=month], selec
   border:1px solid var(--border); border-radius:6px; padding:9px 10px;
 }
 
+/* =========================================================================
+   PERBAIKAN TAMPILAN: spacing lebih rapat, scroll lebih ringkas,
+   lebih lebar & nyaman di HP maupun laptop.
+   ========================================================================= */
+html { -webkit-text-size-adjust: 100%; }
+* { -webkit-tap-highlight-color: transparent; }
+
+.content-inner { padding: 18px 22px; }
+h2 { font-size: 19px; margin: 4px 0 10px; }
+h3 { font-size: 15.5px; margin: 18px 0 8px; }
+h4 { font-size: 14px; }
+p { line-height: 1.5; }
+.mkt-section-title { margin-top: 22px; font-size: 15px; color: #1e293b; }
+
+/* Tabel: padding lebih rapat supaya tidak "lompat-lompat" jaraknya */
+table { font-size: 12.5px; }
+th, td { padding: 7px 9px; line-height: 1.35; }
+thead th { font-weight: 700; white-space: nowrap; }
+
+/* Wrapper tabel: scroll horizontal & vertikal yang jelas batasnya,
+   tidak makan tinggi halaman berlebihan */
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-compact-wrap { overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+.table-compact-wrap table { margin: 0; }
+.table-compact-wrap thead th { position: sticky; top: 0; z-index: 2; }
+
+/* Scorecard mingguan EOS: batasi tinggi + scroll dua arah, header nempel */
+.scorecard-scroll-wrap {
+  overflow: auto;
+  max-height: 380px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.scorecard-scroll-wrap table { border-collapse: collapse; }
+.scorecard-scroll-wrap th, .scorecard-scroll-wrap td { white-space: nowrap; }
+
+/* Tabel Tren Bulanan/Mingguan (Keuangan): batasi tinggi, scroll rapi,
+   kolom lebih ringkas supaya tidak makan banyak ruang horizontal */
+.tren-table-wrap {
+  max-height: 460px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tren-table th, .tren-table td { padding: 6px 8px; font-size: 11px; }
+.tren-table th:first-child, .tren-table td:first-child { min-width: 140px; max-width: 220px; white-space: normal; }
+
+/* Form & filter: gap lebih rapat di HP */
+.form-grid, .filter-grid { gap: 10px; }
+.form-group label { font-size: 11.5px; margin-bottom: 4px; }
+
+/* KPI grid: kartu lebih ringkas biar 2-3 muat sebaris di HP */
+.fin-kpi-grid { gap: 10px; }
+.fin-kpi-card { padding: 14px 16px; }
+.fin-kpi-val { font-size: 19px; }
+
+.card { padding: 16px !important; }
+
+/* ================= RESPONSIVE: TABLET & HP ================= */
+@media (max-width: 900px) {
+  .content-inner { padding: 12px 12px 28px; }
+  h2 { font-size: 17px; }
+  h3 { font-size: 14px; margin-top: 16px; }
+  table { font-size: 11.5px; }
+  th, td { padding: 6px 7px; }
+  .filter-grid, .form-grid, .ek-form-grid, .dl-form-grid { grid-template-columns: 1fr !important; }
+  .fin-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .tren-table-wrap { max-height: 360px; }
+  .scorecard-scroll-wrap { max-height: 320px; }
+  .table-compact-wrap { max-height: 360px !important; }
+  .funnel-bar { min-width: 0; height: 50px; }
+  .dupont-tree { gap: 8px; }
+  .dupont-box { min-width: 110px; padding: 10px 12px; }
+}
+@media (max-width: 480px) {
+  .fin-kpi-grid, .kpi-grid { grid-template-columns: 1fr !important; }
+  .content-inner { padding: 10px 8px 24px; }
+  .card { padding: 12px !important; }
+}
+
 .btn-submit {
   display:block; width:100%; padding:12px; background:var(--primary); color:#fff;
   border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; margin-top:10px;

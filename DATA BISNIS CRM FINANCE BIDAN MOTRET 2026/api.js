@@ -16,7 +16,21 @@ async function tarikDataServer() {
     dataAnggaranBiaya = dataFinance.anggaran || [];
     if (typeof dataVendorGlobal !== 'undefined') dataVendorGlobal = dataFinance.vendors || [];
 
+    // --- Data Marketing (dipakai oleh ui-marketing.js) ---
+    dataMarketing = data.marketing || [];
+    STUDIO_CONFIG = data.config || STUDIO_CONFIG;
+    dataAdsetPerformance = data.adsetPerformance || [];
+    dataAdsetCityTargeting = data.adsetCityTargeting || [];
+    dataContent = data.adContentPerformance || [];
+    dataTargetMingguanMarketing = data.targetMingguanMarketing || { global: null, perProduk: {} };
+
     inisialisasiTampilanKeuangan_();
+
+    // Render tab Marketing juga kalau sedang aktif saat data pertama kali dimuat
+    const tabMarketingEl = document.getElementById('tabMarketing');
+    if (tabMarketingEl && tabMarketingEl.classList.contains('active') && typeof renderMarketingTab === 'function') {
+      renderMarketingTab();
+    }
   } catch (err) {
     console.error('Gagal memuat data dari server:', err);
     alert('❌ Gagal memuat data dari server. Cek koneksi atau URL Apps Script (scriptURL) di index.html.\n\n' + err);

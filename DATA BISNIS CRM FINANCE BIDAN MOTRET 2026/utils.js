@@ -152,3 +152,27 @@ function terapkanBulanPilihan(startId, endId, bulanValue, callback, btnGroupId) 
 
     if (typeof callback === 'function') callback();
 }
+
+// =========================================================================
+// NAVIGASI ANTAR MENU (Keuangan <-> Marketing) — versi ringkas untuk mirror
+// Vercel ini (aslinya bukaTab() di Apps Script menangani banyak tab CRM;
+// di sini hanya 2 menu: tabKeuangan & tabMarketing).
+// =========================================================================
+function bukaTab(tabId, btnElement) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+
+    const target = document.getElementById(tabId);
+    if (target) target.classList.add('active');
+    if (btnElement) btnElement.classList.add('active');
+
+    const topbarTitle = document.getElementById('topbarTitle');
+    if (topbarTitle && btnElement) topbarTitle.textContent = btnElement.textContent.trim();
+
+    const sidebarEl = document.querySelector('.sidebar');
+    if (sidebarEl) sidebarEl.classList.remove('open');
+
+    if (tabId === 'tabMarketing' && typeof renderMarketingTab === 'function') {
+        renderMarketingTab();
+    }
+}
