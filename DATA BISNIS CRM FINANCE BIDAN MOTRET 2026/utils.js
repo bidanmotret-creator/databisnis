@@ -8,7 +8,36 @@ function prc(part, total) { return total == 0 ? "0%" : ((part / total) * 100).to
 function getTime(d) { return new Date(d).setHours(0, 0, 0, 0); }
 function monthDiff(start, end) { let d1 = new Date(start), d2 = new Date(end); return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth()); }
 function formatd(iso) { try { let d = new Date(iso); if (isNaN(d)) return "-"; return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: '2-digit' }); } catch (e) { return "-"; } }
-function formati(iso) { try { let d = new Date(iso); if (isNaN(d.getTime())) return ""; let m = '' + (d.getMonth() + 1), day = '' + d.getDate(), y = d.getFullYear(); if (m.length < 2) m = '0' + m; if (day.length < 2) day = '0' + day; return [y, m, day].join('-'); } catch (e) { return ""; } }
+// PENTING — perbaikan bug tanggal "geser 1 hari":
+// Tanggal dari Google Sheets (kolom bertipe Date) yang dikirim ke JSON tanpa
+// diformat dulu di Code.gs (Utilities.formatDate) akan ter-serialize sebagai
+// ISO UTC. Karena spreadsheet memakai zona waktu GMT+7 (WIB), tengah malam
+// WIB (mis. 1 Agu 00:00 WIB) menjadi "31 Jul 17:00 UTC" -- kalau dibaca ulang
+// pakai getUTCDate() dkk akan terbaca sebagai tanggal 31 Juli, BUKAN 1 Agustus.
+// Ini yang menyebabkan filter tanggal harus "dimundurkan 1 hari" dan angka
+// Ad Spend per-bulan jadi tidak sinkron. Fungsi ini mengompensasi +7 jam
+// SEBELUM mengambil komponen tanggal, tapi HANYA untuk nilai yang punya
+// komponen jam (hasil serialisasi Date) -- string tanggal murni 'yyyy-MM-dd'
+// (misal dari <input type=date>) TIDAK disentuh sama sekali.
+function formati(iso) {
+    try {
+        if (!iso) return "";
+        const sudahMurniTanggal = typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso.trim());
+        if (sudahMurniTanggal) return iso.trim();
+
+        let d = (iso instanceof Date) ? iso : new Date(iso);
+        if (isNaN(d.getTime())) return "";
+
+        // Kompensasi zona waktu WIB (GMT+7) untuk nilai yang berasal dari
+        // serialisasi Date object (bukan string tanggal murni).
+        d = new Date(d.getTime() + 7 * 3600 * 1000);
+
+        let m = '' + (d.getUTCMonth() + 1), day = '' + d.getUTCDate(), y = d.getUTCFullYear();
+        if (m.length < 2) m = '0' + m;
+        if (day.length < 2) day = '0' + day;
+        return [y, m, day].join('-');
+    } catch (e) { return ""; }
+}
 function cleanHP(hp) { let s = hp.toString().trim(); return s.startsWith('0') ? '62' + s.substring(1) : s; }
 
 // --- HELPER DI LUAR FUNGSI ---
@@ -33,6 +62,19 @@ function daysDiff(tgl1, tgl2) {
     } catch (e) {
         return 0;
     }
+}
+
+// Format Date object yang DIKONSTRUKSI SECARA LOKAL di JS (misal `new Date(y, m, 1)`
+// untuk tombol preset "Bulan Lalu"/"Tahun Ini") jadi 'yyyy-MM-dd', TANPA konversi ke
+// UTC (beda dengan formati() yang mengompensasi data dari server). Memakai getter
+// lokal (getFullYear/getMonth/getDate) supaya tanggal yang dipilih benar-benar
+// sama dengan kalender lokal, tidak bergeser.
+function formatDateLocal_(d) {
+    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+    let y = d.getFullYear();
+    let m = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }
 
 // Wrapper khusus tombol sub-tab "Wilayah & Kota" di Audience Intelligence.

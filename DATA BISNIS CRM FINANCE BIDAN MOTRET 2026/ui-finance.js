@@ -385,13 +385,7 @@ function terapkanFilter() {
 
         if (sembunyikanPribadi && isTransaksiPribadi_(row)) return false;
 
-        let rowDate = '';
-        if (row.tgl) {
-            const d = new Date(row.tgl);
-            if (!isNaN(d.getTime())) {
-                rowDate = d.toISOString().split('T')[0]; 
-            }
-        }
+        let rowDate = row.tgl ? formati(row.tgl) : '';
         if (tglMulai && (!rowDate || rowDate < tglMulai)) match = false;
         if (tglSelesai && (!rowDate || rowDate > tglSelesai)) match = false;
 
@@ -445,14 +439,14 @@ function terapkanBulanLaluKeuangan() {
     let now = new Date();
     let awal = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     let akhir = new Date(now.getFullYear(), now.getMonth(), 0);
-    document.getElementById('filterTglMulai').value = awal.toISOString().split('T')[0];
-    document.getElementById('filterTglSelesai').value = akhir.toISOString().split('T')[0];
+    document.getElementById('filterTglMulai').value = formatDateLocal_(awal);
+    document.getElementById('filterTglSelesai').value = formatDateLocal_(akhir);
     terapkanFilter();
 }
 function terapkanTahunIniKeuangan() {
     let now = new Date();
     document.getElementById('filterTglMulai').value = `${now.getFullYear()}-01-01`;
-    document.getElementById('filterTglSelesai').value = now.toISOString().split('T')[0];
+    document.getElementById('filterTglSelesai').value = formatDateLocal_(now);
     terapkanFilter();
 }
 
@@ -839,14 +833,13 @@ function renderInsightKeuangan(dataFiltered) {
         let durasiHari = Math.round((d2 - d1) / 86400000) + 1;
         let prevEnd = new Date(d1); prevEnd.setDate(prevEnd.getDate() - 1);
         let prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - durasiHari + 1);
-        let prevStartStr = prevStart.toISOString().split('T')[0];
-        let prevEndStr = prevEnd.toISOString().split('T')[0];
+        let prevStartStr = formatDateLocal_(prevStart);
+        let prevEndStr = formatDateLocal_(prevEnd);
 
         let dataPrev = dataJurnalGlobal.filter(row => {
             if (!row.tgl) return false;
-            let d = new Date(row.tgl);
-            if (isNaN(d.getTime())) return false;
-            let rd = d.toISOString().split('T')[0];
+            let rd = formati(row.tgl);
+            if (!rd) return false;
             return rd >= prevStartStr && rd <= prevEndStr;
         });
 
@@ -2059,9 +2052,8 @@ function hitungIncomeStatementLengkap(dataJurnal) {
             const nama = (row.nama || '').toLowerCase();
             if (!KATA_KUNCI_PERSEDIAAN.some(k => nama.includes(k))) return;
             if (!row.tgl) return;
-            const d = new Date(row.tgl);
-            if (isNaN(d.getTime())) return;
-            const rd = d.toISOString().split('T')[0];
+            const rd = formati(row.tgl);
+            if (!rd) return;
             const deb = Number(row.debit) || 0, kre = Number(row.kredit) || 0;
             if (tglMulai && rd < tglMulai) beginningInv += (deb - kre);
             if (!tglSelesai || rd <= tglSelesai) endingInv += (deb - kre);
@@ -2391,9 +2383,8 @@ async function jalankanAnalisisGemini() {
     const dataPeriode = dataJurnalGlobal.filter(row => {
         if (!tglMulai && !tglSelesai) return true;
         if (!row.tgl) return false;
-        const d = new Date(row.tgl);
-        if (isNaN(d.getTime())) return false;
-        const rowDate = d.toISOString().split('T')[0];
+        const rowDate = formati(row.tgl);
+        if (!rowDate) return false;
         if (tglMulai && rowDate < tglMulai) return false;
         if (tglSelesai && rowDate > tglSelesai) return false;
         return true;
@@ -2454,8 +2445,7 @@ async function jalankanAnalisisGemini() {
         const sembunyikanPribadi = document.getElementById('filterSembunyikanPribadi')?.checked || false;
         const dataFiltered = dataJurnalGlobal.filter(row => {
             if (sembunyikanPribadi && isTransaksiPribadi_(row)) return false;
-            let rowDate = '';
-            if (row.tgl) { const d = new Date(row.tgl); if (!isNaN(d.getTime())) rowDate = d.toISOString().split('T')[0]; }
+            let rowDate = row.tgl ? formati(row.tgl) : '';
             if (tglMulai && (!rowDate || rowDate < tglMulai)) return false;
             if (tglSelesai && (!rowDate || rowDate > tglSelesai)) return false;
             return true;
@@ -2620,9 +2610,8 @@ function rwHitungRentangTanggal_() {
 
 function amanTglIso_(val) {
     if (!val) return null;
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return null;
-    return d.toISOString().split('T')[0];
+    const hasil = formati(val);
+    return hasil || null;
 }
 
 function renderRosettaWorksheet() {
