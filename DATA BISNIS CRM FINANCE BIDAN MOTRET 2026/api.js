@@ -83,3 +83,75 @@ function inisialisasiTampilanKeuangan_() {
 document.addEventListener('DOMContentLoaded', () => {
   tarikDataServer();
 });
+
+// =========================================================================
+// TOMBOL REFRESH MANUAL (per sub-menu) — tarik ulang data server tanpa
+// reload halaman penuh.
+// =========================================================================
+async function refreshDataKeuanganManual() {
+  const btn = document.getElementById('btnRefreshKeuangan');
+  const teksAsli = btn ? btn.innerText : '';
+  if (btn) { btn.disabled = true; btn.innerText = '⏳ Memuat...'; }
+  try {
+    await tarikDataKeuanganSaja();
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = teksAsli || '🔄 Refresh'; }
+  }
+}
+
+async function refreshDataMarketingManual() {
+  const btn = document.getElementById('btnRefreshMarketing');
+  const teksAsli = btn ? btn.innerText : '';
+  if (btn) { btn.disabled = true; btn.innerText = '⏳ Memuat...'; }
+  try {
+    // Belum ada endpoint "getMarketingOnly" khusus di Code.gs, jadi tarik
+    // ulang semua data (getData) lalu render ulang tab Marketing saja.
+    await tarikDataServer();
+    if (typeof renderMarketingTab === 'function') renderMarketingTab();
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = teksAsli || '🔄 Refresh'; }
+  }
+}
+
+// =========================================================================
+// SINKRONISASI META ADS — memicu fungsi di MetaAdsSync.gs lewat doPost.
+// CATATAN: action ini ('syncMetaAdsSekarang' & 'backfillMetaAds30HariWeb')
+// BELUM ada di Code.gs Anda -- tambahkan dulu handler-nya di doPostCRM_
+// (lihat instruksi yang saya berikan di chat) supaya tombol ini berfungsi.
+// =========================================================================
+async function jalankanSyncMetaAds(jenis) {
+  const idBtn = jenis === 'harian' ? 'btnSyncMetaHarian' : (jenis === 'backfill30' ? 'btnSyncMetaBackfill' : 'btnSyncMetaSatuHari');
+  const btn = document.getElementById(idBtn);
+  const outEl = document.getElementById('hasilSyncMetaAds');
+  const teksAsli = btn ? btn.innerText : '';
+  if (btn) { btn.disabled = true; btn.innerText = '⏳ Sinkronisasi...'; }
+  if (outEl) { outEl.style.display = 'block'; outEl.style.background = '#f1f5f9'; outEl.innerText = '⏳ Menghubungi Meta Ads API, mohon tunggu (bisa 10-60 detik tergantung jumlah data)...'; }
+  try {
+    const fd = new FormData();
+    fd.append('action', jenis === 'harian' ? 'syncMetaAdsSekarang'
+      : jenis === 'backfill30' ? 'backfillMetaAds30HariWeb'
+      : 'syncMetaAdsSatuHariWeb');
+    const res = await fetch(scriptURL, { method: 'POST', body: fd });
+    const result = await res.json();
+    if (result.result === 'success') {
+      if (outEl) {
+        outEl.style.background = '#dcfce7'; outEl.style.color = '#166534';
+        outEl.innerText = '✅ Sinkronisasi selesai. ' + (result.message || '');
+      }
+      await tarikDataServer();
+      if (typeof renderMarketingTab === 'function') renderMarketingTab();
+    } else {
+      if (outEl) {
+        outEl.style.background = '#fee2e2'; outEl.style.color = '#991b1b';
+        outEl.innerText = '❌ Gagal: ' + (result.message || 'Action belum tersedia di Code.gs. Tambahkan handler-nya dulu (lihat instruksi).');
+      }
+    }
+  } catch (err) {
+    if (outEl) {
+      outEl.style.display = 'block'; outEl.style.background = '#fee2e2'; outEl.style.color = '#991b1b';
+      outEl.innerText = '❌ Gagal koneksi: ' + err;
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = teksAsli; }
+  }
+}

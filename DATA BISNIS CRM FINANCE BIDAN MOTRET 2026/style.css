@@ -42,6 +42,9 @@ body { margin:0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
 }
 
 h2, h3, h4 { color:#0f172a; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
 .card { background:#fff; border-radius:12px; border:1px solid var(--border); }
 
 .eos-input, input, select, textarea {
@@ -70,17 +73,18 @@ table { font-size: 12.5px; }
 th, td { padding: 7px 9px; line-height: 1.35; }
 thead th { font-weight: 700; white-space: nowrap; }
 
-/* Wrapper tabel: scroll horizontal & vertikal yang jelas batasnya,
-   tidak makan tinggi halaman berlebihan */
+/* Wrapper tabel: scroll horizontal (untuk kolom banyak), TIDAK dibatasi
+   tinggi lagi -- biarkan halaman yang scroll (sesuai permintaan: sub-menu
+   cukup scroll-down halaman, bukan kotak kecil bertumpuk). */
 .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.table-compact-wrap { overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+.table-compact-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
 .table-compact-wrap table { margin: 0; }
 .table-compact-wrap thead th { position: sticky; top: 0; z-index: 2; }
 
-/* Scorecard mingguan EOS: batasi tinggi + scroll dua arah, header nempel */
+/* Scorecard mingguan EOS: scroll horizontal saja (kolom minggu banyak),
+   tinggi mengikuti isi */
 .scorecard-scroll-wrap {
-  overflow: auto;
-  max-height: 380px;
+  overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
   -webkit-overflow-scrolling: touch;
@@ -88,11 +92,11 @@ thead th { font-weight: 700; white-space: nowrap; }
 .scorecard-scroll-wrap table { border-collapse: collapse; }
 .scorecard-scroll-wrap th, .scorecard-scroll-wrap td { white-space: nowrap; }
 
-/* Tabel Tren Bulanan/Mingguan (Keuangan): batasi tinggi, scroll rapi,
-   kolom lebih ringkas supaya tidak makan banyak ruang horizontal */
+/* Tabel Tren Bulanan/Mingguan (Keuangan): TIDAK dibatasi tinggi lagi --
+   tampil penuh, halaman yang scroll. Scroll horizontal tetap ada karena
+   kolom bulan/minggu bisa banyak. */
 .tren-table-wrap {
-  max-height: 460px;
-  overflow: auto;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 .tren-table th, .tren-table td { padding: 6px 8px; font-size: 11px; }
@@ -119,9 +123,9 @@ thead th { font-weight: 700; white-space: nowrap; }
   .filter-grid, .form-grid, .ek-form-grid, .dl-form-grid { grid-template-columns: 1fr !important; }
   .fin-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
-  .tren-table-wrap { max-height: 360px; }
-  .scorecard-scroll-wrap { max-height: 320px; }
-  .table-compact-wrap { max-height: 360px !important; }
+  .tren-table-wrap { max-height: none; }
+  .scorecard-scroll-wrap { max-height: none; }
+  .table-compact-wrap { max-height: none !important; }
   .funnel-bar { min-width: 0; height: 50px; }
   .dupont-tree { gap: 8px; }
   .dupont-box { min-width: 110px; padding: 10px 12px; }

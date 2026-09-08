@@ -203,6 +203,7 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <button type="button" onclick="terapkanFilter()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);">🔍 Filter Data</button>
+                <button type="button" id="btnRefreshKeuangan" onclick="refreshDataKeuanganManual()" style="padding: 10px 16px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(5,150,105,0.3);" title="Tarik ulang data terbaru tanpa reload halaman">🔄 Refresh</button>
                 <button type="button" onclick="resetFilter()" style="padding: 10px 20px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold;">Reset</button>
             </div>
         </div>
@@ -298,11 +299,13 @@
                 <div class="fin-kpi-label">📉 Total Beban</div>
                 <div class="fin-kpi-val" id="val_beban">Rp 0</div>
                 <div class="fin-kpi-sub" id="val_beban_sub">&nbsp;</div>
+                <div class="fin-kpi-sub" id="val_beban_persen_pendapatan" style="opacity:.85;">&nbsp;</div>
             </div>
             <div class="fin-kpi-card fin-kpi-laba-untung" id="kpiCardLaba">
                 <div class="fin-kpi-label">🏆 Laba Bersih</div>
                 <div class="fin-kpi-val" id="val_laba">Rp 0</div>
                 <div class="fin-kpi-sub" id="val_laba_sub">&nbsp;</div>
+                <div class="fin-kpi-sub" id="val_laba_persen_pendapatan" style="opacity:.85;">&nbsp;</div>
             </div>
         </div>
 
@@ -326,7 +329,7 @@
         <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
             <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📋 Rincian Expenses Operasional</h4>
             <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                <thead><tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:11px;"><th style="padding:10px; text-align:left;">Akun</th><th style="padding:10px; text-align:right;">Nominal</th></tr></thead>
+                <thead><tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:11px;"><th style="padding:10px; text-align:left;">Akun</th><th style="padding:10px; text-align:right;">Nominal</th><th style="padding:10px; text-align:right;">% Pendapatan</th></tr></thead>
                 <tbody id="is_rincian_expenses"></tbody>
             </table>
         </div>
@@ -336,7 +339,7 @@
             <div class="table-responsive">
                 <table class="table-data" style="width: 100%; text-align: left; border-collapse: collapse;">
                     <thead style="background: #f8fafc; color: #475569; font-size: 13px; text-transform: uppercase;">
-                        <tr><th style="padding: 12px 10px;">Tanggal</th><th style="padding: 12px 10px;">Akun</th><th style="padding: 12px 10px;">Deskripsi</th><th style="padding: 12px 10px;">Kategori</th><th style="padding: 12px 10px; text-align: right;">Nilai (Rp)</th></tr>
+                        <tr><th style="padding: 12px 10px;">Tanggal</th><th style="padding: 12px 10px;">Akun</th><th style="padding: 12px 10px;">Deskripsi</th><th style="padding: 12px 10px;">Kategori</th><th style="padding: 12px 10px; text-align: right;">Nilai (Rp)</th><th style="padding: 12px 10px; text-align: right;">% Pendapatan</th></tr>
                     </thead>
                     <tbody id="listDetailLabaRugi"></tbody>
                 </table>
@@ -638,6 +641,24 @@
 
         <div class="tren-toggle-row">
             <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Tahun</label><input type="number" id="trenTahun" value="2026" style="width:100px; padding:8px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+            <div id="trenBulanRangeBox"><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Tampilkan Bulan (opsional, kosongkan = otomatis hanya yang ada data)</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select id="trenBulanDari" onchange="trenTerapkanRentangBulan()" style="padding:8px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px;">
+                        <option value="">Dari...</option>
+                        <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option>
+                        <option value="5">Mei</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Agu</option>
+                        <option value="9">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Des</option>
+                    </select>
+                    <span style="color:#94a3b8;">s/d</span>
+                    <select id="trenBulanSampai" onchange="trenTerapkanRentangBulan()" style="padding:8px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px;">
+                        <option value="">Sampai...</option>
+                        <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option>
+                        <option value="5">Mei</option><option value="6">Jun</option><option value="7">Jul</option><option value="8">Agu</option>
+                        <option value="9">Sep</option><option value="10">Okt</option><option value="11">Nov</option><option value="12">Des</option>
+                    </select>
+                    <button type="button" onclick="trenResetRentangBulan()" style="padding:7px 12px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; color:#475569; font-size:11.5px; cursor:pointer;">Reset</button>
+                </div>
+            </div>
             <div><label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Periode</label>
                 <div class="tren-toggle-group">
                     <button type="button" class="tren-toggle-btn active" data-periode="bulanan" onclick="trenGantiPeriode('bulanan', this)">📆 Bulanan</button>
@@ -1240,15 +1261,27 @@
                 </div>
             </div>
 
-              <div class="form-group" style="display:flex; align-items:flex-end;">
+              <div class="form-group" style="display:flex; align-items:flex-end; gap:8px;">
                 <button type="button" class="btn-submit" style="margin:0; background:#4338ca; width:auto; padding:10px 18px;" onclick="tmBukaPengaturan()">
                     ⚙️ Atur Target Mingguan
                 </button>
+                <button type="button" id="btnRefreshMarketing" onclick="refreshDataMarketingManual()" style="padding:10px 16px; background:#059669; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;" title="Tarik ulang data terbaru tanpa reload halaman">🔄 Refresh</button>
             </div>
         </div>
     </div>
 
 <div id="bannerTargetMingguan"></div>
+
+    <div class="funnel-legend" style="border-left:4px solid #0ea5e9; background:#f0f9ff;">
+        <h3 style="margin-top:0; font-size:14.5px; color:#0369a1;">🔗 Sinkronisasi Meta Ads</h3>
+        <p style="font-size:11.5px; color:#0369a1; margin:4px 0 10px;">Tarik data terbaru langsung dari Meta Ads API ke sheet <code>Data_Ads</code>, tanpa perlu buka Apps Script editor.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" id="btnSyncMetaSatuHari" onclick="jalankanSyncMetaAds('satuhari')" style="padding:9px 16px; background:#0ea5e9; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🔄 Sync Kemarin</button>
+            <button type="button" id="btnSyncMetaHarian" onclick="jalankanSyncMetaAds('harian')" style="padding:9px 16px; background:#0369a1; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🔄 Sync Harian (2 Hari Terakhir)</button>
+            <button type="button" id="btnSyncMetaBackfill" onclick="jalankanSyncMetaAds('backfill30')" style="padding:9px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">⏪ Backfill 30 Hari</button>
+        </div>
+        <div id="hasilSyncMetaAds" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:12px;"></div>
+    </div>
 
     <div class="funnel-legend">
         📖 <b>Cara baca funnel ini:</b> iklan Meta dilihat orang (<b>Awareness</b>) → sebagian menghubungi via chat (<b>Leads</b>, dicatat sebagai "Leads Meta" mentah dari Meta dan "Leads CRM" yang sudah tercocokkan nomor HP-nya ke database) → sebagian bayar DP (<b>Closing</b>) → menghasilkan uang masuk (<b>Revenue</b>). Semakin ke bawah tahapnya, semakin sedikit orangnya — itu wajar, namanya juga funnel (corong).
@@ -1399,7 +1432,7 @@
 
 
        <h3 class="mkt-section-title">📅 Rincian Performa Harian</h3>
-   <div class="table-responsive table-compact-wrap" style="max-height:480px;">
+   <div class="table-responsive table-compact-wrap">
         <table id="tblMarketing" style="width:100%;">
             <thead>
                     <tr style="background: #f1f5f9;">
@@ -1429,7 +1462,7 @@
         Kalau di "Performa per Produk" ada campaign yang ROAS-nya rendah, cek di sini <b>adset mana</b> yang jadi biang keroknya —
         supaya bisa dimatikan/direvisi 1 adset saja tanpa mematikan seluruh campaign.
     </p>
-     <div class="table-responsive table-compact-wrap" style="max-height:480px;">
+     <div class="table-responsive table-compact-wrap">
         <table id="tblAdsetPerformance" style="width:100%;">
             <thead><tr id="theadAdsetPerformance" style="background:#f1f5f9;"></tr></thead>
             <tbody id="bAdsetPerformance"></tbody>
@@ -1443,7 +1476,7 @@
         apakah setting ini konsisten bagus (layak direplikasi lebih banyak) atau konsisten boros
         (harus dihentikan dari template-nya, bukan cuma di-pause satu-satu).
     </p>
-    <div class="table-responsive table-compact-wrap" style="max-height:400px;">
+    <div class="table-responsive table-compact-wrap">
         <table id="tblAgregasiAdset" style="width:100%;">
             <thead><tr id="theadAgregasiAdset" style="background:#f1f5f9;"></tr></thead>
             <tbody id="bAgregasiAdset"></tbody>
@@ -1454,7 +1487,7 @@
     <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
         Kreatif (foto/video/copy) mana yang paling menarik perhatian & paling menghasilkan closing.
     </p>
-   <div class="table-responsive table-compact-wrap" style="max-height:480px;">
+   <div class="table-responsive table-compact-wrap">
         <table id="tblAdContentPerformance" style="width:100%;">
             <thead><tr id="theadAdContentPerformance" style="background:#f1f5f9;"></tr></thead>
             <tbody id="bAdContentPerformance"></tbody>
@@ -1466,7 +1499,7 @@
         Sama seperti di atas, tapi untuk creative/konten iklan — kreatif yang sama dipakai berulang
         di banyak campaign, dilihat performa gabungannya.
     </p>
-    <div class="table-responsive table-compact-wrap" style="max-height:400px;">
+    <div class="table-responsive table-compact-wrap">
         <table id="tblAgregasiContent" style="width:100%;">
             <thead><tr id="theadAgregasiContent" style="background:#f1f5f9;"></tr></thead>
             <tbody id="bAgregasiContent"></tbody>
@@ -1521,7 +1554,7 @@
         </div>
     </div>
 </div>
-</div>
+
 </div>
 
 
@@ -1530,7 +1563,7 @@
 </div>
 
 <script>
-   const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
   let dataGlobal = [];
   let dataFinance = { journal: [], accounts: [], inventaris: [], anggaran: [], vendors: [], barang: [], bom: [], mutasiStok: [], tutupBuku: [], pengaturanNotifikasi: {}, triggerNotifikasiAktif: false };
   let dataJurnalGlobal = [];

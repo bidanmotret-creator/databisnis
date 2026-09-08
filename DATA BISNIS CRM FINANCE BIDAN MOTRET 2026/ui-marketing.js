@@ -238,8 +238,8 @@ function renderMarketingTab() {
 
     let fd = dataGlobal;
     if (selectedCampaigns.length > 0) fd = fd.filter(r => selectedCampaigns.includes(r.minat));
-    if (fStart) fd = fd.filter(r => getTime(r.tanggal_chat) >= getTime(fStart));
-    if (fEnd) fd = fd.filter(r => getTime(r.tanggal_chat) <= getTime(fEnd));
+    if (fStart) fd = fd.filter(r => formati(r.tanggal_chat) >= fStart);
+    if (fEnd) fd = fd.filter(r => formati(r.tanggal_chat) <= fEnd);
 
     fd.forEach(r => {
         let t = formati(r.tanggal_chat);
@@ -279,8 +279,8 @@ function renderMarketingTab() {
     let fAds = dataMarketing;
     if (selectedCampaigns.length > 0) fAds = fAds.filter(m => selectedCampaigns.includes(m.campaign));
     if (selectedNamaMeta.length > 0) fAds = fAds.filter(m => selectedNamaMeta.includes(m.nama_campaign_meta));
-    if (fStart) fAds = fAds.filter(m => getTime(m.tanggal) >= getTime(fStart));
-    if (fEnd) fAds = fAds.filter(m => getTime(m.tanggal) <= getTime(fEnd));
+    if (fStart) fAds = fAds.filter(m => formati(m.tanggal) >= fStart);
+    if (fEnd) fAds = fAds.filter(m => formati(m.tanggal) <= fEnd);
 
     fAds.forEach(m => {
         let t = formati(m.tanggal);
@@ -824,8 +824,8 @@ function renderBreakdownAdset(dataMentah, petaCampaignName, filterState) {
             return v.includes(s) || s.includes(v);
         }));
     }
-    if (filterState.fStart) data = data.filter(row => getTime(row.tanggal) >= getTime(filterState.fStart));
-    if (filterState.fEnd) data = data.filter(row => getTime(row.tanggal) <= getTime(filterState.fEnd));
+    if (filterState.fStart) data = data.filter(row => formati(row.tanggal) >= filterState.fStart);
+    if (filterState.fEnd) data = data.filter(row => formati(row.tanggal) <= filterState.fEnd);
 
     if (data.length === 0) {
         thead.innerHTML = '';
@@ -939,8 +939,8 @@ function renderBreakdownContent(dataMentah, petaCampaignName, filterState) {
             return v.includes(s) || s.includes(v);
         }));
     }
-    if (filterState.fStart) data = data.filter(row => getTime(row.tanggal) >= getTime(filterState.fStart));
-    if (filterState.fEnd) data = data.filter(row => getTime(row.tanggal) <= getTime(filterState.fEnd));
+    if (filterState.fStart) data = data.filter(row => formati(row.tanggal) >= filterState.fStart);
+    if (filterState.fEnd) data = data.filter(row => formati(row.tanggal) <= filterState.fEnd);
 
     if (data.length === 0) {
         thead.innerHTML = '';

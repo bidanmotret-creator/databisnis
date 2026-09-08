@@ -485,14 +485,14 @@ function hitungLabaRugi(dataJurnal) {
 
     let totalPendapatan = 0;
     let totalBeban = 0;
-    let rincianHTML = []; // Wadah untuk tabel detail
+    let barisMentah = []; // { tgl, kode, nama, desc, jenis, nilai }
 
-       dataJurnal.forEach(row => {
+    dataJurnal.forEach(row => {
         if (isTransaksiPribadi_(row)) return; // lewati, bukan bagian P&L bisnis
 
         let deb = Number(row.debit) || 0;
         let kre = Number(row.kredit) || 0;
-        
+
         let kode = (row.kode || "").toString().trim();
         let kategori = (row.kategori || "").toLowerCase();
 
@@ -502,29 +502,33 @@ function hitungLabaRugi(dataJurnal) {
         if (isPendapatan) {
             let nilai = kre - deb;
             totalPendapatan += nilai;
-            rincianHTML.push(`
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 8px;">${formatTanggalManusia(row.tgl)}</td>
-                    <td style="padding: 8px;">${kode} - ${row.nama}</td>
-                    <td style="padding: 8px;">${row.desc || '-'}</td>
-                    <td style="padding: 8px;"><span class="badge" style="background: #dcfce7; color: #166534;">Pendapatan</span></td>
-                    <td style="padding: 8px; text-align: right; font-weight: bold; color: #10b981;">Rp ${rp(nilai)}</td>
-                </tr>
-            `);
-        } 
+            barisMentah.push({ tgl: row.tgl, kode, nama: row.nama, desc: row.desc, jenis: 'Pendapatan', nilai });
+        }
         else if (isBeban) {
             let nilai = deb - kre;
             totalBeban += nilai;
-            rincianHTML.push(`
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 8px;">${formatTanggalManusia(row.tgl)}</td>
-                    <td style="padding: 8px;">${kode} - ${row.nama}</td>
-                    <td style="padding: 8px;">${row.desc || '-'}</td>
-                    <td style="padding: 8px;"><span class="badge" style="background: #fee2e2; color: #991b1b;">Beban</span></td>
-                    <td style="padding: 8px; text-align: right; font-weight: bold; color: #ef4444;">Rp ${rp(nilai)}</td>
-                </tr>
-            `);
+            barisMentah.push({ tgl: row.tgl, kode, nama: row.nama, desc: row.desc, jenis: 'Beban', nilai });
         }
+    });
+
+    // --- Bangun HTML rincian dengan kolom % dari Pendapatan ---
+    function persenDariPendapatan_(nilai) {
+        if (totalPendapatan === 0) return '-';
+        return (nilai / totalPendapatan * 100).toFixed(1) + '%';
+    }
+    let rincianHTML = barisMentah.map(b => {
+        let warnaBadge = b.jenis === 'Pendapatan' ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;';
+        let warnaNilai = b.jenis === 'Pendapatan' ? '#10b981' : '#ef4444';
+        return `
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 8px;">${formatTanggalManusia(b.tgl)}</td>
+                <td style="padding: 8px;">${b.kode} - ${b.nama}</td>
+                <td style="padding: 8px;">${b.desc || '-'}</td>
+                <td style="padding: 8px;"><span class="badge" style="${warnaBadge}">${b.jenis}</span></td>
+                <td style="padding: 8px; text-align: right; font-weight: bold; color: ${warnaNilai};">Rp ${rp(b.nilai)}</td>
+                <td style="padding: 8px; text-align: right; color: #64748b;">${persenDariPendapatan_(b.nilai)}</td>
+            </tr>
+        `;
     });
 
     let labaBersih = totalPendapatan - totalBeban;
@@ -534,16 +538,24 @@ function hitungLabaRugi(dataJurnal) {
     const txtBeban = document.getElementById('val_beban');
     const txtLaba = document.getElementById('val_laba');
     if (txtPendapatan) txtPendapatan.innerText = "Rp " + rp(totalPendapatan);
-    if (txtBeban) txtBeban.innerText = "Rp " + rp(totalBeban);
+    if (txtBeban) {
+        let persenBeban = totalPendapatan > 0 ? (totalBeban / totalPendapatan * 100).toFixed(1) + '% dari pendapatan' : '';
+        txtBeban.innerText = "Rp " + rp(totalBeban);
+        const subBebanPersen = document.getElementById('val_beban_persen_pendapatan');
+        if (subBebanPersen) subBebanPersen.innerText = persenBeban;
+    }
     if (txtLaba) {
+        let persenLaba = totalPendapatan > 0 ? (labaBersih / totalPendapatan * 100).toFixed(1) + '% dari pendapatan' : '';
         txtLaba.innerText = "Rp " + rp(labaBersih);
-        txtLaba.style.color = labaBersih >= 0 ? "#059669" : "#dc2626"; 
+        txtLaba.style.color = labaBersih >= 0 ? "#059669" : "#dc2626";
+        const subLabaPersen = document.getElementById('val_laba_persen_pendapatan');
+        if (subLabaPersen) subLabaPersen.innerText = persenLaba;
     }
 
     // --- Cetak ke UI (Tabel Rincian) ---
     const tbodyLabaRugi = document.getElementById('listDetailLabaRugi');
     if (tbodyLabaRugi) {
-        tbodyLabaRugi.innerHTML = rincianHTML.length > 0 ? rincianHTML.join('') : '<tr><td colspan="5" style="text-align:center; padding: 15px;">Tidak ada transaksi pada periode ini.</td></tr>';
+        tbodyLabaRugi.innerHTML = rincianHTML.length > 0 ? rincianHTML.join('') : '<tr><td colspan="6" style="text-align:center; padding: 15px;">Tidak ada transaksi pada periode ini.</td></tr>';
     }
 }
 
@@ -551,6 +563,7 @@ function hitungArusKas(dataJurnal) {
     if (!Array.isArray(dataJurnal)) return;
 
     let kasOps = 0, kasInv = 0, kasDan = 0, kasPribadi = 0;
+    let totalMasuk = 0, totalKeluar = 0; // ringkasan Masuk/Keluar/Sisa (bisnis, non-pribadi)
     let rincianHTML = [];
     let rincianPribadiHTML = [];
 
@@ -582,6 +595,9 @@ function hitungArusKas(dataJurnal) {
                 return; // lewati, tidak masuk hitungan Operasional/Investasi/Pendanaan bisnis
             }
 
+            totalMasuk += deb;
+            totalKeluar += kre;
+
             let badgeColor = "#3b82f6";
             let teksTipe = "Operasional";
 
@@ -611,6 +627,33 @@ function hitungArusKas(dataJurnal) {
     });
 
     let totalArusKas = kasOps + kasInv + kasDan; // TIDAK termasuk kasPribadi
+    let sisaBersih = totalMasuk - totalKeluar; // sama nilainya dengan totalArusKas, ditampilkan lebih eksplisit
+
+    // --- Ringkasan Masuk/Keluar/Sisa yang eksplisit (disisipkan otomatis
+    //     di atas tabel rincian, tanpa perlu ubah HTML manual) ---
+    let containerRingkasan = document.getElementById('ringkasanMasukKeluarKas');
+    if (!containerRingkasan) {
+        containerRingkasan = document.createElement('div');
+        containerRingkasan.id = 'ringkasanMasukKeluarKas';
+        const anchor = document.getElementById('insightArusKas');
+        if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(containerRingkasan, anchor.nextSibling);
+    }
+    containerRingkasan.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:18px;">
+            <div style="background:linear-gradient(160deg,#34d399,#059669); border-radius:12px; padding:16px; color:#fff;">
+                <div style="font-size:11px; text-transform:uppercase; opacity:.9; font-weight:700;">⬆️ Total Uang Masuk</div>
+                <div style="font-size:19px; font-weight:900; margin-top:4px;">Rp ${rp(totalMasuk)}</div>
+            </div>
+            <div style="background:linear-gradient(160deg,#fb7185,#be123c); border-radius:12px; padding:16px; color:#fff;">
+                <div style="font-size:11px; text-transform:uppercase; opacity:.9; font-weight:700;">⬇️ Total Uang Keluar</div>
+                <div style="font-size:19px; font-weight:900; margin-top:4px;">Rp ${rp(totalKeluar)}</div>
+            </div>
+            <div style="background:${sisaBersih >= 0 ? 'linear-gradient(160deg,#60a5fa,#1d4ed8)' : 'linear-gradient(160deg,#f87171,#7f1d1d)'}; border-radius:12px; padding:16px; color:#fff;">
+                <div style="font-size:11px; text-transform:uppercase; opacity:.9; font-weight:700;">💧 Sisa (Net)</div>
+                <div style="font-size:19px; font-weight:900; margin-top:4px;">Rp ${rp(sisaBersih)}</div>
+            </div>
+        </div>
+    `;
 
     const txtKasOps = document.getElementById('val_kas_ops');
     const txtKasInv = document.getElementById('val_kas_inv');
@@ -1670,6 +1713,8 @@ function trenGantiPeriode(periode, btnEl) {
     document.querySelectorAll('.tren-toggle-btn[data-periode]').forEach(b => b.classList.remove('active'));
     btnEl.classList.add('active');
     document.getElementById('trenMingguanEosBar').style.display = periode === 'mingguan' ? 'flex' : 'none';
+    const boxBulan = document.getElementById('trenBulanRangeBox');
+    if (boxBulan) boxBulan.style.display = periode === 'mingguan' ? 'none' : 'block';
     renderTrenBulanan();
 }
 function trenToggleSection(key) {
@@ -1723,6 +1768,46 @@ function trenFilterEosCepat(jenisPreset) {
     renderTrenBulanan();
 }
 let trenRentangMingguHighlight_ = null;
+let trenBulanRange_ = null; // { mulai: 1-12, selesai: 1-12 } -- filter manual rentang bulan utk mode Bulanan
+
+// Ganti rentang bulan yang ditampilkan di tabel Tren Bulanan (mode 'bulanan').
+// Kosongkan salah satu / keduanya untuk kembali ke mode otomatis (hanya
+// tampilkan bulan yang ada datanya).
+function trenTerapkanRentangBulan() {
+    const dariEl = document.getElementById('trenBulanDari');
+    const sampaiEl = document.getElementById('trenBulanSampai');
+    const dari = dariEl ? Number(dariEl.value) : 0;
+    const sampai = sampaiEl ? Number(sampaiEl.value) : 0;
+    if (dari && sampai) {
+        trenBulanRange_ = { mulai: Math.min(dari, sampai), selesai: Math.max(dari, sampai) };
+    } else {
+        trenBulanRange_ = null;
+    }
+    renderTrenBulanan();
+}
+function trenResetRentangBulan() {
+    trenBulanRange_ = null;
+    const dariEl = document.getElementById('trenBulanDari');
+    const sampaiEl = document.getElementById('trenBulanSampai');
+    if (dariEl) dariEl.value = '';
+    if (sampaiEl) sampaiEl.value = '';
+    renderTrenBulanan();
+}
+
+// Label tanggal untuk kolom minggu di tabel Tren Bulanan/Mingguan,
+// contoh: "1-7 Sep" -- supaya "M32" tidak membingungkan.
+function labelTanggalMingguKe_(tahun, mingguKe1based) {
+    try {
+        const awal = tanggalAwalIsoWeek_(tahun, mingguKe1based);
+        const akhir = new Date(awal); akhir.setUTCDate(awal.getUTCDate() + 6);
+        const namaBulanSingkat = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        const lblAwal = awal.getUTCDate() + ' ' + namaBulanSingkat[awal.getUTCMonth()];
+        const lblAkhir = akhir.getUTCDate() + ' ' + namaBulanSingkat[akhir.getUTCMonth()];
+        return lblAwal + '-' + lblAkhir;
+    } catch (e) {
+        return 'M' + mingguKe1based;
+    }
+}
 
 // Hitung matrix TERKELOMPOK per section, bisa per BULAN (12 kolom) atau per MINGGU (kolom dinamis 1..53)
 function hitungMatrixPeriodeTerkelompok_(tahun, mode, jenis, periode) {
@@ -1791,11 +1876,20 @@ function hitungMatrixPeriodeTerkelompok_(tahun, mode, jenis, periode) {
         section.totalPerKolom[kolomIdx] += nilai;
     });
 
-    // Untuk mingguan: buang kolom minggu yang totalnya 0 di SEMUA section supaya tabel tidak 53 kolom kosong
+    // Untuk mingguan: buang kolom minggu yang totalnya 0 di SEMUA section supaya tabel tidak 53 kolom kosong.
+    // Untuk bulanan: kalau ada rentang bulan manual (trenBulanRange_), pakai itu; kalau tidak,
+    // otomatis buang bulan yang datanya kosong supaya tidak selalu 12 kolom penuh.
     let kolomDipakai = Array.from({ length: jumlahKolom }, (_, i) => i);
     if (periode === 'mingguan') {
         kolomDipakai = kolomDipakai.filter(i => sections.some(s => s.totalPerKolom[i] !== 0) || (trenRentangMingguHighlight_ && (i + 1) >= trenRentangMingguHighlight_.mulai && (i + 1) <= trenRentangMingguHighlight_.selesai));
         if (kolomDipakai.length === 0) kolomDipakai = [new Date().getMonth()]; // fallback biar tidak kosong total
+    } else {
+        if (typeof trenBulanRange_ !== 'undefined' && trenBulanRange_ && trenBulanRange_.mulai && trenBulanRange_.selesai) {
+            kolomDipakai = kolomDipakai.filter(i => (i + 1) >= trenBulanRange_.mulai && (i + 1) <= trenBulanRange_.selesai);
+        } else {
+            kolomDipakai = kolomDipakai.filter(i => sections.some(s => s.totalPerKolom[i] !== 0));
+            if (kolomDipakai.length === 0) kolomDipakai = [new Date().getMonth()];
+        }
     }
 
     return { sections, jenis, jumlahKolom, kolomDipakai };
@@ -1807,7 +1901,9 @@ function renderTrenBulanan() {
     const { sections, jenis, kolomDipakai } = hitungMatrixPeriodeTerkelompok_(tahun, trenModeAktif, trenJenisAktif, periode);
 
     const namaBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    const labelKolom = periode === 'mingguan' ? kolomDipakai.map(i => 'M' + (i + 1)) : namaBulan;
+    const labelKolom = periode === 'mingguan'
+        ? kolomDipakai.map(i => labelTanggalMingguKe_(tahun, i + 1))
+        : kolomDipakai.map(i => namaBulan[i]);
     const indeksAsli = kolomDipakai; // index asli di array 53/12 kolom
 
     // Total Sales per kolom (basis %) — selalu dari Laba Rugi biar konsisten
@@ -2017,8 +2113,11 @@ function hitungIncomeStatementLengkap(dataJurnal) {
     const tbodyExp = document.getElementById('is_rincian_expenses');
     if (tbodyExp) {
         tbodyExp.innerHTML = rincianExpenses.length > 0
-            ? rincianExpenses.sort((a, b) => b.nilai - a.nilai).map(r => `<tr><td>${r.kode} - ${r.nama}</td><td style="text-align:right;">Rp ${r.nilai.toLocaleString('id-ID')}</td></tr>`).join('')
-            : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Tidak ada beban operasional pada periode ini.</td></tr>';
+            ? rincianExpenses.sort((a, b) => b.nilai - a.nilai).map(r => {
+                let persenNilai = sales > 0 ? (r.nilai / sales * 100).toFixed(1) + '%' : '-';
+                return `<tr><td>${r.kode} - ${r.nama}</td><td style="text-align:right;">Rp ${r.nilai.toLocaleString('id-ID')}</td><td style="text-align:right; color:#64748b;">${persenNilai}</td></tr>`;
+            }).join('')
+            : '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Tidak ada beban operasional pada periode ini.</td></tr>';
     }
 
     // Catatan SOP otomatis untuk Income Statement
