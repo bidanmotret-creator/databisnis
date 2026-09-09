@@ -152,23 +152,26 @@
         .ek-form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:16px;}
     </style>
 
-    <div class="sub-tab-menu" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; overflow-x: auto;">
-        <button class="sub-tab-btn active" onclick="bukaSubTab('subJurnal', this)" style="white-space: nowrap;">📝 Jurnal</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subLabaRugi', this)" style="white-space: nowrap;">📈 Income Statement</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subArusKas', this)" style="white-space: nowrap;">💸 Cash Statement</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subNeraca', this)" style="white-space: nowrap;">⚖️ Neraca</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subDecisions', this)" style="white-space: nowrap;">🧩 Decisions · Activities · Numbers</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subDupont', this); hitungDupont(dataJurnalGlobal);" style="white-space: nowrap;">🧮 Analisis DuPont</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subEkuitas', this)" style="white-space: nowrap;">🏛️ Ekuitas & Investor</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subCostStructure', this)" style="white-space: nowrap;">📊 Cost Structure</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subKomparasi', this)" style="white-space: nowrap;">📊 Komparasi & Sign-Off</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subTrenBulanan', this)" style="white-space: nowrap;">📅 Tren Bulanan/Mingguan</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subRosetta', this); renderRosettaWorksheet();" style="white-space: nowrap;">🪨 Rosetta Stone</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subAuditSop', this)" style="white-space: nowrap;">🩺 Audit SOP Otomatis</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subPanduanAI', this)" style="white-space: nowrap;">🎓 Panduan & SOP (AI)</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subStok', this); renderStokPersediaan();" style="white-space: nowrap;">📦 Stok & Persediaan</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subTutupBuku', this); renderTutupBuku();" style="white-space: nowrap;">🔒 Tutup Buku</button>
-        <button class="sub-tab-btn" onclick="bukaSubTab('subNotifikasi', this)" style="white-space: nowrap;">📲 Notifikasi Otomatis</button>
+    <div class="sub-tab-menu" style="margin-bottom: 20px;">
+        <label style="display:block; font-size:11px; font-weight:700; color:#64748b; margin-bottom:6px;">📂 Pilih Menu Laporan</label>
+        <select id="keuanganSubTabSelect" onchange="pilihSubTabKeuangan(this.value)" style="width:100%; max-width:420px; padding:11px 14px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13.5px; font-weight:700; color:#1e293b; background:#fff; cursor:pointer;">
+            <option value="subJurnal">📝 Jurnal</option>
+            <option value="subLabaRugi">📈 Income Statement</option>
+            <option value="subArusKas">💸 Cash Statement</option>
+            <option value="subNeraca">⚖️ Neraca</option>
+            <option value="subDecisions">🧩 Decisions · Activities · Numbers</option>
+            <option value="subDupont">🧮 Analisis DuPont</option>
+            <option value="subEkuitas">🏛️ Ekuitas & Investor</option>
+            <option value="subCostStructure">📊 Cost Structure</option>
+            <option value="subKomparasi">📊 Komparasi & Sign-Off</option>
+            <option value="subTrenBulanan">📅 Tren Bulanan/Mingguan</option>
+            <option value="subRosetta">🪨 Rosetta Stone</option>
+            <option value="subAuditSop">🩺 Audit SOP Otomatis</option>
+            <option value="subPanduanAI">🎓 Panduan & SOP (AI)</option>
+            <option value="subStok">📦 Stok & Persediaan</option>
+            <option value="subTutupBuku">🔒 Tutup Buku</option>
+            <option value="subNotifikasi">📲 Notifikasi Otomatis</option>
+        </select>
     </div>
 
     <div class="filter-panel card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
@@ -1274,11 +1277,26 @@
 
     <div class="funnel-legend" style="border-left:4px solid #0ea5e9; background:#f0f9ff;">
         <h3 style="margin-top:0; font-size:14.5px; color:#0369a1;">🔗 Sinkronisasi Meta Ads</h3>
-        <p style="font-size:11.5px; color:#0369a1; margin:4px 0 10px;">Tarik data terbaru langsung dari Meta Ads API ke sheet <code>Data_Ads</code>, tanpa perlu buka Apps Script editor.</p>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <p style="font-size:11.5px; color:#0369a1; margin:4px 0 10px;">Tarik data terbaru langsung dari Meta Ads API ke Google Sheets, tanpa perlu buka Apps Script editor.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
             <button type="button" id="btnSyncMetaSatuHari" onclick="jalankanSyncMetaAds('satuhari')" style="padding:9px 16px; background:#0ea5e9; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🔄 Sync Kemarin</button>
             <button type="button" id="btnSyncMetaHarian" onclick="jalankanSyncMetaAds('harian')" style="padding:9px 16px; background:#0369a1; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🔄 Sync Harian (2 Hari Terakhir)</button>
             <button type="button" id="btnSyncMetaBackfill" onclick="jalankanSyncMetaAds('backfill30')" style="padding:9px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">⏪ Backfill 30 Hari</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; padding-top:10px; border-top:1px dashed #bae6fd;">
+            <button type="button" id="btnSyncMetaContent" onclick="jalankanSyncMetaAds('content')" style="padding:9px 16px; background:#a21caf; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🎨 Sync Ad Content</button>
+            <button type="button" id="btnSyncMetaAdsetPerf" onclick="jalankanSyncMetaAds('adsetperf')" style="padding:9px 16px; background:#c026d3; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🔍 Sync Adset Performance</button>
+            <button type="button" id="btnSyncMetaAdsetTarget" onclick="jalankanSyncMetaAds('adsettargeting')" style="padding:9px 16px; background:#4338ca; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🎯 Sync Adset Targeting</button>
+        </div>
+        <div style="padding-top:10px; border-top:1px dashed #bae6fd;">
+            <label style="font-size:11px; font-weight:700; color:#0369a1; display:block; margin-bottom:6px;">🩹 Sync Ulang Tanggal Tertentu (kalau ada data yang tidak ketarik)</label>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                <input type="date" id="syncTglDari" style="padding:8px; border-radius:6px; border:1px solid #7dd3fc; font-size:12.5px;">
+                <span style="color:#0369a1;">s/d</span>
+                <input type="date" id="syncTglSampai" style="padding:8px; border-radius:6px; border:1px solid #7dd3fc; font-size:12.5px;">
+                <button type="button" id="btnSyncMetaRentang" onclick="jalankanSyncMetaAdsRentang()" style="padding:9px 16px; background:#0284c7; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🩹 Sync Ulang Rentang Ini</button>
+            </div>
+            <p style="font-size:10.5px; color:#0369a1; margin:6px 0 0;">💡 Meta kadang butuh 24-48 jam untuk data attribution final — kalau ada campaign yang datanya kurang di hari tertentu, coba sync ulang tanggal itu beberapa hari kemudian.</p>
         </div>
         <div id="hasilSyncMetaAds" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:12px;"></div>
     </div>

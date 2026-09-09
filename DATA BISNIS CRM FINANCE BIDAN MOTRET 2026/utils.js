@@ -218,3 +218,26 @@ function bukaTab(tabId, btnElement) {
         renderMarketingTab();
     }
 }
+
+// =========================================================================
+// Sub-menu Keuangan versi DROPDOWN (bukan baris tombol panjang). Menggantikan
+// fungsi tombol lama, tapi tetap memicu render khusus per sub-menu yang butuh
+// (Stok, Tutup Buku, DuPont, Rosetta Worksheet) supaya datanya langsung terisi.
+// =========================================================================
+function pilihSubTabKeuangan(subId) {
+    document.querySelectorAll('#tabKeuangan .sub-content').forEach(el => {
+        el.classList.remove('active');
+        el.style.display = 'none';
+    });
+    const target = document.getElementById(subId);
+    if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+    }
+
+    // Panggil render khusus untuk sub-menu tertentu (kalau fungsinya ada)
+    if (subId === 'subStok' && typeof renderStokPersediaan === 'function') renderStokPersediaan();
+    if (subId === 'subTutupBuku' && typeof renderTutupBuku === 'function') renderTutupBuku();
+    if (subId === 'subDupont' && typeof hitungDupont === 'function') hitungDupont(dataJurnalGlobal);
+    if (subId === 'subRosetta' && typeof renderRosettaWorksheet === 'function') renderRosettaWorksheet();
+}

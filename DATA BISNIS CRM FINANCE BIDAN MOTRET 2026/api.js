@@ -120,17 +120,22 @@ async function refreshDataMarketingManual() {
 // (lihat instruksi yang saya berikan di chat) supaya tombol ini berfungsi.
 // =========================================================================
 async function jalankanSyncMetaAds(jenis) {
-  const idBtn = jenis === 'harian' ? 'btnSyncMetaHarian' : (jenis === 'backfill30' ? 'btnSyncMetaBackfill' : 'btnSyncMetaSatuHari');
-  const btn = document.getElementById(idBtn);
+  const mapIdBtn = {
+    harian: 'btnSyncMetaHarian', backfill30: 'btnSyncMetaBackfill', satuhari: 'btnSyncMetaSatuHari',
+    content: 'btnSyncMetaContent', adsetperf: 'btnSyncMetaAdsetPerf', adsettargeting: 'btnSyncMetaAdsetTarget'
+  };
+  const mapAction = {
+    harian: 'syncMetaAdsSekarang', backfill30: 'backfillMetaAds30HariWeb', satuhari: 'syncMetaAdsSatuHariWeb',
+    content: 'syncAdContentWeb', adsetperf: 'syncAdsetPerformanceWeb', adsettargeting: 'syncAdsetTargetingWeb'
+  };
+  const btn = document.getElementById(mapIdBtn[jenis]);
   const outEl = document.getElementById('hasilSyncMetaAds');
   const teksAsli = btn ? btn.innerText : '';
   if (btn) { btn.disabled = true; btn.innerText = '⏳ Sinkronisasi...'; }
-  if (outEl) { outEl.style.display = 'block'; outEl.style.background = '#f1f5f9'; outEl.innerText = '⏳ Menghubungi Meta Ads API, mohon tunggu (bisa 10-60 detik tergantung jumlah data)...'; }
+  if (outEl) { outEl.style.display = 'block'; outEl.style.background = '#f1f5f9'; outEl.innerText = '⏳ Menghubungi Meta Ads API, mohon tunggu (bisa 10 detik - beberapa menit tergantung jumlah data)...'; }
   try {
     const fd = new FormData();
-    fd.append('action', jenis === 'harian' ? 'syncMetaAdsSekarang'
-      : jenis === 'backfill30' ? 'backfillMetaAds30HariWeb'
-      : 'syncMetaAdsSatuHariWeb');
+    fd.append('action', mapAction[jenis] || 'syncMetaAdsSekarang');
     const res = await fetch(scriptURL, { method: 'POST', body: fd });
     const result = await res.json();
     if (result.result === 'success') {
@@ -144,6 +149,50 @@ async function jalankanSyncMetaAds(jenis) {
       if (outEl) {
         outEl.style.background = '#fee2e2'; outEl.style.color = '#991b1b';
         outEl.innerText = '❌ Gagal: ' + (result.message || 'Action belum tersedia di Code.gs. Tambahkan handler-nya dulu (lihat instruksi).');
+      }
+    }
+  } catch (err) {
+    if (outEl) {
+      outEl.style.display = 'block'; outEl.style.background = '#fee2e2'; outEl.style.color = '#991b1b';
+      outEl.innerText = '❌ Gagal koneksi: ' + err;
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = teksAsli; }
+  }
+}
+
+// Sync ulang rentang tanggal tertentu (untuk perbaiki data yang tidak
+// ketarik/tidak sinkron di hari-hari tertentu).
+async function jalankanSyncMetaAdsRentang() {
+  const dari = document.getElementById('syncTglDari')?.value;
+  const sampai = document.getElementById('syncTglSampai')?.value;
+  const btn = document.getElementById('btnSyncMetaRentang');
+  const outEl = document.getElementById('hasilSyncMetaAds');
+  if (!dari || !sampai) {
+    alert('Isi tanggal Dari dan Sampai dulu.');
+    return;
+  }
+  const teksAsli = btn ? btn.innerText : '';
+  if (btn) { btn.disabled = true; btn.innerText = '⏳ Sinkronisasi...'; }
+  if (outEl) { outEl.style.display = 'block'; outEl.style.background = '#f1f5f9'; outEl.innerText = `⏳ Menyinkronkan ulang periode ${dari} s/d ${sampai}...`; }
+  try {
+    const fd = new FormData();
+    fd.append('action', 'syncMetaAdsRentangWeb');
+    fd.append('since', dari);
+    fd.append('until', sampai);
+    const res = await fetch(scriptURL, { method: 'POST', body: fd });
+    const result = await res.json();
+    if (result.result === 'success') {
+      if (outEl) {
+        outEl.style.background = '#dcfce7'; outEl.style.color = '#166534';
+        outEl.innerText = '✅ ' + (result.message || 'Sync ulang selesai.');
+      }
+      await tarikDataServer();
+      if (typeof renderMarketingTab === 'function') renderMarketingTab();
+    } else {
+      if (outEl) {
+        outEl.style.background = '#fee2e2'; outEl.style.color = '#991b1b';
+        outEl.innerText = '❌ Gagal: ' + (result.message || 'Action belum tersedia di Code.gs.');
       }
     }
   } catch (err) {
