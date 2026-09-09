@@ -80,9 +80,44 @@ function inisialisasiTampilanKeuangan_() {
   try { if (typeof panduanRenderChat === 'function') panduanRenderChat(); } catch (e) {}
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  tarikDataServer();
-});
+// =========================================================================
+// ANALISIS AI (GEMINI) — MARKETING. Dipasang di beberapa bagian utama
+// tab Marketing, mirip pola "Analisis Akhir AI" di tab Keuangan.
+// =========================================================================
+async function jalankanAnalisisMarketingAI(bagian) {  const mapIdBtn = { funnel: 'btnAiFunnel', adset: 'btnAiAdsetContent', tren: 'btnAiTrenMarketing' };
+  const mapIdLoading = { funnel: 'aiFunnelLoading', adset: 'aiAdsetContentLoading', tren: 'aiTrenMarketingLoading' };
+  const mapIdOutput = { funnel: 'aiFunnelOutput', adset: 'aiAdsetContentOutput', tren: 'aiTrenMarketingOutput' };
+
+  const btn = document.getElementById(mapIdBtn[bagian]);
+  const loadingEl = document.getElementById(mapIdLoading[bagian]);
+  const outEl = document.getElementById(mapIdOutput[bagian]);
+  const teksAsli = btn ? btn.innerText : '';
+
+  const ringkasan = ambilRingkasanMarketingUntukAI_(bagian);
+  if (!ringkasan) { alert('Data belum cukup untuk dianalisis. Pastikan tab Marketing sudah dimuat/di-filter dulu.'); return; }
+
+  if (btn) { btn.disabled = true; btn.innerText = '⏳...'; }
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (outEl) outEl.style.display = 'none';
+
+  try {
+    const fd = new FormData();
+    fd.append('action', 'analisisAiGeminiMarketing');
+    fd.append('jenisAnalisis', bagian);
+    fd.append('ringkasanJson', JSON.stringify(ringkasan));
+    const res = await fetch(scriptURL, { method: 'POST', body: fd });
+    const result = await res.json();
+    if (outEl) {
+      outEl.style.display = 'block';
+      outEl.innerText = result.result === 'success' ? result.analisis : ('❌ Gagal: ' + (result.message || 'Action belum tersedia di Code.gs — tambahkan handler analisisAiGeminiMarketing dulu (lihat instruksi).'));
+    }
+  } catch (err) {
+    if (outEl) { outEl.style.display = 'block'; outEl.innerText = '❌ Gagal koneksi: ' + err; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = teksAsli; }
+    if (loadingEl) loadingEl.style.display = 'none';
+  }
+}
 
 // =========================================================================
 // TOMBOL REFRESH MANUAL (per sub-menu) — tarik ulang data server tanpa
@@ -122,17 +157,22 @@ async function refreshDataMarketingManual() {
 async function jalankanSyncMetaAds(jenis) {
   const mapIdBtn = {
     harian: 'btnSyncMetaHarian', backfill30: 'btnSyncMetaBackfill', satuhari: 'btnSyncMetaSatuHari',
-    content: 'btnSyncMetaContent', adsetperf: 'btnSyncMetaAdsetPerf', adsettargeting: 'btnSyncMetaAdsetTarget'
+    content: 'btnSyncMetaContent', adsetperf: 'btnSyncMetaAdsetPerf', adsettargeting: 'btnSyncMetaAdsetTarget',
+    audiencecapi: 'btnSyncAudienceCapi', buataudience: 'btnBuatAudienceSaja', shareaudience: 'btnShareUlangAudience'
   };
   const mapAction = {
     harian: 'syncMetaAdsSekarang', backfill30: 'backfillMetaAds30HariWeb', satuhari: 'syncMetaAdsSatuHariWeb',
-    content: 'syncAdContentWeb', adsetperf: 'syncAdsetPerformanceWeb', adsettargeting: 'syncAdsetTargetingWeb'
+    content: 'syncAdContentWeb', adsetperf: 'syncAdsetPerformanceWeb', adsettargeting: 'syncAdsetTargetingWeb',
+    audiencecapi: 'syncAudienceCapiWeb', buataudience: 'buatAudienceSajaWeb', shareaudience: 'shareUlangAudienceWeb'
+  };
+  const mapOutEl = {
+    audiencecapi: 'hasilSyncAudienceCapi', buataudience: 'hasilSyncAudienceCapi', shareaudience: 'hasilSyncAudienceCapi'
   };
   const btn = document.getElementById(mapIdBtn[jenis]);
-  const outEl = document.getElementById('hasilSyncMetaAds');
+  const outEl = document.getElementById(mapOutEl[jenis] || 'hasilSyncMetaAds');
   const teksAsli = btn ? btn.innerText : '';
   if (btn) { btn.disabled = true; btn.innerText = '⏳ Sinkronisasi...'; }
-  if (outEl) { outEl.style.display = 'block'; outEl.style.background = '#f1f5f9'; outEl.innerText = '⏳ Menghubungi Meta Ads API, mohon tunggu (bisa 10 detik - beberapa menit tergantung jumlah data)...'; }
+  if (outEl) { outEl.style.display = 'block'; outEl.style.background = '#f1f5f9'; outEl.innerText = '⏳ Menghubungi Meta API, mohon tunggu (bisa 10 detik - beberapa menit tergantung jumlah data)...'; }
   try {
     const fd = new FormData();
     fd.append('action', mapAction[jenis] || 'syncMetaAdsSekarang');
@@ -204,3 +244,7 @@ async function jalankanSyncMetaAdsRentang() {
     if (btn) { btn.disabled = false; btn.innerText = teksAsli; }
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  tarikDataServer();
+});

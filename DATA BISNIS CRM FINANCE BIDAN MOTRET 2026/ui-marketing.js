@@ -1640,9 +1640,109 @@ function renderBannerTargetMingguan(mktDataMingguan, sMinggu, creativeBaruPerMin
 }
 
 
-// ==============================================================
-// MODAL PENGATURAN TARGET MINGGUAN (Global + per Produk)
-// ==============================================================
+// =========================================================================
+// RINGKASAN UNTUK ANALISIS AI (Marketing) — dipanggil oleh
+// jalankanAnalisisMarketingAI() di api.js. Menyusun ringkasan angka
+// (bukan raw data mentah) sesuai bagian yang mau dianalisis.
+// =========================================================================
+function ambilRingkasanMarketingUntukAI_(bagian) {
+    if (!Array.isArray(dataGlobal) || !Array.isArray(dataMarketing)) return null;
+
+    let selectedCampaigns = typeof getMsFilterSelected === 'function' ? getMsFilterSelected('msFilterMktCampaign') : [];
+    let fStart = document.getElementById('fMktStart')?.value || '';
+    let fEnd = document.getElementById('fMktEnd')?.value || '';
+
+    let fd = dataGlobal;
+    if (selectedCampaigns.length > 0) fd = fd.filter(r => selectedCampaigns.includes(r.minat));
+    if (fStart) fd = fd.filter(r => formati(r.tanggal_chat) >= fStart);
+    if (fEnd) fd = fd.filter(r => formati(r.tanggal_chat) <= fEnd);
+
+    let fAds = dataMarketing;
+    if (selectedCampaigns.length > 0) fAds = fAds.filter(m => selectedCampaigns.includes(m.campaign));
+    if (fStart) fAds = fAds.filter(m => formati(m.tanggal) >= fStart);
+    if (fEnd) fAds = fAds.filter(m => formati(m.tanggal) <= fEnd);
+
+    let leadsCRM = new Set(), spend = 0, dp = 0, omzet = 0, leadsMeta = 0, impressions = 0, linkClicks = 0;
+    fd.forEach(r => {
+        if (r.no_hp) leadsCRM.add(r.no_hp);
+        if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) {
+            dp++;
+            omzet += Number(r.total) || 0;
+        }
+    });
+    fAds.forEach(m => {
+        spend += Number(m.spend) || 0;
+        leadsMeta += Number(m.results) || 0;
+        impressions += Number(m.impressions) || 0;
+        linkClicks += Number(m.link_clicks) || 0;
+    });
+    const totalLeadsCRM = leadsCRM.size;
+    const cpl = totalLeadsCRM > 0 ? Math.round(spend / totalLeadsCRM) : 0;
+    const cac = dp > 0 ? Math.round(spend / dp) : 0;
+    const cr = totalLeadsCRM > 0 ? (dp / totalLeadsCRM * 100).toFixed(1) : 0;
+    const roas = spend > 0 ? (omzet / spend).toFixed(2) : 0;
+    const ctr = impressions > 0 ? (linkClicks / impressions * 100).toFixed(2) : 0;
+
+    if (bagian === 'funnel') {
+        return {
+            periode: (fStart || 'Semua') + ' s/d ' + (fEnd || 'Sekarang'),
+            spend, impressions, linkClicks, ctrPersen: Number(ctr),
+            leadsMeta, leadsCRM: totalLeadsCRM, cpl,
+            closing: dp, convRatePersen: Number(cr), cac,
+            omzet, roasKali: Number(roas)
+        };
+    }
+
+    if (bagian === 'adset') {
+        const petaCampaignName = buatPetaCampaignName(dataAdsetPerformance, dataAdsetCityTargeting);
+        const filterState = { selectedNamaMeta: typeof getMsFilterSelected === 'function' ? getMsFilterSelected('msFilterMktNamaMeta') : [], fStart, fEnd };
+        const dataAdset = (dataAdsetPerformance || []).map(row => ({
+            ...row,
+            _campaignName: petaCampaignName[String(row.campaign_id || '').trim()] || ('Campaign #' + row.campaign_id),
+            _label: row.adset_name || '(tanpa nama)'
+        }));
+        const kandidatAdset = cariTerbaikTerburuk(dataAdset);
+        const dataContentFiltered = (dataContent || []).map(row => ({ ...row, _label: row.ad_name || '(tanpa nama)', _campaignName: petaCampaignName[String(row.campaign_id || '').trim()] || '' }));
+        const kandidatContent = cariTerbaikTerburuk(dataContentFiltered);
+        const agregasiAdset = agregasiPerNamaLintasCampaign(dataAdset).filter(v => v.status.tipe === 'boros_berulang' || v.status.tipe === 'konsisten').slice(0, 10);
+
+        return {
+            globalCpl: cpl,
+            adsetTerbaik: kandidatAdset.terbaik ? { nama: kandidatAdset.terbaik._label, spend: kandidatAdset.terbaik.spend, results: kandidatAdset.terbaik.results } : null,
+            adsetTerburuk: kandidatAdset.terburuk ? { nama: kandidatAdset.terburuk._label, spend: kandidatAdset.terburuk.spend, results: kandidatAdset.terburuk.results } : null,
+            contentTerbaik: kandidatContent.terbaik ? { nama: kandidatContent.terbaik._label, spend: kandidatContent.terbaik.spend, results: kandidatContent.terbaik.results } : null,
+            contentTerburuk: kandidatContent.terburuk ? { nama: kandidatContent.terburuk._label, spend: kandidatContent.terburuk.spend, results: kandidatContent.terburuk.results } : null,
+            polaBerulangSignifikan: agregasiAdset.map(v => ({ nama: v.nama, statusTipe: v.status.tipe, totalSpend: v.totalSpend, totalResults: v.totalResults, jumlahCampaign: v.jumlahCampaign }))
+        };
+    }
+
+    if (bagian === 'tren') {
+        const tahun = new Date().getFullYear();
+        // Ringkasan bulanan sederhana dari dataMarketing + dataGlobal tahun berjalan
+        const perBulan = {};
+        (dataGlobal || []).forEach(r => {
+            const bln = formati(r.tanggal_chat)?.substring(0, 7);
+            if (!bln || !bln.startsWith(String(tahun))) return;
+            if (!perBulan[bln]) perBulan[bln] = { dp: 0, omzet: 0, leadsCRM: new Set() };
+            if (r.no_hp) perBulan[bln].leadsCRM.add(r.no_hp);
+            if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) { perBulan[bln].dp++; perBulan[bln].omzet += Number(r.total) || 0; }
+        });
+        (dataMarketing || []).forEach(m => {
+            const bln = formati(m.tanggal)?.substring(0, 7);
+            if (!bln || !bln.startsWith(String(tahun))) return;
+            if (!perBulan[bln]) perBulan[bln] = { dp: 0, omzet: 0, leadsCRM: new Set(), spend: 0 };
+            perBulan[bln].spend = (perBulan[bln].spend || 0) + (Number(m.spend) || 0);
+        });
+        const ringkasanBulanan = Object.keys(perBulan).sort().map(k => ({
+            bulan: k, spend: Math.round(perBulan[k].spend || 0), omzet: perBulan[k].omzet,
+            closing: perBulan[k].dp, leadsCRM: perBulan[k].leadsCRM.size,
+            roas: (perBulan[k].spend || 0) > 0 ? Number((perBulan[k].omzet / perBulan[k].spend).toFixed(2)) : 0
+        }));
+        return { tahun, ringkasanBulanan };
+    }
+
+    return null;
+}
 function tmBukaPengaturan() {
     let g = (dataTargetMingguanMarketing && dataTargetMingguanMarketing.global) || TARGET_DEFAULT_FALLBACK;
     document.getElementById('tmGlobalClosing').value = g.closingMin;
