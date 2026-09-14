@@ -870,10 +870,10 @@ function renderBreakdownAdset(dataMentah, petaCampaignName, filterState) {
             <td style="font-size:12.5px; white-space:nowrap;">${row.tanggal || '-'}</td>
         </tr>`;
     }
-    function headerGrupAdset(g) {
-        return `<tr style="background:#eef2ff;">
+    function headerGrupAdset(g, idGrup) {
+        return `<tr style="background:#eef2ff; cursor:pointer;" onclick="toggleGrupCampaign_(document.getElementById('${idGrup}_arrow'), '${idGrup}')">
             <td colspan="7" style="font-weight:800; color:#4338ca; padding:8px 10px; font-size:12.5px;">
-                📁 ${g.nama} <span style="font-weight:500; color:#64748b; font-size:11px;">(Total Spend: Rp ${rp(g.totalSpend)})</span>
+                <span id="${idGrup}_arrow">▶</span> 📁 ${g.nama} <span style="font-weight:500; color:#64748b; font-size:11px;">(${g.rows.length} baris · Total Spend: Rp ${rp(g.totalSpend)})</span>
             </td>
         </tr>`;
     }
@@ -881,12 +881,14 @@ function renderBreakdownAdset(dataMentah, petaCampaignName, filterState) {
     let htmlTerlihat = '', htmlTersembunyi = '';
     let jumlahBarisTerlihat = 0, jumlahBarisTersembunyi = 0, jumlahCampaignTersembunyi = 0;
     let modeSembunyi = false;
+    let idxGrupAdset = 0;
 
     campaignUrut.forEach(g => {
         if (!modeSembunyi && jumlahBarisTerlihat >= BATAS_BARIS_TERLIHAT) modeSembunyi = true;
 
-        let headerHtml = headerGrupAdset(g);
-        let rowsHtml = g.rows.map(baris1Adset).join('');
+        const idGrup = 'adsetGrup_' + (idxGrupAdset++);
+        let headerHtml = headerGrupAdset(g, idGrup);
+        let rowsHtml = `<tbody id="${idGrup}" style="display:none;">${g.rows.map(baris1Adset).join('')}</tbody>`;
 
         if (!modeSembunyi) {
             htmlTerlihat += headerHtml + rowsHtml;
@@ -903,7 +905,7 @@ function renderBreakdownAdset(dataMentah, petaCampaignName, filterState) {
         html += `<tr style="background:#f8fafc;">
             <td colspan="7" style="text-align:center; padding:10px; cursor:pointer; color:#6366f1; font-weight:700; font-size:12.5px;"
                 onclick="toggleExpandBreakdown(this, 'hiddenAdsetRows')">
-                ▼ Tampilkan ${jumlahBarisTersembunyi} baris lainnya (${jumlahCampaignTersembunyi} campaign) ▼
+                ▼ Tampilkan ${jumlahCampaignTersembunyi} campaign lainnya (${jumlahBarisTersembunyi} baris) ▼
             </td>
         </tr>
         <tbody id="hiddenAdsetRows" style="display:none;">${htmlTersembunyi}</tbody>`;
@@ -987,10 +989,10 @@ function renderBreakdownContent(dataMentah, petaCampaignName, filterState) {
             <td style="font-size:12.5px; white-space:nowrap;">${row.tanggal || '-'}</td>
         </tr>`;
     }
-    function headerGrupContent(g) {
-        return `<tr style="background:#fdf4ff;">
+    function headerGrupContent(g, idGrup) {
+        return `<tr style="background:#fdf4ff; cursor:pointer;" onclick="toggleGrupCampaign_(document.getElementById('${idGrup}_arrow'), '${idGrup}')">
             <td colspan="8" style="font-weight:800; color:#a21caf; padding:8px 10px; font-size:12.5px;">
-                📁 ${g.nama} <span style="font-weight:500; color:#64748b; font-size:11px;">(Total Spend: Rp ${rp(g.totalSpend)})</span>
+                <span id="${idGrup}_arrow">▶</span> 📁 ${g.nama} <span style="font-weight:500; color:#64748b; font-size:11px;">(${g.rows.length} baris · Total Spend: Rp ${rp(g.totalSpend)})</span>
             </td>
         </tr>`;
     }
@@ -998,12 +1000,14 @@ function renderBreakdownContent(dataMentah, petaCampaignName, filterState) {
     let htmlTerlihat = '', htmlTersembunyi = '';
     let jumlahBarisTerlihat = 0, jumlahBarisTersembunyi = 0;
     let modeSembunyi = false;
+    let idxGrupContent = 0;
 
     campaignUrut.forEach(g => {
         if (!modeSembunyi && jumlahBarisTerlihat >= BATAS_BARIS_TERLIHAT) modeSembunyi = true;
 
-        let headerHtml = headerGrupContent(g);
-        let rowsHtml = g.rows.map(baris1Content).join('');
+        const idGrup = 'contentGrup_' + (idxGrupContent++);
+        let headerHtml = headerGrupContent(g, idGrup);
+        let rowsHtml = `<tbody id="${idGrup}" style="display:none;">${g.rows.map(baris1Content).join('')}</tbody>`;
 
         if (!modeSembunyi) {
             htmlTerlihat += headerHtml + rowsHtml;
@@ -1039,6 +1043,21 @@ function toggleExpandBreakdown(el, idHidden) {
     } else {
         hidden.style.display = 'none';
         el.innerHTML = '▼ Tampilkan baris lainnya ▼';
+    }
+}
+
+// Buka/tutup satu kelompok campaign di tabel breakdown Adset/Content --
+// hanya membalik simbol panah, TIDAK mengganti teks lain di header (beda
+// dengan toggleExpandBreakdown yang mengganti seluruh label tombol).
+function toggleGrupCampaign_(elArrow, idGrup) {
+    const hidden = document.getElementById(idGrup);
+    if (!hidden) return;
+    if (hidden.style.display === 'none') {
+        hidden.style.display = '';
+        if (elArrow) elArrow.innerText = '▼';
+    } else {
+        hidden.style.display = 'none';
+        if (elArrow) elArrow.innerText = '▶';
     }
 }
 
@@ -1571,8 +1590,19 @@ function renderBannerTargetMingguan(mktDataMingguan, sMinggu, creativeBaruPerMin
     let container = document.getElementById('bannerTargetMingguan');
     if (!container) return;
 
+    // --- Pengaman: pastikan target selalu object valid (mencegah error yang
+    // bikin renderMarketingTab berhenti di tengah jalan kalau data target
+    // dari server belum lengkap/berbentuk tak terduga) ---
+    target = target && typeof target === 'object' ? target : TARGET_DEFAULT_FALLBACK;
+    target = {
+        closingMin: Number(target.closingMin) || 0,
+        omzetMin: Number(target.omzetMin) || 0,
+        roasMin: Number(target.roasMin) || 0,
+        creativeBaruMin: Number(target.creativeBaruMin) || 0
+    };
+
     if (!sMinggu || sMinggu.length === 0) {
-        container.innerHTML = '';
+        container.innerHTML = '<div style="padding:12px 16px; background:#f8fafc; border-radius:8px; color:#94a3b8; font-size:12.5px; margin-bottom:16px;">Belum ada data mingguan untuk periode/filter ini.</div>';
         return;
     }
 
@@ -1587,15 +1617,19 @@ function renderBannerTargetMingguan(mktDataMingguan, sMinggu, creativeBaruPerMin
     }
 
     if (!mingguSelesai) {
-        container.innerHTML = '<div style="padding:12px 16px; background:#f8fafc; border-radius:8px; color:#94a3b8; font-size:12.5px; margin-bottom:16px;">Belum ada minggu penuh yang selesai untuk dievaluasi terhadap target.</div>';
+        container.innerHTML = '<div style="padding:12px 16px; background:#f8fafc; border-radius:8px; color:#94a3b8; font-size:12.5px; margin-bottom:16px;">Belum ada minggu penuh yang selesai untuk dievaluasi terhadap target (minggu berjalan belum dihitung karena datanya belum lengkap).</div>';
         return;
     }
 
     let v = mktDataMingguan[mingguSelesai];
-    let closing = v.dp;
-    let omzet = v.omzet;
+    if (!v) {
+        container.innerHTML = '<div style="padding:12px 16px; background:#fef2f2; border-radius:8px; color:#991b1b; font-size:12.5px; margin-bottom:16px;">⚠️ Data minggu terakhir tidak ditemukan (kemungkinan sinkronisasi belum lengkap). Coba klik 🔄 Refresh.</div>';
+        return;
+    }
+    let closing = v.dp || 0;
+    let omzet = v.omzet || 0;
     let roas = v.spend > 0 ? v.omzet / v.spend : 0;
-    let creativeBaru = creativeBaruPerMinggu[mingguSelesai] || 0;
+    let creativeBaru = (creativeBaruPerMinggu && creativeBaruPerMinggu[mingguSelesai]) || 0;
     let labelMgg = labelMinggu(mingguSelesai);
 
     function kartuTarget(judul, aktual, targetNilai, formatFn, arah) {
@@ -1607,11 +1641,15 @@ function renderBannerTargetMingguan(mktDataMingguan, sMinggu, creativeBaruPerMin
         let statusText = tercapai ? '✅ TERCAPAI' : '🚨 BELUM TERCAPAI';
         let gap = arah === 'min' ? (targetNilai - aktual) : (aktual - targetNilai);
         let labelTarget = arah === 'min' ? 'Target min: ' : 'Batas maks: ';
+        let persenCapaian = targetNilai > 0 ? Math.min(100, Math.round((aktual / targetNilai) * 100)) : (aktual > 0 ? 100 : 0);
         return `
-        <div style="flex:1; min-width:170px; padding:14px; border-radius:10px; border:2px solid ${warnaBorder}; background:${warnaBg};">
+        <div style="flex:1; min-width:180px; padding:14px; border-radius:10px; border:2px solid ${warnaBorder}; background:${warnaBg};">
             <div style="font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase; margin-bottom:4px;">${judul}</div>
             <div style="font-size:20px; font-weight:900; color:${warnaTeks};">${formatFn(aktual)}</div>
-            <div style="font-size:11px; color:${warnaTeks}; font-weight:700; margin-top:4px;">${statusText}</div>
+            <div style="background:#e2e8f0; border-radius:6px; height:6px; margin-top:8px; overflow:hidden;">
+                <div style="background:${warnaBorder}; height:100%; width:${persenCapaian}%;"></div>
+            </div>
+            <div style="font-size:11px; color:${warnaTeks}; font-weight:700; margin-top:6px;">${statusText} (${persenCapaian}%)</div>
             <div style="font-size:10.5px; color:#64748b; margin-top:2px;">${labelTarget}${formatFn(targetNilai)}${!tercapai ? ' · Selisih ' + formatFn(gap) : ''}</div>
         </div>`;
     }
@@ -1624,6 +1662,7 @@ function renderBannerTargetMingguan(mktDataMingguan, sMinggu, creativeBaruPerMin
                 ${adaYangBelumTercapai ? '🚨 PERHATIAN — ADA TARGET BELUM TERCAPAI' : '✅ SEMUA TARGET TERCAPAI'} · Evaluasi Minggu Lalu (${labelMgg})
             </div>
             <span style="font-size:10.5px; font-weight:700; padding:2px 10px; border-radius:12px; background:#e0e7ff; color:#4338ca;">${sumberTarget || 'Global'}</span>
+            <button type="button" onclick="tmBukaPengaturan()" style="margin-left:auto; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:12px; border:1px solid #cbd5e1; background:#fff; color:#475569; cursor:pointer;">⚙️ Ubah Target</button>
         </div>
         <div style="font-size:11.5px; color:#64748b; margin-bottom:12px;">
             Berdasarkan minggu penuh terakhir yang sudah selesai (bukan minggu berjalan, karena datanya belum lengkap). Creative Baru dihitung dari semua akun.
@@ -1693,6 +1732,34 @@ function ambilRingkasanMarketingUntukAI_(bagian) {
         };
     }
 
+    if (bagian === 'produk') {
+        let mktDataSummary = {};
+        fd.forEach(r => {
+            let c = r.minat || 'Lainnya';
+            if (!mktDataSummary[c]) mktDataSummary[c] = { camp: c, spend: 0, leadsCRM: new Set(), dp: 0, omzet: 0 };
+            if (r.no_hp) mktDataSummary[c].leadsCRM.add(r.no_hp);
+            if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) {
+                mktDataSummary[c].dp++;
+                mktDataSummary[c].omzet += Number(r.total) || 0;
+            }
+        });
+        fAds.forEach(m => {
+            let c = m.campaign || 'Lainnya';
+            if (!mktDataSummary[c]) mktDataSummary[c] = { camp: c, spend: 0, leadsCRM: new Set(), dp: 0, omzet: 0 };
+            mktDataSummary[c].spend += Number(m.spend) || 0;
+        });
+        const perProduk = Object.values(mktDataSummary).map(v => ({
+            produk: v.camp,
+            spend: Math.round(v.spend),
+            leadsCRM: v.leadsCRM.size,
+            closing: v.dp,
+            omzet: v.omzet,
+            roas: v.spend > 0 ? Number((v.omzet / v.spend).toFixed(2)) : 0,
+            convRatePersen: v.leadsCRM.size > 0 ? Number((v.dp / v.leadsCRM.size * 100).toFixed(1)) : 0
+        })).sort((a, b) => b.omzet - a.omzet);
+        return { periode: (fStart || 'Semua') + ' s/d ' + (fEnd || 'Sekarang'), perProduk };
+    }
+
     if (bagian === 'adset') {
         const petaCampaignName = buatPetaCampaignName(dataAdsetPerformance, dataAdsetCityTargeting);
         const filterState = { selectedNamaMeta: typeof getMsFilterSelected === 'function' ? getMsFilterSelected('msFilterMktNamaMeta') : [], fStart, fEnd };
@@ -1745,16 +1812,30 @@ function ambilRingkasanMarketingUntukAI_(bagian) {
 }
 function tmBukaPengaturan() {
     let g = (dataTargetMingguanMarketing && dataTargetMingguanMarketing.global) || TARGET_DEFAULT_FALLBACK;
-    document.getElementById('tmGlobalClosing').value = g.closingMin;
-    document.getElementById('tmGlobalOmzet').value = g.omzetMin;
-    document.getElementById('tmGlobalRoas').value = g.roasMin;
-    document.getElementById('tmGlobalCreative').value = g.creativeBaruMin;
+    const elClosing = document.getElementById('tmGlobalClosing');
+    const elOmzet = document.getElementById('tmGlobalOmzet');
+    const elRoas = document.getElementById('tmGlobalRoas');
+    const elCreative = document.getElementById('tmGlobalCreative');
+    if (elClosing) elClosing.value = g.closingMin || 0;
+    if (elOmzet) elOmzet.value = g.omzetMin || 0;
+    if (elRoas) elRoas.value = g.roasMin || 0;
+    if (elCreative) elCreative.value = g.creativeBaruMin || 0;
 
-    let daftarMinat = (STUDIO_CONFIG && STUDIO_CONFIG.minat) || [];
+    let daftarMinat = (STUDIO_CONFIG && Array.isArray(STUDIO_CONFIG.minat)) ? STUDIO_CONFIG.minat : [];
     let perProduk = (dataTargetMingguanMarketing && dataTargetMingguanMarketing.perProduk) || {};
 
     let container = document.getElementById('tmPerProdukContainer');
-    container.innerHTML = daftarMinat.map(minat => {
+    if (!container) { document.getElementById('tmModalSet').style.display = 'flex'; return; }
+
+    if (daftarMinat.length === 0) {
+        container.innerHTML = '<p style="font-size:12px; color:#94a3b8; font-style:italic;">Daftar Minat Produk belum tersedia dari server (STUDIO_CONFIG kosong). Target per Produk tidak bisa diatur sekarang, tapi Target Global tetap bisa disimpan.</p>';
+        document.getElementById('tmModalSet').style.display = 'flex';
+        return;
+    }
+
+    container.innerHTML = daftarMinat.map(minatMentah => {
+        let minat = String(minatMentah || '').trim();
+        if (!minat) return '';
         let existing = perProduk[minat] || { closingMin: '', omzetMin: '', roasMin: '', creativeBaruMin: '' };
         let idAman = minat.replace(/[^a-zA-Z0-9]/g, '_');
         return `

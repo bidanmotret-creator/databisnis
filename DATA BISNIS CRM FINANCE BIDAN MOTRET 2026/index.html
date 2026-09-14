@@ -167,6 +167,8 @@
             <option value="subTrenBulanan">📅 Tren Bulanan/Mingguan</option>
             <option value="subRosetta">🪨 Rosetta Stone</option>
             <option value="subAuditSop">🩺 Audit SOP Otomatis</option>
+            <option value="subKontrolInternal">🛡️ Kontrol Internal (SOP & Validasi)</option>
+            <option value="subAsetTetap">🏗️ Aset Tetap & Penyusutan</option>
             <option value="subPanduanAI">🎓 Panduan & SOP (AI)</option>
             <option value="subStok">📦 Stok & Persediaan</option>
             <option value="subTutupBuku">🔒 Tutup Buku</option>
@@ -330,10 +332,29 @@
         </div>
 
         <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📋 Rincian Expenses Operasional</h4>
-            <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                <thead><tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:11px;"><th style="padding:10px; text-align:left;">Akun</th><th style="padding:10px; text-align:right;">Nominal</th><th style="padding:10px; text-align:right;">% Pendapatan</th></tr></thead>
-                <tbody id="is_rincian_expenses"></tbody>
+            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">💰 Rincian Pendapatan per Akun</h4>
+            <p style="font-size:11px; color:#94a3b8; margin-top:-6px;">Klik satu baris akun untuk melihat transaksi mana saja yang menyusunnya.</p>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:11px;"><th style="padding:10px; text-align:left;">Akun</th><th style="padding:10px; text-align:right;">Nominal</th><th style="padding:10px; text-align:right;">% Pendapatan</th><th style="padding:10px;"></th></tr></thead>
+                <tbody id="is_rincian_pendapatan"></tbody>
+            </table>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-top:20px;">
+            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📦 Rincian COGS (Beban Pokok Produksi) per Akun</h4>
+            <p style="font-size:11px; color:#94a3b8; margin-top:-6px;">Klik satu baris akun untuk melihat transaksi mana saja yang menyusunnya.</p>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:11px;"><th style="padding:10px; text-align:left;">Akun</th><th style="padding:10px; text-align:right;">Nominal</th><th style="padding:10px; text-align:right;">% Pendapatan</th><th style="padding:10px;"></th></tr></thead>
+                <tbody id="is_rincian_cogs"></tbody>
+            </table>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-top:20px;">
+            <h4 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">📋 Rincian Beban Operasional per Akun</h4>
+            <p style="font-size:11px; color:#94a3b8; margin-top:-6px;">Klik satu baris akun untuk melihat transaksi mana saja yang menyusunnya.</p>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc; color:#475569; text-transform:uppercase; font-size:11px;"><th style="padding:10px; text-align:left;">Akun</th><th style="padding:10px; text-align:right;">Nominal</th><th style="padding:10px; text-align:right;">% Pendapatan</th><th style="padding:10px;"></th></tr></thead>
+                <tbody id="is_rincian_expenses_grup"></tbody>
             </table>
         </div>
 
@@ -398,6 +419,24 @@
             <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
                 <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Tgl</th><th style="padding:8px; text-align:left;">Akun</th><th style="padding:8px; text-align:left;">Deskripsi</th><th style="padding:8px; text-align:right;">Nilai</th></tr></thead>
                 <tbody id="cs_skedul_dan"></tbody>
+            </table>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-top:16px;">
+            <h4 style="margin-top: 0; color: #059669;">⬆️ Rincian Uang Masuk per Kategori</h4>
+            <p style="font-size:11px; color:#94a3b8; margin-top:-6px;">Dikelompokkan per akun lawan (sumber uang masuk) — klik untuk lihat transaksinya.</p>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Kategori</th><th style="padding:8px; text-align:right;">Total</th><th style="padding:8px; text-align:right;">% dari Total Masuk</th></tr></thead>
+                <tbody id="cs_rincian_masuk"></tbody>
+            </table>
+        </div>
+
+        <div class="card" style="padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; margin-top:16px;">
+            <h4 style="margin-top: 0; color: #dc2626;">⬇️ Rincian Uang Keluar per Kategori</h4>
+            <p style="font-size:11px; color:#94a3b8; margin-top:-6px;">Dikelompokkan per akun lawan (tujuan pengeluaran) — klik untuk lihat transaksinya.</p>
+            <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+                <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Kategori</th><th style="padding:8px; text-align:right;">Total</th><th style="padding:8px; text-align:right;">% dari Total Keluar</th></tr></thead>
+                <tbody id="cs_rincian_keluar"></tbody>
             </table>
         </div>
 
@@ -806,6 +845,158 @@
         </div>
         <div class="audit-summary" id="auditSummaryBox"></div>
         <div id="auditHasilList"></div>
+    </div>
+
+    <div id="subKontrolInternal" class="sub-content" style="display: none;">
+        <style>
+            .kontrol-check-item { background:#fff; border:1px solid #e2e8f0; border-left:5px solid #cbd5e1; border-radius:8px; padding:14px 16px; margin-bottom:10px; }
+            .kontrol-check-item.merah { border-left-color:#dc2626; background:#fef2f2; }
+            .kontrol-check-item.kuning { border-left-color:#d97706; background:#fffbeb; }
+            .kontrol-check-item.hijau { border-left-color:#059669; background:#f0fdf4; }
+            .kontrol-badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:10.5px; font-weight:800; margin-right:8px; }
+            .kontrol-badge.merah { background:#fee2e2; color:#991b1b; }
+            .kontrol-badge.kuning { background:#fef3c7; color:#92400e; }
+            .kontrol-badge.hijau { background:#dcfce7; color:#166534; }
+            .ceklis-row { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+            .ceklis-row input[type=checkbox] { width:18px; height:18px; margin-top:2px; cursor:pointer; flex-shrink:0; }
+            .ceklis-row label { cursor:pointer; line-height:1.5; }
+            .ceklis-row.done label { text-decoration:line-through; color:#94a3b8; }
+        </style>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div>
+                <h3 style="margin:0;">🛡️ Sistem Pengendalian Internal (Internal Financial Control)</h3>
+                <p style="color:#64748b; font-size:12.5px; margin:4px 0 0 0;">"Pagar pengaman" otomatis supaya kesalahan input tidak lolos ke laporan keuangan — plus ceklis SOP rutin harian/2 mingguan/bulanan.</p>
+            </div>
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#0f172a;" onclick="jalankanValidasiInternalControl()">🔍 Jalankan Validasi Sekarang</button>
+        </div>
+
+        <div class="audit-summary" id="kontrolSummaryBox"></div>
+        <div id="kontrolHasilList" style="margin-bottom:24px;"></div>
+
+        <p style="font-size:11px; color:#94a3b8; margin:0 0 20px; padding:10px 14px; background:#f8fafc; border-radius:8px;">
+            📘 Validasi ini bekerja berdasarkan pola kode akun & kata kunci yang cocok dengan skema akun Anda saat ini (kode 1xx=Aset/Kas, 3xx=Ekuitas/Prive, 4xx=Pendapatan, 5xx=Beban, kata "pribadi"=transaksi pribadi). Kalau skema akun Anda berbeda, beberapa deteksi mungkin perlu disesuaikan — beri tahu saya kode akun aslinya untuk penyesuaian presisi.
+        </p>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px;">
+            <div class="card" style="padding:18px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="margin:0; font-size:14px;">☑️ Ceklis Harian</h4>
+                    <button type="button" onclick="resetCeklisSOP('harian')" style="font-size:10.5px; padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; color:#64748b; cursor:pointer;">Reset Hari Ini</button>
+                </div>
+                <div id="ceklisHarianBox"></div>
+            </div>
+
+            <div class="card" style="padding:18px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="margin:0; font-size:14px;">☑️ Ceklis 2 Mingguan (Profit First — Tgl 10 & 25)</h4>
+                    <button type="button" onclick="resetCeklisSOP('mingguan')" style="font-size:10.5px; padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; color:#64748b; cursor:pointer;">Reset Periode Ini</button>
+                </div>
+                <div id="ceklisMingguanBox"></div>
+            </div>
+
+            <div class="card" style="padding:18px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="margin:0; font-size:14px;">☑️ Ceklis Bulanan / Closing</h4>
+                    <button type="button" onclick="resetCeklisSOP('bulanan')" style="font-size:10.5px; padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; color:#64748b; cursor:pointer;">Reset Bulan Ini</button>
+                </div>
+                <div id="ceklisBulananBox"></div>
+            </div>
+        </div>
+
+        <p style="font-size:10.5px; color:#94a3b8; margin-top:14px;">💾 Status ceklis tersimpan di browser ini (localStorage), otomatis reset ulang setiap ganti periode (hari/dua-mingguan/bulan).</p>
+    </div>
+
+    <div id="subAsetTetap" class="sub-content" style="display: none;">
+        <style>
+            .aset-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+            .aset-table th { background:#0f172a; color:#fff; padding:9px 10px; text-align:left; }
+            .aset-table td { padding:8px 10px; border-bottom:1px solid #f1f5f9; }
+            .aset-progress-bar { background:#e2e8f0; border-radius:6px; height:8px; overflow:hidden; width:100%; max-width:120px; }
+            .aset-progress-fill { background:#4f46e5; height:100%; }
+        </style>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+            <div>
+                <h3 style="margin:0;">🏗️ Aset Tetap & Penyusutan</h3>
+                <p style="color:#64748b; font-size:12.5px; margin:4px 0 0 0;">Daftar aset tetap (kamera, props, kendaraan, dll), akumulasi penyusutan, dan nilai buku — otomatis terhubung ke Neraca, Income Statement, dan Cost Structure begitu jurnal penyusutan diposting.</p>
+            </div>
+            <button type="button" class="btn-submit" style="width:auto; margin:0; background:#4338ca;" onclick="bukaFormTambahAset()">➕ Tambah Aset Baru</button>
+        </div>
+
+        <div class="fin-kpi-grid" id="asetKpiGrid" style="margin-bottom:18px;"></div>
+
+        <div class="card" style="padding:20px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+            <div class="table-responsive table-compact-wrap" style="max-height:520px;">
+            <table class="aset-table">
+                <thead>
+                    <tr>
+                        <th>Kode Aset</th>
+                        <th>Nama Barang</th>
+                        <th>Kategori Akun</th>
+                        <th>Tgl Perolehan</th>
+                        <th>Qty</th>
+                        <th>Debet (Harga)</th>
+                        <th>Masa Pakai</th>
+                        <th>Dep/Bln</th>
+                        <th>Terdepresiasi</th>
+                        <th>Nilai Akhir</th>
+                        <th>Terpakai</th>
+                        <th>Sisa Masa Pakai (bln)</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="asetTetapTabelBody"></tbody>
+            </table>
+            </div>
+        </div>
+
+        <div id="modalTambahAset" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#fff; border-radius:14px; padding:24px; max-width:520px; width:92%; max-height:85vh; overflow-y:auto;">
+                <h3 style="margin-top:0; color:#0f172a;">➕ Tambah Aset Tetap Baru</h3>
+                <p style="font-size:11.5px; color:#64748b; margin-top:-8px;">Ini akan (1) mendaftarkan aset ke master Daftar Inventaris, dan (2) langsung memposting jurnal perolehan aset (Debit Aset / Kredit Kas atau Hutang).</p>
+
+                <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="form-group"><label>Kode Aset</label><input type="text" id="asetKodeBaru" placeholder="EQ001" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div class="form-group"><label>Tanggal Perolehan</label><input type="date" id="asetTglBaru" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <div class="form-group"><label>Nama Barang</label><input type="text" id="asetNamaBaru" placeholder="Cth: Kamera Sony A7 III" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="form-group"><label>Kategori Pos Akun</label><input type="text" id="asetKategoriPosBaru" placeholder="151" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div class="form-group"><label>Kategori Akun (Deskripsi)</label><input type="text" id="asetKategoriAkunBaru" placeholder="151 - KAMERA & LIGHTING" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="form-group"><label>Qty Masuk</label><input type="number" id="asetQtyInBaru" value="1" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div class="form-group"><label>Qty Keluar</label><input type="number" id="asetQtyOutBaru" value="0" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="form-group"><label>Debet (Harga Perolehan, Rp)</label><input type="number" id="asetHargaBaru" placeholder="25000000" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                    <div class="form-group"><label>Masa Pakai (Tahun)</label><input type="number" id="asetMasaPakaiTahunBaru" placeholder="5" value="5" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                </div>
+                <div class="form-group"><label style="color:#059669;">🟢 Akun Aset (Debit)</label><input type="text" id="asetAkunDebitBaru" list="listAkun" placeholder="Cth: 151 - Aset - Peralatan Kamera" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div class="form-group"><label style="color:#dc2626;">🔴 Sumber Dana (Kredit)</label><input type="text" id="asetAkunKreditBaru" list="listAkun" placeholder="Cth: 111 - Kas/Bank atau 21x - Hutang" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+
+                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                    <button type="button" onclick="document.getElementById('modalTambahAset').style.display='none'" style="padding:10px 18px; background:#f1f5f9; color:#475569; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Batal</button>
+                    <button type="button" id="btnSimpanAsetBaru" onclick="simpanAsetTetapBaru()" style="padding:10px 18px; background:#4338ca; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">💾 Simpan & Posting Jurnal</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalPostingPenyusutan" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#fff; border-radius:14px; padding:24px; max-width:460px; width:92%;">
+                <h3 style="margin-top:0; color:#0f172a;">📉 Posting Jurnal Penyusutan Bulan Ini</h3>
+                <p id="penyusutanInfoAset" style="font-size:12.5px; color:#475569;"></p>
+                <div class="form-group"><label style="color:#dc2626;">🔴 Akun Beban Penyusutan (Debit)</label><input type="text" id="penyusutanAkunBeban" list="listAkun" placeholder="Cth: 532 - Beban - Penyusutan Aset" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <div class="form-group"><label style="color:#059669;">🟢 Akun Akumulasi Penyusutan (Kredit)</label><input type="text" id="penyusutanAkunAkumulasi" list="listAkun" placeholder="Cth: 159 - Aset - Akumulasi Penyusutan" style="width:100%; padding:9px; border-radius:6px; border:1px solid #cbd5e1;"></div>
+                <input type="hidden" id="penyusutanAsetNamaAktif">
+                <input type="hidden" id="penyusutanNominalAktif">
+                <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                    <button type="button" onclick="document.getElementById('modalPostingPenyusutan').style.display='none'" style="padding:10px 18px; background:#f1f5f9; color:#475569; border:none; border-radius:6px; cursor:pointer; font-weight:700;">Batal</button>
+                    <button type="button" id="btnPostingPenyusutan" onclick="postingPenyusutanBulanIni()" style="padding:10px 18px; background:#dc2626; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;">📉 Posting Penyusutan</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="subPanduanAI" class="sub-content" style="display: none;">
@@ -1313,6 +1504,39 @@
         <div id="hasilSyncAudienceCapi" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:12px;"></div>
     </div>
 
+    <div class="funnel-legend" style="border-left:4px solid #7c3aed; background:#f5f3ff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+                <h3 style="margin-top:0; font-size:14.5px; color:#5b21b6;">🕵️ Audit Proses CAPI & Custom Audience</h3>
+                <p style="font-size:11.5px; color:#5b21b6; margin:4px 0 0;">Lihat riwayat: audience apa saja yang sudah dibuat, berapa event terkirim, dan status sync terakhir — dari sheet <code>Meta_Audience_Config</code> & <code>Meta_Sync_Log</code>.</p>
+            </div>
+            <button type="button" id="btnMuatAuditCapi" onclick="muatAuditCapiAudience()" style="padding:9px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px; white-space:nowrap;">🔄 Muat Log Audit</button>
+        </div>
+
+        <div id="auditCapiKpiGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;"></div>
+
+        <div style="margin-top:16px;">
+            <h4 style="font-size:13px; color:#5b21b6; margin-bottom:6px;">📋 Custom Audience yang Sudah Dibuat</h4>
+            <div class="table-responsive table-compact-wrap" style="max-height:280px;">
+                <table style="width:100%; font-size:12px;">
+                    <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Minat</th><th style="padding:8px; text-align:left;">Kategori</th><th style="padding:8px; text-align:left;">Audience ID</th><th style="padding:8px; text-align:left;">Akun Pemilik</th><th style="padding:8px; text-align:left;">Terakhir Sync</th></tr></thead>
+                    <tbody id="auditCapiAudienceTable"><tr><td colspan="5" style="text-align:center; padding:14px; color:#94a3b8;">Klik "Muat Log Audit" untuk menampilkan data.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="margin-top:16px;">
+            <h4 style="font-size:13px; color:#5b21b6; margin-bottom:6px;">📨 Riwayat Event Terkirim per Lead (20 Terbaru)</h4>
+            <div class="table-responsive table-compact-wrap" style="max-height:280px;">
+                <table style="width:100%; font-size:12px;">
+                    <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Kode Leads</th><th style="padding:8px; text-align:left;">Sumber</th><th style="padding:8px; text-align:left;">Minat</th><th style="padding:8px; text-align:left;">Kategori</th><th style="padding:8px; text-align:center;">Purchase Terkirim?</th><th style="padding:8px; text-align:left;">Terakhir Sync</th></tr></thead>
+                    <tbody id="auditCapiEventTable"><tr><td colspan="6" style="text-align:center; padding:14px; color:#94a3b8;">Klik "Muat Log Audit" untuk menampilkan data.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        <p style="font-size:10.5px; color:#5b21b6; margin-top:10px;">📘 <b>Input → Proses → Output:</b> Input = data Leads (CRM) yang statusnya berubah. Proses = dicocokkan ke kategori Minat×Status, di-hash (SHA-256), dikirim ke Custom Audience & Pixel Meta. Output = baris log di atas (audience_id yang dipakai + status pengiriman event Purchase).</p>
+    </div>
+
     <div class="funnel-legend">
         📖 <b>Cara baca funnel ini:</b> iklan Meta dilihat orang (<b>Awareness</b>) → sebagian menghubungi via chat (<b>Leads</b>, dicatat sebagai "Leads Meta" mentah dari Meta dan "Leads CRM" yang sudah tercocokkan nomor HP-nya ke database) → sebagian bayar DP (<b>Closing</b>) → menghasilkan uang masuk (<b>Revenue</b>). Semakin ke bawah tahapnya, semakin sedikit orangnya — itu wajar, namanya juga funnel (corong).
     </div>
@@ -1442,6 +1666,12 @@
               </thead>
             <tbody id="bMarketingSummary"></tbody>
         </table>
+    </div>
+
+    <div class="funnel-legend" style="border-left:4px solid #059669; margin-top:14px;">
+        <button type="button" id="btnAiProduk" onclick="jalankanAnalisisMarketingAI('produk')" style="padding:9px 16px; background:#059669; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">✨ Analisis AI — Performa per Produk</button>
+        <div id="aiProdukLoading" style="display:none; margin-top:8px; font-size:12px; color:#64748b;">⏳ Menganalisis dengan Gemini...</div>
+        <div id="aiProdukOutput" style="display:none; white-space:pre-wrap; font-size:13px; line-height:1.7; background:#f0fdf4; border-radius:8px; padding:14px; margin-top:10px;"></div>
     </div>
 
     <h3 class="mkt-section-title">📊 Tren Perbandingan Bulanan</h3>

@@ -84,9 +84,75 @@ function inisialisasiTampilanKeuangan_() {
 // ANALISIS AI (GEMINI) — MARKETING. Dipasang di beberapa bagian utama
 // tab Marketing, mirip pola "Analisis Akhir AI" di tab Keuangan.
 // =========================================================================
-async function jalankanAnalisisMarketingAI(bagian) {  const mapIdBtn = { funnel: 'btnAiFunnel', adset: 'btnAiAdsetContent', tren: 'btnAiTrenMarketing' };
-  const mapIdLoading = { funnel: 'aiFunnelLoading', adset: 'aiAdsetContentLoading', tren: 'aiTrenMarketingLoading' };
-  const mapIdOutput = { funnel: 'aiFunnelOutput', adset: 'aiAdsetContentOutput', tren: 'aiTrenMarketingOutput' };
+// =========================================================================
+// AUDIT PROSES CAPI & CUSTOM AUDIENCE — muat log dari Meta_Audience_Config
+// dan Meta_Sync_Log via action baru 'getAudienceCapiLog' (lihat instruksi
+// Code.gs). Menampilkan Input -> Proses -> Output secara transparan.
+// =========================================================================
+async function muatAuditCapiAudience() {
+  const btn = document.getElementById('btnMuatAuditCapi');
+  const teksAsli = btn ? btn.innerText : '';
+  if (btn) { btn.disabled = true; btn.innerText = '⏳ Memuat...'; }
+
+  try {
+    const fd = new FormData();
+    fd.append('action', 'getAudienceCapiLog');
+    const res = await fetch(scriptURL, { method: 'POST', body: fd });
+    const result = await res.json();
+
+    if (result.result !== 'success') {
+      alert('❌ Gagal memuat log: ' + (result.message || 'Action belum tersedia di Code.gs — tambahkan handler getAudienceCapiLog dulu.'));
+      return;
+    }
+
+    const audiences = result.audiences || [];
+    const logs = result.logs || [];
+
+    const kpiGrid = document.getElementById('auditCapiKpiGrid');
+    if (kpiGrid) {
+      const totalPurchaseTerkirim = logs.filter(l => l.sudah_kirim_purchase).length;
+      kpiGrid.innerHTML = `
+        <div class="fin-kpi-card fin-kpi-aktiva"><div class="fin-kpi-label">Audience Dibuat</div><div class="fin-kpi-val">${audiences.length}</div></div>
+        <div class="fin-kpi-card fin-kpi-leads"><div class="fin-kpi-label">Lead Sudah Disinkron</div><div class="fin-kpi-val">${logs.length}</div></div>
+        <div class="fin-kpi-card fin-kpi-revenue"><div class="fin-kpi-label">Event Purchase Terkirim</div><div class="fin-kpi-val">${totalPurchaseTerkirim}</div></div>
+      `;
+    }
+
+    const tblAudience = document.getElementById('auditCapiAudienceTable');
+    if (tblAudience) {
+      tblAudience.innerHTML = audiences.length > 0 ? audiences.map(a => `
+        <tr>
+          <td style="padding:7px;">${a.minat || '-'}</td>
+          <td style="padding:7px;">${a.kategori || '-'}</td>
+          <td style="padding:7px; font-family:monospace; font-size:11px;">${a.audience_id || '-'}</td>
+          <td style="padding:7px;">${a.akun_pemilik || '-'}</td>
+          <td style="padding:7px; font-size:11px; color:#64748b;">${a.last_synced || '-'}</td>
+        </tr>`).join('') : '<tr><td colspan="5" style="text-align:center; padding:14px; color:#94a3b8;">Belum ada audience dibuat.</td></tr>';
+    }
+
+    const tblEvent = document.getElementById('auditCapiEventTable');
+    if (tblEvent) {
+      const logTerbaru = [...logs].sort((a, b) => (b.last_synced || '').localeCompare(a.last_synced || '')).slice(0, 20);
+      tblEvent.innerHTML = logTerbaru.length > 0 ? logTerbaru.map(l => `
+        <tr>
+          <td style="padding:7px; font-family:monospace; font-size:11px;">${l.kode_leads || '-'}</td>
+          <td style="padding:7px;">${l.sumber || '-'}</td>
+          <td style="padding:7px;">${l.minat || '-'}</td>
+          <td style="padding:7px;">${l.kategori || '-'}</td>
+          <td style="padding:7px; text-align:center;">${l.sudah_kirim_purchase ? '✅' : '—'}</td>
+          <td style="padding:7px; font-size:11px; color:#64748b;">${l.last_synced || '-'}</td>
+        </tr>`).join('') : '<tr><td colspan="6" style="text-align:center; padding:14px; color:#94a3b8;">Belum ada log sinkronisasi.</td></tr>';
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = teksAsli; }
+  }
+}
+
+async function jalankanAnalisisMarketingAI(bagian) {  const mapIdBtn = { funnel: 'btnAiFunnel', adset: 'btnAiAdsetContent', tren: 'btnAiTrenMarketing', produk: 'btnAiProduk' };
+  const mapIdLoading = { funnel: 'aiFunnelLoading', adset: 'aiAdsetContentLoading', tren: 'aiTrenMarketingLoading', produk: 'aiProdukLoading' };
+  const mapIdOutput = { funnel: 'aiFunnelOutput', adset: 'aiAdsetContentOutput', tren: 'aiTrenMarketingOutput', produk: 'aiProdukOutput' };
 
   const btn = document.getElementById(mapIdBtn[bagian]);
   const loadingEl = document.getElementById(mapIdLoading[bagian]);

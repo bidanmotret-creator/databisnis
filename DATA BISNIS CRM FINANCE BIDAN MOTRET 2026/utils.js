@@ -240,4 +240,6 @@ function pilihSubTabKeuangan(subId) {
     if (subId === 'subTutupBuku' && typeof renderTutupBuku === 'function') renderTutupBuku();
     if (subId === 'subDupont' && typeof hitungDupont === 'function') hitungDupont(dataJurnalGlobal);
     if (subId === 'subRosetta' && typeof renderRosettaWorksheet === 'function') renderRosettaWorksheet();
+    if (subId === 'subKontrolInternal' && typeof renderKontrolInternal === 'function') renderKontrolInternal();
+    if (subId === 'subAsetTetap' && typeof renderAsetTetap === 'function') renderAsetTetap();
 }
