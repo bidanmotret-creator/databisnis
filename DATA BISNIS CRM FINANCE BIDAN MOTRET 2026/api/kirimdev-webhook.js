@@ -7,6 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const bodyText = JSON.stringify(req.body || {});
+    console.log('DEBUG - Body LENGKAP:', bodyText);
 
     let response = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
