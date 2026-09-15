@@ -221,6 +221,11 @@ async function refreshDataMarketingManual() {
 // (lihat instruksi yang saya berikan di chat) supaya tombol ini berfungsi.
 // =========================================================================
 async function jalankanSyncMetaAds(jenis) {
+  const mapLabel = {
+    harian: 'Sync Harian', backfill30: 'Backfill 30 Hari', satuhari: 'Sync Kemarin',
+    content: 'Sync Ad Content', adsetperf: 'Sync Adset Performance', adsettargeting: 'Sync Adset Targeting',
+    audiencecapi: 'Sync Audience & CAPI', buataudience: 'Buat Audience Saja', shareaudience: 'Share Ulang Audience'
+  };
   const mapIdBtn = {
     harian: 'btnSyncMetaHarian', backfill30: 'btnSyncMetaBackfill', satuhari: 'btnSyncMetaSatuHari',
     content: 'btnSyncMetaContent', adsetperf: 'btnSyncMetaAdsetPerf', adsettargeting: 'btnSyncMetaAdsetTarget',
@@ -237,6 +242,7 @@ async function jalankanSyncMetaAds(jenis) {
   const btn = document.getElementById(mapIdBtn[jenis]);
   const outEl = document.getElementById(mapOutEl[jenis] || 'hasilSyncMetaAds');
   const teksAsli = btn ? btn.innerText : '';
+  const waktuMulai = Date.now();
   if (btn) { btn.disabled = true; btn.innerText = '⏳ Sinkronisasi...'; }
   if (outEl) { outEl.style.display = 'block'; outEl.style.background = '#f1f5f9'; outEl.innerText = '⏳ Menghubungi Meta API, mohon tunggu (bisa 10 detik - beberapa menit tergantung jumlah data)...'; }
   try {
@@ -244,11 +250,13 @@ async function jalankanSyncMetaAds(jenis) {
     fd.append('action', mapAction[jenis] || 'syncMetaAdsSekarang');
     const res = await fetch(scriptURL, { method: 'POST', body: fd });
     const result = await res.json();
+    const durasiDetik = ((Date.now() - waktuMulai) / 1000).toFixed(1);
     if (result.result === 'success') {
       if (outEl) {
         outEl.style.background = '#dcfce7'; outEl.style.color = '#166534';
-        outEl.innerText = '✅ Sinkronisasi selesai. ' + (result.message || '');
+        outEl.innerText = '✅ Sinkronisasi selesai (' + durasiDetik + ' detik). ' + (result.message || '');
       }
+      catatRiwayatSyncMeta_(mapLabel[jenis] || jenis, true, result.message || '', durasiDetik);
       await tarikDataServer();
       if (typeof renderMarketingTab === 'function') renderMarketingTab();
     } else {
@@ -256,16 +264,61 @@ async function jalankanSyncMetaAds(jenis) {
         outEl.style.background = '#fee2e2'; outEl.style.color = '#991b1b';
         outEl.innerText = '❌ Gagal: ' + (result.message || 'Action belum tersedia di Code.gs. Tambahkan handler-nya dulu (lihat instruksi).');
       }
+      catatRiwayatSyncMeta_(mapLabel[jenis] || jenis, false, result.message || 'Gagal', durasiDetik);
     }
   } catch (err) {
+    const durasiDetik = ((Date.now() - waktuMulai) / 1000).toFixed(1);
     if (outEl) {
       outEl.style.display = 'block'; outEl.style.background = '#fee2e2'; outEl.style.color = '#991b1b';
       outEl.innerText = '❌ Gagal koneksi: ' + err;
     }
+    catatRiwayatSyncMeta_(mapLabel[jenis] || jenis, false, 'Gagal koneksi: ' + err, durasiDetik);
   } finally {
     if (btn) { btn.disabled = false; btn.innerText = teksAsli; }
   }
 }
+
+// --- Riwayat Sync (tersimpan di localStorage browser ini, 5 terbaru) ---
+function catatRiwayatSyncMeta_(label, sukses, pesan, durasiDetik) {
+  const KEY = 'riwayat_sync_meta_ads';
+  let riwayat = [];
+  try { riwayat = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { riwayat = []; }
+  riwayat.unshift({
+    label, sukses, pesan,
+    durasiDetik,
+    waktu: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
+  });
+  riwayat = riwayat.slice(0, 5);
+  localStorage.setItem(KEY, JSON.stringify(riwayat));
+  renderRiwayatSyncMeta();
+}
+
+function renderRiwayatSyncMeta() {
+  const el = document.getElementById('riwayatSyncMetaList');
+  if (!el) return;
+  const KEY = 'riwayat_sync_meta_ads';
+  let riwayat = [];
+  try { riwayat = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { riwayat = []; }
+  if (riwayat.length === 0) {
+    el.innerHTML = '<div style="color:#94a3b8; font-style:italic;">Belum ada riwayat sync di sesi browser ini.</div>';
+    return;
+  }
+  el.innerHTML = riwayat.map(r => `
+    <div style="display:flex; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px solid #e0f2fe;">
+      <span>${r.sukses ? '✅' : '❌'} <b>${r.label}</b> <span style="color:#94a3b8;">(${r.durasiDetik}s)</span></span>
+      <span style="color:#64748b; white-space:nowrap;">${r.waktu}</span>
+    </div>
+  `).join('');
+}
+
+function bersihkanRiwayatSyncMeta() {
+  localStorage.removeItem('riwayat_sync_meta_ads');
+  renderRiwayatSyncMeta();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  try { renderRiwayatSyncMeta(); } catch (e) {}
+});
 
 // Sync ulang rentang tanggal tertentu (untuk perbaiki data yang tidak
 // ketarik/tidak sinkron di hari-hari tertentu).
