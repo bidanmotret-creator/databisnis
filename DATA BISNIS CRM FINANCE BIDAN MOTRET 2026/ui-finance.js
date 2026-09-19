@@ -156,22 +156,44 @@ async function simpanJurnal(btn) {
     }
 }
 
+// Batas jumlah baris yang dirender sekaligus di tabel Jurnal (data besar =
+// ribuan baris DOM = render lambat & scroll berat). User bisa klik
+// "Tampilkan Semua" kalau memang perlu lihat semuanya.
+const BATAS_BARIS_JURNAL_AWAL = 150;
+let jurnalTampilSemua_ = false;
+let jurnalDataTerakhirDirender_ = [];
+
+function toggleTampilSemuaJurnal() {
+    jurnalTampilSemua_ = !jurnalTampilSemua_;
+    renderJurnalTable(jurnalDataTerakhirDirender_);
+}
+
 function renderJurnalTable(data) {
     const tbody = document.getElementById('listPreviewJurnal');
     if (!tbody) return;
+    jurnalDataTerakhirDirender_ = Array.isArray(data) ? data : [];
     tbody.innerHTML = '';
 
     if (!Array.isArray(data) || data.length === 0) return;
 
+    // Total tetap dihitung dari SEMUA baris (bukan cuma yang ditampilkan)
     let totalDebit = 0;
     let totalKredit = 0;
-    const dataDisplay = [...data].reverse();
+    data.forEach(row => {
+        totalDebit += Number(row.debit) || 0;
+        totalKredit += Number(row.kredit) || 0;
+    });
 
+    const dataDisplayPenuh = [...data].reverse();
+    const perluDibatasi = !jurnalTampilSemua_ && dataDisplayPenuh.length > BATAS_BARIS_JURNAL_AWAL;
+    const dataDisplay = perluDibatasi ? dataDisplayPenuh.slice(0, BATAS_BARIS_JURNAL_AWAL) : dataDisplayPenuh;
+
+    // Bangun HTML sebagai string dulu (jauh lebih cepat dari appendChild
+    // satu-satu untuk ratusan/ribuan baris), baru di-set sekali ke DOM.
+    let htmlBaris = '';
     dataDisplay.forEach(row => {
         let deb = Number(row.debit) || 0;
         let kre = Number(row.kredit) || 0;
-        totalDebit += deb;
-        totalKredit += kre;
 
         let formattedDate = '-';
         if (row.tgl) {
@@ -181,33 +203,26 @@ function renderJurnalTable(data) {
                 : row.tgl;
         }
 
-            // Badge sumber entri
         let sumber = row.sumber_entri || 'Manual';
         let badgeSumber = sumber === 'Otomatis-Leads'
             ? `<span class="badge" style="background:#dbeafe; color:#1e40af; font-weight:700;">🔄 Auto (${row.ref_tahap_bayar || '-'})</span>`
             : `<span class="badge" style="background:#f1f5f9; color:#475569; font-weight:700;">✍️ Manual</span>`;
 
-        // --- BARU: tandai baris Pribadi dengan badge terpisah + baris agak transparan ---
         let baginiPribadi = isTransaksiPribadi_(row);
         let styleBarisPribadi = baginiPribadi ? 'opacity:0.75; background:#f8fafc;' : '';
 
-        // Badge status audit
         let statusAudit = row.status_audit || 'Belum Diaudit';
         let badgeAudit = statusAudit === 'Sudah Diaudit'
             ? `<span class="badge" style="background:#dcfce7; color:#166534; font-weight:700;" title="Oleh: ${row.diaudit_oleh || '-'} pada ${row.tgl_audit || '-'}">✅ ${row.diaudit_oleh || '-'}</span>`
             : `<button type="button" class="btn-verifikasi-jurnal" onclick="verifikasiJurnal('${row.id}')" style="padding:4px 10px; font-size:11px; border-radius:12px; border:1px solid #f59e0b; background:#fffbeb; color:#92400e; font-weight:700; cursor:pointer;">⏳ Verifikasi</button>`;
 
-        // Bukti nota
         let bukti = row.url_bukti
             ? `<a href="${row.url_bukti}" target="_blank" style="color:#2563eb; font-weight:700; text-decoration:none;">📎 Lihat</a>`
             : `<button type="button" onclick="pilihFileBuktiJurnal('${row.id}')" style="padding:4px 10px; font-size:11px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#475569; cursor:pointer;">📤 Upload</button>`;
 
         let aksi = `<button type="button" title="Hapus baris ini" onclick="hapusBarisJurnal('${row.id}', this)" style="padding:4px 8px; font-size:11px; border-radius:6px; border:none; background:#fee2e2; color:#991b1b; font-weight:700; cursor:pointer;">🗑️</button>`;
 
-              let tr = document.createElement('tr');
-        tr.setAttribute('data-pribadi', baginiPribadi ? '1' : '0');
-        tr.style.cssText = styleBarisPribadi;
-        tr.innerHTML = `
+        htmlBaris += `<tr data-pribadi="${baginiPribadi ? '1' : '0'}" style="${styleBarisPribadi}">
             <td>${row.id || '-'}</td>
             <td>${formattedDate}</td>
             <td>${row.kode || '-'}</td>
@@ -224,20 +239,32 @@ function renderJurnalTable(data) {
             <td>${badgeAudit}</td>
             <td>${bukti}</td>
             <td>${aksi}</td>
-        `;
-        tbody.appendChild(tr);
+        </tr>`;
     });
 
-    let trTotal = document.createElement('tr');
-    trTotal.style.fontWeight = "bold";
-    trTotal.style.background = "#f1f5f9";
-    trTotal.innerHTML = `
-        <td colspan="7" style="text-align: right;">TOTAL</td>
+    if (perluDibatasi) {
+        const sisaBaris = dataDisplayPenuh.length - BATAS_BARIS_JURNAL_AWAL;
+        htmlBaris += `<tr style="background:#f8fafc;">
+            <td colspan="13" style="text-align:center; padding:12px; cursor:pointer; color:#4f46e5; font-weight:700; font-size:12.5px;" onclick="toggleTampilSemuaJurnal()">
+                ▼ Tampilkan ${sisaBaris} baris lainnya (menampilkan ${BATAS_BARIS_JURNAL_AWAL} baris terbaru dari total ${dataDisplayPenuh.length}) ▼
+            </td>
+        </tr>`;
+    } else if (jurnalTampilSemua_ && dataDisplayPenuh.length > BATAS_BARIS_JURNAL_AWAL) {
+        htmlBaris += `<tr style="background:#f8fafc;">
+            <td colspan="13" style="text-align:center; padding:12px; cursor:pointer; color:#4f46e5; font-weight:700; font-size:12.5px;" onclick="toggleTampilSemuaJurnal()">
+                ▲ Sembunyikan sebagian lagi (tampilkan ${BATAS_BARIS_JURNAL_AWAL} baris terbaru saja) ▲
+            </td>
+        </tr>`;
+    }
+
+    htmlBaris += `<tr style="font-weight:bold; background:#f1f5f9;">
+        <td colspan="7" style="text-align: right;">TOTAL${perluDibatasi ? ' (seluruh data, bukan cuma yang ditampilkan)' : ''}</td>
         <td>Rp ${totalDebit.toLocaleString('id-ID')}</td>
         <td>Rp ${totalKredit.toLocaleString('id-ID')}</td>
         <td colspan="4"></td>
-    `;
-    tbody.appendChild(trTotal);
+    </tr>`;
+
+    tbody.innerHTML = htmlBaris;
 }
 
 // --- VERIFIKASI / AUDIT JURNAL ---

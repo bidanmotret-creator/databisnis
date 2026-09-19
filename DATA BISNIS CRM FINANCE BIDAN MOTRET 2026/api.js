@@ -5,7 +5,52 @@
 // HtmlService Apps Script, tidak bisa dipakai dari domain luar/Vercel).
 // =========================================================================
 
+// =========================================================================
+// STRATEGI PERCEPATAN LOADING (PROGRESSIVE LOADING):
+// Alih-alih menarik SEMUA data sekaligus (jurnal + leads + iklan harian
+// per-adset, dst -- bisa jadi ribuan baris) dalam satu request raksasa,
+// sekarang alurnya 2 tahap:
+//   TAHAP 1 (cepat): fetch ?action=getFinanceOnly -- HANYA data Keuangan
+//     (jurnal, akun, dst). Overlay loading langsung hilang & tab Keuangan
+//     langsung bisa dipakai begitu ini selesai (biasanya jauh lebih cepat
+//     karena tidak perlu baca sheet Leads/Data_Ads/Adset_Performance/dst).
+//   TAHAP 2 (di belakang layar, TIDAK memblokir tampilan): fetch penuh
+//     ?action=getData untuk mengisi data Marketing (clients, ads, dst).
+//     Kalau user sudah pindah ke tab Marketing sebelum tahap ini selesai,
+//     otomatis dirender ulang begitu datanya sampai.
+// =========================================================================
+
 async function tarikDataServer() {
+  await muatDataKeuanganCepat_();
+  // Tahap 2 sengaja TIDAK di-await di sini supaya tidak memblokir --
+  // biarkan berjalan di belakang layar.
+  muatDataLengkapDiBelakangLayar_();
+}
+
+// TAHAP 1: data Keuangan saja, cepat, dipakai saat load pertama kali.
+async function muatDataKeuanganCepat_() {
+  try {
+    const res = await fetch(scriptURL + '?action=getFinanceOnly');
+    const data = await res.json();
+
+    dataFinance = data.finance || dataFinance;
+    dataJurnalGlobal = dataFinance.journal || [];
+    dataAnggaranBiaya = dataFinance.anggaran || [];
+    if (typeof dataVendorGlobal !== 'undefined') dataVendorGlobal = dataFinance.vendors || [];
+
+    inisialisasiTampilanKeuangan_();
+  } catch (err) {
+    console.error('Gagal memuat data Keuangan awal:', err);
+    alert('❌ Gagal memuat data dari server. Cek koneksi atau URL Apps Script (scriptURL) di index.html.\n\n' + err);
+  } finally {
+    const overlay = document.getElementById('globalLoadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+}
+
+// TAHAP 2: data lengkap (Marketing dkk) -- dipanggil TANPA await, jalan di
+// belakang layar. Dipakai juga sebagai "refresh penuh" oleh tombol Refresh.
+async function muatDataLengkapDiBelakangLayar_() {
   try {
     const res = await fetch(scriptURL + '?action=getData');
     const data = await res.json();
@@ -24,21 +69,22 @@ async function tarikDataServer() {
     dataContent = data.adContentPerformance || [];
     dataTargetMingguanMarketing = data.targetMingguanMarketing || { global: null, perProduk: {} };
 
+    // Refresh ulang Keuangan juga (kalau ada perubahan dari data yang lebih baru)
     inisialisasiTampilanKeuangan_();
 
-    // Render tab Marketing juga kalau sedang aktif saat data pertama kali dimuat
+    // Render tab Marketing kalau sedang aktif saat data lengkap sampai
     const tabMarketingEl = document.getElementById('tabMarketing');
     if (tabMarketingEl && tabMarketingEl.classList.contains('active') && typeof renderMarketingTab === 'function') {
       renderMarketingTab();
     }
+
+    const indikator = document.getElementById('indikatorDataMarketingSiap');
+    if (indikator) indikator.style.display = 'none';
   } catch (err) {
-    console.error('Gagal memuat data dari server:', err);
-    alert('❌ Gagal memuat data dari server. Cek koneksi atau URL Apps Script (scriptURL) di index.html.\n\n' + err);
-  } finally {
-    const overlay = document.getElementById('globalLoadingOverlay');
-    if (overlay) overlay.style.display = 'none';
+    console.error('Gagal memuat data lengkap (Marketing) di belakang layar:', err);
   }
 }
+
 
 // Dipakai untuk refresh cepat setelah aksi jurnal (posting/hapus/dll),
 // tanpa perlu narik ulang seluruh dataset CRM+Marketing yang berat.
@@ -207,8 +253,9 @@ async function refreshDataMarketingManual() {
   try {
     // Belum ada endpoint "getMarketingOnly" khusus di Code.gs, jadi tarik
     // ulang semua data (getData) lalu render ulang tab Marketing saja.
-    await tarikDataServer();
-    if (typeof renderMarketingTab === 'function') renderMarketingTab();
+    // (BEDA dari tarikDataServer() biasa: di sini kita SENGAJA menunggu
+    // data lengkap sampai, bukan cuma versi cepat Keuangan.)
+    await muatDataLengkapDiBelakangLayar_();
   } finally {
     if (btn) { btn.disabled = false; btn.innerText = teksAsli || '🔄 Refresh'; }
   }
