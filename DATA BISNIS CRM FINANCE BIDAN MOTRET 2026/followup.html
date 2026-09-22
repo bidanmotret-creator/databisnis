@@ -32,12 +32,12 @@
   .fu-prod-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .fu-prod-grid .full { grid-column:1/-1; }
   .fu-prod-grid label { display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:3px; }
-  .fu-prod-grid textarea, .fu-prod-grid input { width:100%; border:1px solid var(--border); border-radius:6px; padding:7px 9px; font-size:12.5px; font-family:inherit; box-sizing:border-box; }
+  .fu-prod-grid textarea, .fu-prod-grid input, .fu-prod-grid select { width:100%; border:1px solid var(--border); border-radius:6px; padding:7px 9px; font-size:12.5px; font-family:inherit; box-sizing:border-box; }
   .fu-prod-grid textarea { min-height:64px; resize:vertical; }
   .btn-fu-hapus { background:#fee2e2; color:#991b1b; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; }
   .btn-fu-hapus:hover { background:#fecaca; }
 
-  #tabFollowUp .sub-tab-menu { margin-bottom:16px; }
+  #tabFollowUp .sub-tab-menu, #tabAiLearning .sub-tab-menu { margin-bottom:16px; }
 </style>
 </head>
 <body>
@@ -58,6 +58,7 @@
       <div class="nav-group">
         <button class="nav-item active" onclick="bukaTab('tabAiChat', this)"><span class="nav-ico">🧠</span> AI Chat Analysis</button>
         <button class="nav-item" onclick="bukaTab('tabFollowUp', this)"><span class="nav-ico">⚡</span> Follow-up Otomatis</button>
+        <button class="nav-item" onclick="bukaTab('tabAiLearning', this)"><span class="nav-ico">🎓</span> AI Learning</button>
       </div>
       <div class="nav-group" style="margin-top:auto;">
         <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
@@ -207,6 +208,109 @@
   </div>
 </div>
 
+<!-- ===================== TAB 3: AI LEARNING (Error Log + Few-Shot) ===================== -->
+<div id="tabAiLearning" class="tab-content">
+  <div class="sub-tab-menu">
+    <button class="sub-tab-btn active" onclick="bukaSubTab('subErrLog', this)">🚨 Log Error AI</button>
+    <button class="sub-tab-btn" onclick="bukaSubTab('subFewShot', this)">📚 Kelola Contoh (Few-Shot)</button>
+  </div>
+
+  <!-- SUB-TAB: LOG ERROR -->
+  <div id="subErrLog" class="sub-content active" style="display:block;">
+    <p style="font-size:12px; color:var(--text-light); margin:0 0 12px 0;">
+      Setiap kali AI salah baca pesan customer (format rusak, atau nilainya aneh), sistem otomatis mencatatnya di sini.
+      Kalau kamu lihat kasus yang layak diajarkan ke AI, klik "Jadikan Contoh" untuk memindahkannya ke daftar Few-Shot.
+    </p>
+    <div class="fu-kpi-grid" id="errKpiGrid"></div>
+
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>Jenis Prompt</label>
+          <select id="errFilterJenis" onchange="renderErrorLogTable()"><option value="">Semua Jenis</option></select>
+        </div>
+        <div class="form-group">
+          <label>Status Review</label>
+          <select id="errFilterReview" onchange="renderErrorLogTable()">
+            <option value="">Semua</option>
+            <option value="belum">Belum Direview</option>
+            <option value="sudah">Sudah Direview</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive table-compact-wrap">
+        <table>
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th>Waktu</th><th>Jenis</th><th>Pesan Customer</th><th>Output AI (Salah)</th>
+              <th>Status</th><th>Sudah Ditangani?</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="bErrorLogTable"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB-TAB: KELOLA CONTOH -->
+  <div id="subFewShot" class="sub-content" style="display:none;">
+    <div class="card" style="margin-bottom:16px;">
+      <h4 style="margin:0 0 12px 0;">➕ Tambah Contoh Baru Secara Manual</h4>
+      <div class="fu-prod-grid">
+        <div>
+          <label>Jenis Prompt</label>
+          <select id="fsInputJenis">
+            <option value="ekstrak_usia">Ekstrak Usia Anak</option>
+            <option value="product_interest">Deteksi Minat Produk</option>
+            <option value="chat_analysis">Analisis Chat (Batch)</option>
+          </select>
+        </div>
+        <div></div>
+        <div class="full">
+          <label>Pesan Contoh (pesan asli dari customer)</label>
+          <textarea id="fsInputPesan" placeholder="cth: baby lahir tanggal 3 kemaren kak"></textarea>
+        </div>
+        <div class="full">
+          <label>Output JSON Ideal (harus format JSON valid)</label>
+          <textarea id="fsInputOutput" placeholder='{"status":"sudah_lahir","tanggal":"2026-09-19","domisili":""}'></textarea>
+        </div>
+        <div class="full">
+          <label>Catatan (opsional)</label>
+          <input type="text" id="fsInputCatatan" placeholder="cth: contoh tanggal relatif">
+        </div>
+      </div>
+      <button type="button" class="btn-co-primary" style="margin-top:10px;" onclick="tambahFewShotManual()">💾 Simpan & Aktifkan</button>
+    </div>
+
+    <div class="fu-kpi-grid" id="fsKpiGrid"></div>
+
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>Jenis Prompt</label>
+          <select id="fsFilterJenis" onchange="renderFewShotTable()"><option value="">Semua Jenis</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive table-compact-wrap">
+        <table>
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th>Jenis</th><th>Pesan Contoh</th><th>Output Ideal</th><th>Catatan</th><th>Status</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="bFewShotTable"><tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
     </div>
   </main>
 </div>
@@ -220,10 +324,13 @@
   let dataPengaturanFollowUp = { aktif: true };
   let dataPengaturanFollowUpProduk = [];
   let dataKolomFupProduk = [];
+  let dataAiErrorLog = [];
+  let dataFewShotList = [];
 </script>
 
 <script src="utils.js"></script>
 <script src="ui-followup.js"></script>
+<script src="ui-fewshot.js"></script>
 <script src="api-followup.js"></script>
 
 </body>
