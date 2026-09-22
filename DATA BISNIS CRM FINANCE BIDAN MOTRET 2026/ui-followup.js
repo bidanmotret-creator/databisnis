@@ -212,6 +212,21 @@ const LABEL_KOLOM_FU_ = {
 const FIELD_TEXTAREA_ = ['template_qualifying', 'template_setelah_detail', 'template_aman_lanjutan', 'template_abuabu', 'template_tolak', 'template_repeat_customer', 'template_lokasi_luar_kota', 'template_reminder_h4', 'template_reminder_h20'];
 const FIELD_GLOBAL_ONLY_ = ['template_repeat_customer', 'template_lokasi_luar_kota'];
 
+// Contoh teks yang tampil abu-abu di kotak kosong (placeholder) -- ini
+// CUMA panduan visual, tidak ikut tersimpan sampai user benar-benar ketik
+// sesuatu di kotaknya. Aman dibiarkan kosong kalau memang mau kosong.
+const CONTOH_PLACEHOLDER_ = {
+  template_qualifying: "Contoh: Halo [NAMA]! Boleh info dulu ya kak: 1) HPL/tanggal lahir baby 2) Domisili tinggal di mana?",
+  template_setelah_detail: "Contoh: Ini Price List kami kak, boleh dicek dulu 😊",
+  template_aman_lanjutan: "Contoh: Kalau fix mau foto, bisa segera booking ya kak, usia pemotretan maksimal [BATAS_AMAN] hari.[LOKASI_NOTE]",
+  template_abuabu: "Contoh: Usia baby sudah [USIA_HARI] hari. Boleh info BB lahir & kondisi kesehatan? Tim kami cek dulu ya.",
+  template_tolak: "Contoh: Mohon maaf, usia baby [USIA_HARI] hari sudah di luar window. Kami ada paket lain yang cocok, mau kami kirim infonya?",
+  template_repeat_customer: "Contoh: Halo kembali [NAMA]! Senang bisa terhubung lagi 🤍 Ada yang bisa kami bantu kali ini?",
+  template_lokasi_luar_kota: "Contoh: Kami lihat domisili kakak di luar kota. Boleh share pin lokasi untuk cek estimasi transport?",
+  template_reminder_h4: "Contoh: Halo [NAMA] 👋 Masih ditunggu infonya ya kak, biar kami bisa bantu cek jadwal.",
+  template_reminder_h20: "Contoh: Halo kak [NAMA], kami masih standby kalau mau lanjut ya 🙏"
+};
+
 function renderPengaturanProduk() {
   const container = document.getElementById('fuPengaturanContainer');
   if (!container) return;
@@ -233,6 +248,7 @@ function renderPengaturanProduk() {
           <div class="${isGlobal ? '' : ''}">
             <label>Nama Minat/Produk (persis sama seperti di dropdown Minat)</label>
             <input type="text" ${isGlobal ? 'disabled' : ''} value="${isGlobal ? '__GLOBAL__' : (item.minat || '')}"
+              placeholder="Contoh: Newborn, Maternity, Handcasting, Birthday, Family"
               onchange="updateFieldProduk(${idx}, 'minat', this.value)">
           </div>
           <div>
@@ -245,7 +261,7 @@ function renderPengaturanProduk() {
           ${FIELD_TEXTAREA_.filter(f => isGlobal || !FIELD_GLOBAL_ONLY_.includes(f)).map(f => `
             <div class="full">
               <label>${LABEL_KOLOM_FU_[f]}${isGlobal ? '' : ' (kosongkan = ikut __GLOBAL__)'}</label>
-              <textarea onchange="updateFieldProduk(${idx}, '${f}', this.value)">${(item[f] || '')}</textarea>
+              <textarea placeholder="${CONTOH_PLACEHOLDER_[f] || ''}" onchange="updateFieldProduk(${idx}, '${f}', this.value)">${(item[f] || '')}</textarea>
             </div>
           `).join('')}
           <div>
@@ -260,12 +276,12 @@ function renderPengaturanProduk() {
           </div>
           <div>
             <label>${LABEL_KOLOM_FU_.url_pl_pdf}</label>
-            <input type="text" value="${item.url_pl_pdf || ''}" placeholder="${isGlobal ? 'https://...' : '(ikut global)'}"
+            <input type="text" value="${item.url_pl_pdf || ''}" placeholder="${isGlobal ? 'https://drive.google.com/uc?export=download&id=...' : '(ikut global)'}"
               onchange="updateFieldProduk(${idx}, 'url_pl_pdf', this.value)">
           </div>
           <div>
             <label>${LABEL_KOLOM_FU_.nama_file_pdf}</label>
-            <input type="text" value="${item.nama_file_pdf || ''}" placeholder="${isGlobal ? 'Price List.pdf' : '(ikut global)'}"
+            <input type="text" value="${item.nama_file_pdf || ''}" placeholder="${isGlobal ? 'PL Newborn Bidan Motret 2026.pdf' : '(ikut global)'}"
               onchange="updateFieldProduk(${idx}, 'nama_file_pdf', this.value)">
           </div>
         </div>
