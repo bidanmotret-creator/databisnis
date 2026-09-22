@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chat & Follow-up Otomatis — SentuhanMomen3D</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .fu-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+  .fu-kpi-card { border-radius:12px; padding:16px 18px; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.10); }
+  .fu-kpi-card .n { font-size:22px; font-weight:900; }
+  .fu-kpi-card .l { font-size:11px; text-transform:uppercase; opacity:.9; margin-top:4px; font-weight:700; }
+  .fu-kpi-1 { background:linear-gradient(160deg,#4f46e5,#312e81); }
+  .fu-kpi-2 { background:linear-gradient(160deg,#0ea5e9,#075985); }
+  .fu-kpi-3 { background:linear-gradient(160deg,#f59e0b,#b45309); }
+  .fu-kpi-4 { background:linear-gradient(160deg,#10b981,#065f46); }
+  .fu-kpi-5 { background:linear-gradient(160deg,#ef4444,#7f1d1d); }
+
+  .fu-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; color:#fff; }
+  .fu-stage-0 { background:#94a3b8; }
+  .fu-stage-1 { background:#f59e0b; }
+  .fu-stage-2 { background:#0ea5e9; }
+  .fu-stage-3 { background:#ef4444; }
+  .fu-stage-100 { background:#10b981; }
+  .fu-intent-High, .fu-intent-VeryHigh { background:#10b981; }
+  .fu-intent-Medium { background:#f59e0b; }
+  .fu-intent-Low { background:#94a3b8; }
+  .fu-intent-Unknown { background:#cbd5e1; color:#334155; }
+
+  .fu-prod-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; }
+  .fu-prod-card h4 { margin:0 0 10px 0; display:flex; align-items:center; justify-content:space-between; }
+  .fu-prod-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .fu-prod-grid .full { grid-column:1/-1; }
+  .fu-prod-grid label { display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:3px; }
+  .fu-prod-grid textarea, .fu-prod-grid input { width:100%; border:1px solid var(--border); border-radius:6px; padding:7px 9px; font-size:12.5px; font-family:inherit; box-sizing:border-box; }
+  .fu-prod-grid textarea { min-height:64px; resize:vertical; }
+  .btn-fu-hapus { background:#fee2e2; color:#991b1b; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; }
+  .btn-fu-hapus:hover { background:#fecaca; }
+
+  #tabFollowUp .sub-tab-menu { margin-bottom:16px; }
+</style>
+</head>
+<body>
+
+<div id="globalLoadingOverlay" style="position:fixed; inset:0; z-index:9999; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+    <div style="width:48px; height:48px; border:4px solid #e2e8f0; border-top-color:#4f46e5; border-radius:50%; animation:spinFu 0.8s linear infinite;"></div>
+    <div style="font-size:14px; font-weight:600; color:#475569;">Memuat data AI Chat & Follow-up...</div>
+</div>
+<style>@keyframes spinFu { to { transform: rotate(360deg); } }</style>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🤖</div>
+      <div class="brand-text"><strong>AI Chat & Follow-up</strong><span>SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <button class="nav-item active" onclick="bukaTab('tabAiChat', this)"><span class="nav-ico">🧠</span> AI Chat Analysis</button>
+        <button class="nav-item" onclick="bukaTab('tabFollowUp', this)"><span class="nav-ico">⚡</span> Follow-up Otomatis</button>
+      </div>
+      <div class="nav-group" style="margin-top:auto;">
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title" id="topbarTitle">AI Chat Analysis</div>
+      <button type="button" onclick="tarikDataFollowUp()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
+    </div>
+
+    <div class="content-inner">
+
+<!-- ===================== TAB 1: AI CHAT ANALYSIS ===================== -->
+<div id="tabAiChat" class="tab-content active">
+  <div class="fu-kpi-grid" id="aiKpiGrid"></div>
+
+  <div class="filter-panel">
+    <div class="filter-grid">
+      <div class="form-group">
+        <label>Cari (No HP / Ringkasan)</label>
+        <input type="text" id="aiFilterCari" oninput="renderAiChatTable()" placeholder="cth: 0812xxxx atau kata kunci">
+      </div>
+      <div class="form-group">
+        <label>Product Interest</label>
+        <select id="aiFilterProduk" onchange="renderAiChatTable()">
+          <option value="">Semua</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Intent</label>
+        <select id="aiFilterIntent" onchange="renderAiChatTable()">
+          <option value="">Semua</option>
+          <option value="Very High">Very High</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Booking Signal</label>
+        <select id="aiFilterBooking" onchange="renderAiChatTable()">
+          <option value="">Semua</option>
+          <option value="true">Ya (siap booking)</option>
+          <option value="false">Belum</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive table-compact-wrap">
+      <table>
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th>No HP</th><th>Nama</th><th>Produk Diminati</th><th>Timeline</th><th>Lokasi</th>
+            <th>Budget</th><th>Intent</th><th>Booking?</th><th>Confidence</th><th>Ringkasan</th><th>Waktu Analisis</th>
+          </tr>
+        </thead>
+        <tbody id="bAiChatTable"><tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 2: FOLLOW-UP OTOMATIS ===================== -->
+<div id="tabFollowUp" class="tab-content">
+  <div class="sub-tab-menu">
+    <button class="sub-tab-btn active" onclick="bukaSubTab('subFuMonitor', this)">📊 Monitor Stage & Drip</button>
+    <button class="sub-tab-btn" onclick="bukaSubTab('subFuPengaturan', this)">⚙️ Pengaturan Template per Produk</button>
+  </div>
+
+  <!-- SUB-TAB: MONITOR -->
+  <div id="subFuMonitor" class="sub-content active" style="display:block;">
+    <div class="fu-kpi-grid" id="fuKpiGrid"></div>
+
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>Cari (No HP / Nama)</label>
+          <input type="text" id="fuFilterCari" oninput="renderFollowUpTable()" placeholder="cth: 0812xxxx atau nama">
+        </div>
+        <div class="form-group">
+          <label>Stage</label>
+          <select id="fuFilterStage" onchange="renderFollowUpTable()">
+            <option value="">Semua</option>
+            <option value="0">0 - Belum ditanya qualifying</option>
+            <option value="1">1 - Sudah ditanya, menunggu jawaban</option>
+            <option value="2">2 - PL terkirim</option>
+            <option value="3">3 - Perlu review CS (abu-abu usia)</option>
+            <option value="100">100 - Repeat customer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Hanya yang sedang di-drip (stuck &gt; H+4)</label>
+          <select id="fuFilterDrip" onchange="renderFollowUpTable()">
+            <option value="">Semua</option>
+            <option value="ya">Ya, sedang menunggu reminder</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive table-compact-wrap">
+        <table>
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th>No HP</th><th>Nama</th><th>Kode Leads</th><th>Produk</th><th>Stage Terakhir</th>
+              <th>Catatan</th><th>Waktu Update</th><th>Reminder Drip Terkirim</th><th>Reminder Terakhir</th>
+            </tr>
+          </thead>
+          <tbody id="bFollowUpTable"><tr><td colspan="9" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB-TAB: PENGATURAN -->
+  <div id="subFuPengaturan" class="sub-content" style="display:none;">
+    <div class="card" style="margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:13.5px; margin:0;">
+        <input type="checkbox" id="fuAktifGlobal" style="width:18px; height:18px;">
+        Sistem Follow-up Otomatis Aktif
+      </label>
+      <button type="button" class="btn-co-primary" onclick="simpanAktifGlobal()">💾 Simpan Status Aktif</button>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+      <p style="font-size:12px; color:var(--text-light); margin:0; max-width:640px;">
+        Baris <b>__GLOBAL__</b> adalah fallback: kalau field pada baris produk dikosongkan, sistem otomatis pakai nilai dari baris ini.
+        Newborn wajib "Butuh Cek Usia Bayi" = Ya; produk lain sebaiknya Tidak.
+      </p>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-co-secondary" onclick="tambahBarisProduk()">➕ Tambah Produk</button>
+        <button type="button" class="btn-co-primary" onclick="simpanPengaturanProduk()">💾 Simpan Semua Template</button>
+      </div>
+    </div>
+
+    <div id="fuPengaturanContainer"></div>
+  </div>
+</div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+  let dataAiAnalysis = [];
+  let dataFollowUpState = [];
+  let dataDripTracking = [];
+  let dataNamaKodeByHp = {};
+  let dataPengaturanFollowUp = { aktif: true };
+  let dataPengaturanFollowUpProduk = [];
+  let dataKolomFupProduk = [];
+</script>
+
+<script src="utils.js"></script>
+<script src="ui-followup.js"></script>
+<script src="api-followup.js"></script>
+
+</body>
+</html>
