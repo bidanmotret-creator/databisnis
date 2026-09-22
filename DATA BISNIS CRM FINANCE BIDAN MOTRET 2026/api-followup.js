@@ -5,14 +5,36 @@
 // payload getData() yang berat (finance+marketing+leads dst).
 // =========================================================================
 
+// Coba fetch dengan percobaan ulang otomatis -- Apps Script kadang lambat
+// merespons pertama kali (cold start) kalau sudah lama tidak dipanggil,
+// jadi kita kasih kesempatan coba lagi sebelum benar-benar dianggap gagal.
+async function fetchDenganRetry_(url, percobaanMaks) {
+  percobaanMaks = percobaanMaks || 3;
+  var errorTerakhir = null;
+
+  for (var percobaan = 1; percobaan <= percobaanMaks; percobaan++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } catch (err) {
+      errorTerakhir = err;
+      if (percobaan < percobaanMaks) {
+        // Tunggu sebentar sebelum coba lagi, makin lama tiap gagal
+        // (percobaan 1 gagal -> tunggu 2 detik, percobaan 2 gagal -> tunggu 4 detik, dst)
+        await new Promise(resolve => setTimeout(resolve, 2000 * percobaan));
+      }
+    }
+  }
+  throw errorTerakhir;
+}
+
 async function tarikDataFollowUp() {
   const overlay = document.getElementById('globalLoadingOverlay');
   if (overlay) overlay.style.display = 'flex';
 
   try {
-    const res = await fetch(scriptURL + '?action=getFollowUpData');
-    if (!res.ok) throw new Error('Gagal ambil data (HTTP ' + res.status + ')');
-    const data = await res.json();
+    const data = await fetchDenganRetry_(scriptURL + '?action=getFollowUpData', 3);
 
     dataAiAnalysis = data.aiAnalysis || [];
     dataFollowUpState = data.followUpState || [];
@@ -24,7 +46,6 @@ async function tarikDataFollowUp() {
     dataAiErrorLog = data.aiErrorLog || [];
     dataFewShotList = data.fewShotList || [];
 
-    // Render semuanya (fungsi ada di ui-followup.js dan ui-fewshot.js)
     if (typeof isiDropdownProdukAiChat === 'function') isiDropdownProdukAiChat();
     if (typeof renderAiChatTable === 'function') renderAiChatTable();
     if (typeof renderFollowUpTable === 'function') renderFollowUpTable();
@@ -36,7 +57,7 @@ async function tarikDataFollowUp() {
     if (typeof renderFewShotTable === 'function') renderFewShotTable();
   } catch (err) {
     console.error('Gagal memuat data Follow-up:', err);
-    alert('❌ Gagal memuat data dari server. Cek koneksi atau scriptURL di followup.html.\n\n' + err);
+    alert('❌ Gagal memuat data dari server setelah beberapa kali percobaan. Cek koneksi atau scriptURL di followup.html.\n\n' + err);
   } finally {
     if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; overlay.style.opacity = '1'; }, 250); }
   }
