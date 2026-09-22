@@ -190,23 +190,26 @@ function renderPengaturanAktif() {
 
 const LABEL_KOLOM_FU_ = {
   minat: 'Minat / Kategori Produk',
-  butuh_cek_usia_bayi: 'Butuh Cek Usia Bayi? (khusus Newborn)',
-  template_qualifying: 'Template Qualifying (Stage 0 → 1)',
-  template_detail_acara: 'Template Tanya Detail Acara (non-Newborn, Stage 1)',
-  template_setelah_detail: 'Caption Dikirim Bareng PL (non-Newborn)',
-  template_aman_lanjutan: 'Template Setelah PL — Newborn Aman',
-  template_abuabu: 'Template Newborn Zona Abu-abu',
-  template_tolak: 'Template Newborn Ditolak (di luar window)',
+  butuh_cek_usia_bayi: 'Punya Batas Window Usia? (bisa auto-tolak — hanya Newborn yang seharusnya "Ya")',
+  template_qualifying: 'Template Qualifying (Stage 0 → 1) — tanyakan usia/tanggal lahir anak di sini',
+  template_setelah_detail: 'Caption Dikirim Bareng PL (untuk produk TANPA batas window)',
+  template_aman_lanjutan: 'Template Setelah PL — Dalam Window Aman (khusus produk dengan batas window)',
+  template_abuabu: 'Template Zona Abu-abu (khusus produk dengan batas window)',
+  template_tolak: 'Template Ditolak / Di Luar Window (khusus produk dengan batas window)',
   template_repeat_customer: 'Template Sapaan Repeat Customer (khusus __GLOBAL__)',
   template_lokasi_luar_kota: 'Template Catatan Lokasi Luar Kota (khusus __GLOBAL__)',
   template_reminder_h4: 'Template Reminder Drip H+4 Jam',
   template_reminder_h20: 'Template Reminder Drip H+20 Jam',
-  batas_hari_aman: 'Batas Hari Aman (Newborn)',
-  batas_hari_abuabu: 'Batas Hari Abu-abu (Newborn)',
+  batas_hari_aman: 'Batas Hari Aman (khusus produk dengan batas window)',
+  batas_hari_abuabu: 'Batas Hari Abu-abu (khusus produk dengan batas window)',
   url_pl_pdf: 'URL PDF Price List',
   nama_file_pdf: 'Nama File PDF'
 };
-const FIELD_TEXTAREA_ = ['template_qualifying', 'template_detail_acara', 'template_setelah_detail', 'template_aman_lanjutan', 'template_abuabu', 'template_tolak', 'template_repeat_customer', 'template_lokasi_luar_kota', 'template_reminder_h4', 'template_reminder_h20'];
+// NOTE: 'template_detail_acara' sengaja TIDAK ditampilkan lagi di form ini —
+// sejak alur di-unifikasi (semua produk tanya usia anak, bukan tanggal
+// acara/tema), field ini sudah tidak dipakai oleh prosesFollowUpOtomatis_.
+// Kolomnya boleh tetap ada di sheet (data lama tidak hilang), cuma disembunyikan di sini.
+const FIELD_TEXTAREA_ = ['template_qualifying', 'template_setelah_detail', 'template_aman_lanjutan', 'template_abuabu', 'template_tolak', 'template_repeat_customer', 'template_lokasi_luar_kota', 'template_reminder_h4', 'template_reminder_h20'];
 const FIELD_GLOBAL_ONLY_ = ['template_repeat_customer', 'template_lokasi_luar_kota'];
 
 function renderPengaturanProduk() {
@@ -235,8 +238,8 @@ function renderPengaturanProduk() {
           <div>
             <label>${LABEL_KOLOM_FU_.butuh_cek_usia_bayi}</label>
             <select onchange="updateFieldProduk(${idx}, 'butuh_cek_usia_bayi', this.value === 'true')">
-              <option value="true" ${item.butuh_cek_usia_bayi ? 'selected' : ''}>Ya (Newborn)</option>
-              <option value="false" ${!item.butuh_cek_usia_bayi ? 'selected' : ''}>Tidak (non-Newborn)</option>
+              <option value="true" ${item.butuh_cek_usia_bayi ? 'selected' : ''}>Ya — bisa auto-tolak kalau di luar window (Newborn)</option>
+              <option value="false" ${!item.butuh_cek_usia_bayi ? 'selected' : ''}>Tidak — usia cuma info, PL selalu dikirim</option>
             </select>
           </div>
           ${FIELD_TEXTAREA_.filter(f => isGlobal || !FIELD_GLOBAL_ONLY_.includes(f)).map(f => `
