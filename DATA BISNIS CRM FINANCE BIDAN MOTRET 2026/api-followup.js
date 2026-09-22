@@ -21,13 +21,19 @@ async function tarikDataFollowUp() {
     dataPengaturanFollowUp = data.pengaturanFollowUp || { aktif: true };
     dataPengaturanFollowUpProduk = data.pengaturanFollowUpPerProduk || [];
     dataKolomFupProduk = data.kolomFupProduk || [];
+    dataAiErrorLog = data.aiErrorLog || [];
+    dataFewShotList = data.fewShotList || [];
 
-    // Render semuanya (fungsi ada di ui-followup.js)
+    // Render semuanya (fungsi ada di ui-followup.js dan ui-fewshot.js)
     if (typeof isiDropdownProdukAiChat === 'function') isiDropdownProdukAiChat();
     if (typeof renderAiChatTable === 'function') renderAiChatTable();
     if (typeof renderFollowUpTable === 'function') renderFollowUpTable();
     if (typeof renderPengaturanAktif === 'function') renderPengaturanAktif();
     if (typeof renderPengaturanProduk === 'function') renderPengaturanProduk();
+    if (typeof isiDropdownJenisPromptError_ === 'function') isiDropdownJenisPromptError_();
+    if (typeof renderErrorLogTable === 'function') renderErrorLogTable();
+    if (typeof isiDropdownJenisPromptFewShot_ === 'function') isiDropdownJenisPromptFewShot_();
+    if (typeof renderFewShotTable === 'function') renderFewShotTable();
   } catch (err) {
     console.error('Gagal memuat data Follow-up:', err);
     alert('❌ Gagal memuat data dari server. Cek koneksi atau scriptURL di followup.html.\n\n' + err);
