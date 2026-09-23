@@ -21,7 +21,6 @@
   .fu-stage-1 { background:#f59e0b; }
   .fu-stage-2 { background:#0ea5e9; }
   .fu-stage-3 { background:#ef4444; }
-  .fu-stage-4 { background:#a855f7; }
   .fu-stage-100 { background:#10b981; }
   .fu-intent-High, .fu-intent-VeryHigh { background:#10b981; }
   .fu-intent-Medium { background:#f59e0b; }
@@ -60,6 +59,7 @@
         <button class="nav-item active" onclick="bukaTab('tabAiChat', this)"><span class="nav-ico">🧠</span> AI Chat Analysis</button>
         <button class="nav-item" onclick="bukaTab('tabFollowUp', this)"><span class="nav-ico">⚡</span> Follow-up Otomatis</button>
         <button class="nav-item" onclick="bukaTab('tabAiLearning', this)"><span class="nav-ico">🎓</span> AI Learning</button>
+        <button class="nav-item" onclick="bukaTab('tabAnalisisEvaluasi', this)"><span class="nav-ico">📈</span> Analisis & Evaluasi</button>
       </div>
       <div class="nav-group" style="margin-top:auto;">
         <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
@@ -74,8 +74,28 @@
       <div class="topbar-title" id="topbarTitle">AI Chat Analysis</div>
       <button type="button" onclick="tarikDataFollowUp()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
     </div>
+<!-- ===================== TAB 4: ANALISIS & EVALUASI ===================== -->
+<div id="tabAnalisisEvaluasi" class="tab-content">
+  <div class="fu-kpi-grid" id="evalKpiGrid"></div>
 
+  <div class="card" style="margin-bottom:16px;">
+    <h4 style="margin:0 0 12px 0;">📊 Funnel Stage (Posisi Terakhir Semua Nomor)</h4>
+    <div id="evalFunnelChart"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h4 style="margin:0 0 12px 0;">🏆 Layanan Terpopuler</h4>
+    <div id="evalPopularitasChart"></div>
+  </div>
+
+  <div class="card">
+    <h4 style="margin:0 0 12px 0;">⚠️ Error AI per Jenis Prompt</h4>
+    <div id="evalErrorChart"></div>
+  </div>
+</div>
     <div class="content-inner">
+
+
 
 <!-- ===================== TAB 1: AI CHAT ANALYSIS ===================== -->
 <div id="tabAiChat" class="tab-content active">
@@ -135,6 +155,7 @@
   <div class="sub-tab-menu">
     <button class="sub-tab-btn active" onclick="bukaSubTab('subFuMonitor', this)">📊 Monitor Stage & Drip</button>
     <button class="sub-tab-btn" onclick="bukaSubTab('subFuPengaturan', this)">⚙️ Pengaturan Template per Produk</button>
+    <button class="sub-tab-btn" onclick="bukaSubTab('subFuSistem', this)">🔧 Pengaturan Sistem</button>
   </div>
 
   <!-- SUB-TAB: MONITOR -->
@@ -151,12 +172,10 @@
           <label>Stage</label>
           <select id="fuFilterStage" onchange="renderFollowUpTable()">
             <option value="">Semua</option>
-            
             <option value="0">0 - Belum ditanya qualifying</option>
             <option value="1">1 - Sudah ditanya, menunggu jawaban</option>
             <option value="2">2 - PL terkirim</option>
             <option value="3">3 - Perlu review CS (abu-abu usia)</option>
-            <option value="4">4 - Menunggu pilih layanan (menu terkirim)</option>
             <option value="100">100 - Repeat customer</option>
           </select>
         </div>
@@ -209,6 +228,34 @@
 
     <div id="fuPengaturanContainer"></div>
   </div>
+
+  <div id="subFuSistem" class="sub-content" style="display:none;">
+  <div class="card">
+    <h4 style="margin:0 0 12px 0;">Pengaturan Waktu & Batas Sistem</h4>
+    <p style="font-size:12px; color:var(--text-light); margin:0 0 14px 0;">
+      Ubah angka-angka ini tanpa perlu edit kode. Berlaku untuk seluruh sistem follow-up otomatis.
+    </p>
+    <div class="fu-prod-grid">
+      <div>
+        <label>Reminder Drip Pertama (jam setelah diam di Stage 1)</label>
+        <input type="number" id="sisDripJamH4">
+      </div>
+      <div>
+        <label>Reminder Drip Kedua (jam setelah reminder pertama)</label>
+        <input type="number" id="sisDripJamH20">
+      </div>
+      <div>
+        <label>Maksimal Reminder Drip Dikirim</label>
+        <input type="number" id="sisDripMaxReminder">
+      </div>
+      <div>
+        <label>Eskalasi ke CS Setelah Gagal Ekstrak Berapa Kali</label>
+        <input type="number" id="sisBatasGagalEskalasi">
+      </div>
+    </div>
+    <button type="button" class="btn-co-primary" style="margin-top:12px;" onclick="simpanPengaturanSistem()">💾 Simpan Pengaturan Sistem</button>
+  </div>
+</div>
 </div>
 
 <!-- ===================== TAB 3: AI LEARNING (Error Log + Few-Shot) ===================== -->
@@ -217,6 +264,7 @@
     <button class="sub-tab-btn active" onclick="bukaSubTab('subErrLog', this)">🚨 Log Error AI</button>
     <button class="sub-tab-btn" onclick="bukaSubTab('subFewShot', this)">📚 Kelola Contoh (Few-Shot)</button>
   </div>
+  
 
   <!-- SUB-TAB: LOG ERROR -->
   <div id="subErrLog" class="sub-content active" style="display:block;">
@@ -329,6 +377,8 @@
   let dataKolomFupProduk = [];
   let dataAiErrorLog = [];
   let dataFewShotList = [];
+  let dataAnalisisEvaluasi = {};
+let dataPengaturanSistem = {};
 </script>
 
 <script src="utils.js"></script>

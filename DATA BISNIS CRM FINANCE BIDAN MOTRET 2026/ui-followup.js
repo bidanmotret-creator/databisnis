@@ -14,8 +14,8 @@ function normalizeHpFu_(phone) {
 
 function labelStageFu(stage) {
   const map = {
-    0: "Belum Dikirim Menu", 4: "Menunggu Pilih Layanan", 1: "Menunggu Jawaban HPL/Usia",
-    2: "PL Terkirim", 3: "Perlu Review CS", 100: "Repeat Customer"
+    0: "Belum Qualifying", 1: "Menunggu Jawaban", 2: "PL Terkirim",
+    3: "Perlu Review CS", 100: "Repeat Customer"
   };
   return map.hasOwnProperty(stage) ? map[stage] : ("Stage " + stage);
 }
