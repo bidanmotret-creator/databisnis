@@ -1,0 +1,72 @@
+/* marketing.css — sub-menu, toolbar, kelompok campaign, PDF mode, warna KPI & audit CAPI */
+
+/* ===== Sub-menu ===== */
+.mkt-subnav { position:sticky; top:49px; z-index:15; display:flex; gap:8px; overflow-x:auto; padding:10px 2px; margin:0 0 14px; background:#f1f5f9; -webkit-overflow-scrolling:touch; }
+.mkt-chip { flex:0 0 auto; padding:9px 15px; border-radius:999px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-weight:700; font-size:12.5px; cursor:pointer; white-space:nowrap; }
+.mkt-chip:hover { border-color:#4f46e5; color:#4f46e5; }
+.mkt-chip.active { background:#1e1b4b; border-color:#1e1b4b; color:#fff; }
+.mkt-sub { display:none; }
+.mkt-sub.active { display:block; }
+.mkt-toolbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding:10px 14px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; }
+.mkt-toolbar-title { font-size:15px; color:#0f172a; }
+.mkt-stamp { margin-left:10px; font-size:11px; color:#64748b; font-weight:600; }
+.mkt-toolbar-btns { display:flex; gap:6px; flex-wrap:wrap; }
+.mkt-btn { padding:8px 13px; border:none; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; background:#e0e7ff; color:#312e81; }
+.mkt-btn:hover { background:#c7d2fe; }
+.mkt-btn:disabled { opacity:.6; cursor:wait; }
+.mkt-btn-pdf { background:#dc2626; color:#fff; }
+.mkt-btn-pdf:hover { background:#b91c1c; }
+.mkt-groupbtns { display:flex; gap:6px; margin:0 0 8px; }
+.mkt-groupbtns button { padding:6px 11px; border:1px solid #c7d2fe; background:#fff; color:#3730a3; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; }
+@media (max-width:900px){ .mkt-subnav { top:49px; } }
+
+/* ===== Kelompok campaign (buka/tutup) ===== */
+tr.grp-head { cursor:pointer; user-select:none; }
+tr.grp-head td { font-weight:800; padding:9px 10px !important; border-top:2px solid #fff; }
+tr.grp-head:hover td { filter:brightness(.96); }
+tr.grp-row td { background:#fff; }
+tr.grp-row td:first-child { padding-left:26px !important; }
+tr.grp-row:nth-child(even) td { background:#f8fafc; }
+.grp-arrow { display:inline-block; width:16px; }
+
+/* ===== Mode PDF ===== */
+.mkt-pdf-mode .mkt-toolbar-btns, .mkt-pdf-mode .mkt-groupbtns, .mkt-pdf-mode .mkt-noprint { display:none !important; }
+.mkt-pdf-mode tr.grp-row { display:table-row !important; }
+.mkt-pdf-mode .table-responsive, .mkt-pdf-mode .table-compact-wrap, .mkt-pdf-mode .scorecard-scroll-wrap { overflow:visible !important; max-height:none !important; }
+.mkt-pdf-mode { background:#fff; }
+
+/* ===== Warna KPI (sebelumnya tidak terdefinisi di halaman ini -> teks putih di atas latar transparan) ===== */
+.fin-kpi-card { border-radius:12px; padding:14px 16px; color:#fff; box-shadow:0 3px 10px rgba(15,23,42,.18); }
+.fin-kpi-label { font-size:11px; font-weight:700; opacity:1; text-transform:uppercase; letter-spacing:.3px; }
+.fin-kpi-val { font-size:22px; font-weight:900; margin-top:4px; }
+.fin-kpi-aktiva { background:linear-gradient(160deg,#1d4ed8,#1e3a8a); }
+.fin-kpi-leads { background:linear-gradient(160deg,#0369a1,#0c4a6e); }
+.fin-kpi-revenue { background:linear-gradient(160deg,#047857,#064e3b); }
+.fin-kpi-warn { background:linear-gradient(160deg,#b45309,#78350f); }
+.fin-kpi-bad { background:linear-gradient(160deg,#b91c1c,#7f1d1d); }
+
+/* ===== Audit CAPI: kontras tinggi ===== */
+#mktSub_capi .funnel-legend { color:#1e1b4b; }
+#mktSub_capi table { background:#fff; }
+#mktSub_capi thead tr, #mktSub_capi thead th { background:#3b0764 !important; color:#fff !important; font-weight:700; }
+#mktSub_capi tbody td { color:#111827; border-bottom:1px solid #e5e7eb; }
+#mktSub_capi tbody tr:nth-child(even) td { background:#f5f3ff; }
+#mktSub_capi tbody tr:hover td { background:#ede9fe; }
+.capi-badge { display:inline-block; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800; white-space:nowrap; }
+.capi-ok { background:#166534; color:#fff; }
+.capi-warn { background:#92400e; color:#fff; }
+.capi-bad { background:#991b1b; color:#fff; }
+.capi-na { background:#e5e7eb; color:#374151; }
+.capi-filter { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:8px; margin:10px 0; }
+.capi-filter input, .capi-filter select { padding:8px 10px; border:1px solid #6b21a8; border-radius:6px; font-size:12.5px; background:#fff; color:#111827; }
+
+/* ===== Analisis Iklan (gaya Ads Manager) ===== */
+.ik-controls { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:12px; }
+.ik-controls label { display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:4px; }
+.ik-controls select { width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px; }
+.ik-controls .chk { display:flex; align-items:center; gap:6px; padding-top:22px; font-size:12.5px; }
+.ik-summary { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; font-size:12px; }
+.ik-summary span { background:#eef2ff; color:#312e81; padding:5px 11px; border-radius:999px; font-weight:700; }
+.ik-chartwrap { position:relative; height:340px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:12px; }
+#tblAnalisisIklan td.num, #tblAnalisisIklan th.num { text-align:right; }
+.ik-bar { display:inline-block; height:8px; border-radius:4px; background:#5b3fc4; vertical-align:middle; margin-right:6px; }

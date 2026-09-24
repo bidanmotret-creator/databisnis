@@ -853,65 +853,11 @@ function renderBreakdownAdset(dataMentah, petaCampaignName, filterState) {
         <th style="font-size:12px;">Tanggal</th>
     `;
 
-    function baris1Adset(row) {
-        let spend = Number(row.spend) || 0;
-        let results = Number(row.results) || 0;
-        let purchases = Number(row.purchases) || 0;
-        let cpl = results > 0 ? Math.round(spend / results) : null;
-        let warnaCpl = cpl === null ? '#94a3b8' : (cpl > 30000 ? '#ef4444' : '#059669');
-        let labelHasil = results === 0 ? '<span style="color:#ef4444; font-weight:700;">0</span>' : results;
-        return `<tr>
-            <td style="font-size:12.5px;">${row._label}</td>
-            <td style="font-size:12.5px;">Rp ${rp(spend)}</td>
-            <td style="font-size:12.5px;">${labelHasil}</td>
-            <td style="font-size:12.5px; color:${warnaCpl}; font-weight:600;">${cpl !== null ? 'Rp ' + rp(cpl) : '-'}</td>
-            <td style="font-size:12.5px;">${purchases}</td>
-            <td style="font-size:12.5px;">${row._ctr.toFixed(2)}%</td>
-            <td style="font-size:12.5px; white-space:nowrap;">${row.tanggal || '-'}</td>
-        </tr>`;
-    }
-    function headerGrupAdset(g, idGrup) {
-        return `<tr style="background:#eef2ff; cursor:pointer;" onclick="toggleGrupCampaign_(document.getElementById('${idGrup}_arrow'), '${idGrup}')">
-            <td colspan="7" style="font-weight:800; color:#4338ca; padding:8px 10px; font-size:12.5px;">
-                <span id="${idGrup}_arrow">▶</span> 📁 ${g.nama} <span style="font-weight:500; color:#64748b; font-size:11px;">(${g.rows.length} baris · Total Spend: Rp ${rp(g.totalSpend)})</span>
-            </td>
-        </tr>`;
-    }
-
-    let htmlTerlihat = '', htmlTersembunyi = '';
-    let jumlahBarisTerlihat = 0, jumlahBarisTersembunyi = 0, jumlahCampaignTersembunyi = 0;
-    let modeSembunyi = false;
-    let idxGrupAdset = 0;
-
-    campaignUrut.forEach(g => {
-        if (!modeSembunyi && jumlahBarisTerlihat >= BATAS_BARIS_TERLIHAT) modeSembunyi = true;
-
-        const idGrup = 'adsetGrup_' + (idxGrupAdset++);
-        let headerHtml = headerGrupAdset(g, idGrup);
-        let rowsHtml = `<tbody id="${idGrup}" style="display:none;">${g.rows.map(baris1Adset).join('')}</tbody>`;
-
-        if (!modeSembunyi) {
-            htmlTerlihat += headerHtml + rowsHtml;
-            jumlahBarisTerlihat += g.rows.length;
-        } else {
-            htmlTersembunyi += headerHtml + rowsHtml;
-            jumlahBarisTersembunyi += g.rows.length;
-            jumlahCampaignTersembunyi++;
-        }
-    });
-
-    let html = htmlTerlihat;
-    if (jumlahBarisTersembunyi > 0) {
-        html += `<tr style="background:#f8fafc;">
-            <td colspan="7" style="text-align:center; padding:10px; cursor:pointer; color:#6366f1; font-weight:700; font-size:12.5px;"
-                onclick="toggleExpandBreakdown(this, 'hiddenAdsetRows')">
-                ▼ Tampilkan ${jumlahCampaignTersembunyi} campaign lainnya (${jumlahBarisTersembunyi} baris) ▼
-            </td>
-        </tr>
-        <tbody id="hiddenAdsetRows" style="display:none;">${htmlTersembunyi}</tbody>`;
-    }
-
-    tbody.innerHTML = html;
+    thead.innerHTML = `
+        <th style="text-align:left; font-size:12px;">Adset</th><th style="font-size:12px;">Spend</th><th style="font-size:12px;">Results</th>
+        <th style="font-size:12px;">CPL</th><th style="font-size:12px;">Purchases</th><th style="font-size:12px;">CTR (rata-rata)</th><th style="font-size:12px;">Periode</th>
+    `;
+    tbody.innerHTML = MKT_bangunGrupHtml_(campaignUrut, { prefix: 'adset', tipe: false, warna: { bg: '#e0e7ff', fg: '#312e81' } });
 
     return { campaignUrut, dataFlat: data };
 }
@@ -971,65 +917,11 @@ function renderBreakdownContent(dataMentah, petaCampaignName, filterState) {
         <th style="font-size:12px;">Tanggal</th>
     `;
 
-    function baris1Content(row) {
-        let spend = Number(row.spend) || 0;
-        let results = Number(row.results) || 0;
-        let purchases = Number(row.purchases) || 0;
-        let cpl = results > 0 ? Math.round(spend / results) : null;
-        let warnaCpl = cpl === null ? '#94a3b8' : (cpl > 30000 ? '#ef4444' : '#059669');
-        let labelHasil = results === 0 ? '<span style="color:#ef4444; font-weight:700;">0</span>' : results;
-        return `<tr>
-            <td style="font-size:12.5px;">${row._label}</td>
-            <td style="font-size:12.5px;">${row.creative_type || '-'}</td>
-            <td style="font-size:12.5px;">Rp ${rp(spend)}</td>
-            <td style="font-size:12.5px;">${labelHasil}</td>
-            <td style="font-size:12.5px; color:${warnaCpl}; font-weight:600;">${cpl !== null ? 'Rp ' + rp(cpl) : '-'}</td>
-            <td style="font-size:12.5px;">${purchases}</td>
-            <td style="font-size:12.5px;">${row._ctr.toFixed(2)}%</td>
-            <td style="font-size:12.5px; white-space:nowrap;">${row.tanggal || '-'}</td>
-        </tr>`;
-    }
-    function headerGrupContent(g, idGrup) {
-        return `<tr style="background:#fdf4ff; cursor:pointer;" onclick="toggleGrupCampaign_(document.getElementById('${idGrup}_arrow'), '${idGrup}')">
-            <td colspan="8" style="font-weight:800; color:#a21caf; padding:8px 10px; font-size:12.5px;">
-                <span id="${idGrup}_arrow">▶</span> 📁 ${g.nama} <span style="font-weight:500; color:#64748b; font-size:11px;">(${g.rows.length} baris · Total Spend: Rp ${rp(g.totalSpend)})</span>
-            </td>
-        </tr>`;
-    }
-
-    let htmlTerlihat = '', htmlTersembunyi = '';
-    let jumlahBarisTerlihat = 0, jumlahBarisTersembunyi = 0;
-    let modeSembunyi = false;
-    let idxGrupContent = 0;
-
-    campaignUrut.forEach(g => {
-        if (!modeSembunyi && jumlahBarisTerlihat >= BATAS_BARIS_TERLIHAT) modeSembunyi = true;
-
-        const idGrup = 'contentGrup_' + (idxGrupContent++);
-        let headerHtml = headerGrupContent(g, idGrup);
-        let rowsHtml = `<tbody id="${idGrup}" style="display:none;">${g.rows.map(baris1Content).join('')}</tbody>`;
-
-        if (!modeSembunyi) {
-            htmlTerlihat += headerHtml + rowsHtml;
-            jumlahBarisTerlihat += g.rows.length;
-        } else {
-            htmlTersembunyi += headerHtml + rowsHtml;
-            jumlahBarisTersembunyi += g.rows.length;
-        }
-    });
-
-    let html = htmlTerlihat;
-    if (jumlahBarisTersembunyi > 0) {
-        html += `<tr style="background:#f8fafc;">
-            <td colspan="8" style="text-align:center; padding:10px; cursor:pointer; color:#a21caf; font-weight:700; font-size:12.5px;"
-                onclick="toggleExpandBreakdown(this, 'hiddenContentRows')">
-                ▼ Tampilkan ${jumlahBarisTersembunyi} baris lainnya ▼
-            </td>
-        </tr>
-        <tbody id="hiddenContentRows" style="display:none;">${htmlTersembunyi}</tbody>`;
-    }
-
-    tbody.innerHTML = html;
+    thead.innerHTML = `
+        <th style="text-align:left; font-size:12px;">Ad Name</th><th style="font-size:12px;">Tipe</th><th style="font-size:12px;">Spend</th><th style="font-size:12px;">Results</th>
+        <th style="font-size:12px;">CPL</th><th style="font-size:12px;">Purchases</th><th style="font-size:12px;">CTR (rata-rata)</th><th style="font-size:12px;">Periode</th>
+    `;
+    tbody.innerHTML = MKT_bangunGrupHtml_(campaignUrut, { prefix: 'content', tipe: true, warna: { bg: '#fae8ff', fg: '#701a75' } });
 
     return { campaignUrut, dataFlat: data };
 }
@@ -1049,16 +941,68 @@ function toggleExpandBreakdown(el, idHidden) {
 // Buka/tutup satu kelompok campaign di tabel breakdown Adset/Content --
 // hanya membalik simbol panah, TIDAK mengganti teks lain di header (beda
 // dengan toggleExpandBreakdown yang mengganti seluruh label tombol).
+function mktEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Buka/tutup satu kelompok campaign. Baris anak memakai <tr class="grp-row" data-grp="...">
+// (BUKAN <tbody> bersarang -- tag <tbody> di dalam <tbody> dibuang browser sehingga
+// kelompok tidak pernah bisa dilipat).
+function mktSetGrup(idGrup, buka) {
+    document.querySelectorAll('tr.grp-row[data-grp="' + idGrup + '"]').forEach(r => { r.style.display = buka ? '' : 'none'; });
+    const a = document.getElementById(idGrup + '_arrow');
+    if (a) a.textContent = buka ? '▼' : '▶';
+}
 function toggleGrupCampaign_(elArrow, idGrup) {
-    const hidden = document.getElementById(idGrup);
-    if (!hidden) return;
-    if (hidden.style.display === 'none') {
-        hidden.style.display = '';
-        if (elArrow) elArrow.innerText = '▼';
-    } else {
-        hidden.style.display = 'none';
-        if (elArrow) elArrow.innerText = '▶';
-    }
+    const baris = document.querySelector('tr.grp-row[data-grp="' + idGrup + '"]');
+    if (!baris) return;
+    mktSetGrup(idGrup, baris.style.display === 'none');
+}
+
+// Satu kelompok per campaign: baris header berisi total, baris anak = 1 baris per
+// adset/iklan (angka harian sudah dijumlahkan sehingga ringkas).
+function MKT_bangunGrupHtml_(campaignUrut, cfg) {
+    const bg = (cfg.warna && cfg.warna.bg) || '#e0e7ff', fg = (cfg.warna && cfg.warna.fg) || '#312e81';
+    const cplHtml = (spend, res) => res > 0
+        ? `<span style="color:${Math.round(spend / res) > 30000 ? '#b91c1c' : '#047857'}; font-weight:700;">Rp ${rp(Math.round(spend / res))}</span>`
+        : '<span style="color:#6b7280;">-</span>';
+    const kolomTipe = cfg.tipe ? '<td></td>' : '';
+    return campaignUrut.map((g, gi) => {
+        const id = cfg.prefix + 'Grup_' + gi;
+        const per = {};
+        g.rows.forEach(r => {
+            const o = per[r._label] || (per[r._label] = { label: r._label, tipe: r.creative_type || '-', spend: 0, results: 0, purchases: 0, ctr: 0, n: 0, tgl: {} });
+            o.spend += Number(r.spend) || 0; o.results += Number(r.results) || 0; o.purchases += Number(r.purchases) || 0;
+            o.ctr += r._ctr || 0; o.n++;
+            const t = formati(r.tanggal); if (t) o.tgl[t] = 1;
+        });
+        const items = Object.values(per).sort((a, b) => b.spend - a.spend);
+        const tSpend = items.reduce((a, o) => a + o.spend, 0), tRes = items.reduce((a, o) => a + o.results, 0), tPur = items.reduce((a, o) => a + o.purchases, 0);
+        const head = `<tr class="grp-head" data-grp="${id}" data-pref="${cfg.prefix}" onclick="toggleGrupCampaign_(null,'${id}')">
+            <td style="background:${bg}; color:${fg};"><span class="grp-arrow" id="${id}_arrow">▶</span> 📁 ${mktEsc(g.nama)} <span style="font-weight:500; font-size:11px; opacity:.85;">(${items.length} ${cfg.tipe ? 'iklan' : 'adset'})</span></td>
+            ${kolomTipe.replace('<td>', `<td style="background:${bg};">`)}
+            <td style="background:${bg}; color:${fg};">Rp ${rp(tSpend)}</td>
+            <td style="background:${bg}; color:${fg};">${tRes}</td>
+            <td style="background:${bg};">${cplHtml(tSpend, tRes)}</td>
+            <td style="background:${bg}; color:${fg};">${tPur}</td>
+            <td style="background:${bg};"></td><td style="background:${bg};"></td>
+        </tr>`;
+        const rows = items.map(o => {
+            const hari = Object.keys(o.tgl).sort();
+            const periode = hari.length ? (hari.length === 1 ? formatd(hari[0]) : formatd(hari[0]) + ' – ' + formatd(hari[hari.length - 1])) + ' (' + hari.length + ' hari)' : '-';
+            return `<tr class="grp-row" data-grp="${id}" style="display:none;">
+                <td style="font-size:12.5px;">${mktEsc(o.label)}</td>
+                ${cfg.tipe ? `<td style="font-size:12.5px;">${mktEsc(o.tipe)}</td>` : ''}
+                <td style="font-size:12.5px;">Rp ${rp(o.spend)}</td>
+                <td style="font-size:12.5px;">${o.results === 0 ? '<span style="color:#b91c1c; font-weight:700;">0</span>' : o.results}</td>
+                <td style="font-size:12.5px;">${cplHtml(o.spend, o.results)}</td>
+                <td style="font-size:12.5px;">${o.purchases}</td>
+                <td style="font-size:12.5px;">${(o.n ? o.ctr / o.n : 0).toFixed(2)}%</td>
+                <td style="font-size:12px; white-space:nowrap;">${periode}</td>
+            </tr>`;
+        }).join('');
+        return head + rows;
+    }).join('');
 }
 
 function cariTerbaikTerburuk(rows) {
