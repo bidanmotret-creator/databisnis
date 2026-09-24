@@ -200,29 +200,6 @@ function terapkanBulanPilihan(startId, endId, bulanValue, callback, btnGroupId) 
 // Vercel ini (aslinya bukaTab() di Apps Script menangani banyak tab CRM;
 // di sini hanya 2 menu: tabKeuangan & tabMarketing).
 // =========================================================================
-// =========================================================================
-// LAZY-LOAD ui-marketing.js — file ini cukup besar (logic funnel, breakdown
-// adset/content, scorecard EOS, dll) dan HANYA dipakai kalau user buka tab
-// Marketing. Supaya loading awal halaman lebih cepat, file ini BARU
-// di-download saat tab Marketing pertama kali dibuka, bukan sejak awal.
-// =========================================================================
-let marketingScriptSiap_ = false;
-let marketingScriptPromise_ = null;
-
-function muatScriptMarketingLazy_() {
-    if (marketingScriptSiap_) return Promise.resolve();
-    if (marketingScriptPromise_) return marketingScriptPromise_;
-
-    marketingScriptPromise_ = new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'ui-marketing.js';
-        script.onload = () => { marketingScriptSiap_ = true; resolve(); };
-        script.onerror = () => reject(new Error('Gagal memuat ui-marketing.js'));
-        document.body.appendChild(script);
-    });
-    return marketingScriptPromise_;
-}
-
 function bukaTab(tabId, btnElement) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
@@ -237,19 +214,8 @@ function bukaTab(tabId, btnElement) {
     const sidebarEl = document.querySelector('.sidebar');
     if (sidebarEl) sidebarEl.classList.remove('open');
 
-    if (tabId === 'tabMarketing') {
-        const indikator = document.getElementById('indikatorDataMarketingSiap');
-        const dataBelumSiap = !Array.isArray(dataMarketing) || dataMarketing.length === 0;
-        if (indikator) indikator.style.display = dataBelumSiap ? 'flex' : 'none';
-
-        muatScriptMarketingLazy_()
-            .then(() => {
-                if (typeof renderMarketingTab === 'function') renderMarketingTab();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('❌ Gagal memuat modul Marketing. Coba refresh halaman.\n\n' + err.message);
-            });
+    if (tabId === 'tabMarketing' && typeof renderMarketingTab === 'function') {
+        renderMarketingTab();
     }
 }
 
@@ -274,6 +240,4 @@ function pilihSubTabKeuangan(subId) {
     if (subId === 'subTutupBuku' && typeof renderTutupBuku === 'function') renderTutupBuku();
     if (subId === 'subDupont' && typeof hitungDupont === 'function') hitungDupont(dataJurnalGlobal);
     if (subId === 'subRosetta' && typeof renderRosettaWorksheet === 'function') renderRosettaWorksheet();
-    if (subId === 'subKontrolInternal' && typeof renderKontrolInternal === 'function') renderKontrolInternal();
-    if (subId === 'subAsetTetap' && typeof renderAsetTetap === 'function') renderAsetTetap();
 }
