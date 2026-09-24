@@ -1,4 +1,31 @@
 // api-crm.js — komunikasi ke Apps Script untuk crm.html
+
+// Fetch + parse JSON dengan pesan error yang jelas (mandiri, tidak butuh nav.js)
+async function fetchJsonAman(url, options) {
+  let res;
+  try {
+    res = await fetch(url, options);
+  } catch (err) {
+    throw new Error('Gagal terhubung ke server: ' + err.message);
+  }
+  let text;
+  try {
+    text = await res.text();
+  } catch (err) {
+    throw new Error('Gagal membaca respons server.');
+  }
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    throw new Error('Server tidak mengembalikan JSON valid (cek URL deploy Apps Script). Cuplikan: ' + text.substring(0, 200));
+  }
+  if (json && json.result === 'error') {
+    throw new Error(json.message || 'Terjadi error di server.');
+  }
+  return json;
+}
+// api-crm.js — komunikasi ke Apps Script untuk crm.html
 // (sudah memakai fetchJsonAman dari nav.js supaya error server tampil jelas)
 async function tarikDataCrm() {
   const overlay = document.getElementById('globalLoadingOverlay');
