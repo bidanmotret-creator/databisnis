@@ -7,8 +7,7 @@
 
 async function tarikDataServer() {
   try {
-    const res = await fetch(scriptURL + '?action=getData');
-    const data = await res.json();
+    const data = await fetchJsonAman(scriptURL + '?action=getData');
 
     // dataGlobal (Leads) tetap ditarik karena dipakai untuk funnel Leads/Closing/Revenue
     dataGlobal = data.clients || [];
@@ -55,8 +54,7 @@ async function jalankanAnalisisMarketingAI(bagian) {
     fd.append('action', 'analisisAiGeminiMarketing');
     fd.append('jenisAnalisis', bagian);
     fd.append('ringkasanJson', JSON.stringify(ringkasan));
-    const res = await fetch(scriptURL, { method: 'POST', body: fd });
-    const result = await res.json();
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: fd });
     if (outEl) {
       outEl.style.display = 'block';
       outEl.innerText = result.result === 'success' ? result.analisis : ('❌ Gagal: ' + (result.message || 'Action belum tersedia di Code.gs — tambahkan handler analisisAiGeminiMarketing dulu (lihat instruksi).'));
@@ -110,8 +108,7 @@ async function jalankanSyncMetaAds(jenis) {
   try {
     const fd = new FormData();
     fd.append('action', mapAction[jenis] || 'syncMetaAdsSekarang');
-    const res = await fetch(scriptURL, { method: 'POST', body: fd });
-    const result = await res.json();
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: fd });
     if (result.result === 'success') {
       if (outEl) {
         outEl.style.background = '#dcfce7'; outEl.style.color = '#166534';
@@ -153,8 +150,7 @@ async function jalankanSyncMetaAdsRentang() {
     fd.append('action', 'syncMetaAdsRentangWeb');
     fd.append('since', dari);
     fd.append('until', sampai);
-    const res = await fetch(scriptURL, { method: 'POST', body: fd });
-    const result = await res.json();
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: fd });
     if (result.result === 'success') {
       if (outEl) {
         outEl.style.background = '#dcfce7'; outEl.style.color = '#166534';

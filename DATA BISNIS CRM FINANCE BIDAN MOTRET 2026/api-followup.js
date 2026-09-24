@@ -10,9 +10,7 @@ async function tarikDataFollowUp() {
   if (overlay) overlay.style.display = 'flex';
 
   try {
-    const res = await fetch(scriptURL + '?action=getFollowUpData');
-    if (!res.ok) throw new Error('Gagal ambil data (HTTP ' + res.status + ')');
-    const data = await res.json();
+    const data = await fetchJsonAman(scriptURL + '?action=getFollowUpData');
 
     dataAiAnalysis = data.aiAnalysis || [];
     dataFollowUpState = data.followUpState || [];
@@ -69,8 +67,7 @@ async function simpanAktifGlobal() {
   params.append('namaFilePdf', cfg.nama_file_pdf || '');
 
   try {
-    const res = await fetch(scriptURL, { method: 'POST', body: params });
-    const result = await res.json();
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: params });
     if (result.result === 'success') {
       alert('✅ Status sistem follow-up berhasil disimpan.');
       dataPengaturanFollowUp.aktif = aktifBaru;
@@ -93,8 +90,7 @@ async function simpanPengaturanProduk() {
   params.append('dataJson', JSON.stringify(dataPengaturanFollowUpProduk));
 
   try {
-    const res = await fetch(scriptURL, { method: 'POST', body: params });
-    const result = await res.json();
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: params });
     if (result.result === 'success') {
       alert('✅ Semua template berhasil disimpan.');
       await tarikDataFollowUp();
@@ -211,8 +207,7 @@ async function kirimFollowUpManual(noHp, nama) {
   params.append('namaKontak', nama);
 
   try {
-    const res = await fetch(scriptURL, { method: 'POST', body: params });
-    const result = await res.json();
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: params });
     if (result.result === 'success') {
       alert('✅ ' + (result.message || 'Follow-up terkirim.'));
       await tarikDataFollowUp();

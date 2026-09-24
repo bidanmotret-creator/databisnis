@@ -7,8 +7,7 @@
 
 async function tarikDataServer() {
   try {
-    const res = await fetch(scriptURL + '?action=getData');
-    const data = await res.json();
+    const data = await fetchJsonAman(scriptURL + '?action=getData');
 
     dataGlobal = data.clients || [];
     dataFinance = data.finance || dataFinance;
@@ -30,8 +29,7 @@ async function tarikDataServer() {
 // tanpa perlu narik ulang seluruh dataset CRM yang berat.
 async function tarikDataKeuanganSaja() {
   try {
-    const res = await fetch(scriptURL + '?action=getFinanceOnly');
-    const data = await res.json();
+    const data = await fetchJsonAman(scriptURL + '?action=getFinanceOnly');
     dataFinance = data.finance || dataFinance;
     dataJurnalGlobal = dataFinance.journal || [];
     dataAnggaranBiaya = dataFinance.anggaran || [];
