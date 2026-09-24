@@ -82,10 +82,7 @@
 <div id="tabAiChat" class="tab-content active">
   <div class="fu-kpi-grid" id="aiKpiGrid"></div>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-  <div style="display:flex; gap:6px;">
-    <button type="button" id="btnTampilTabel" class="btn-co-primary" style="padding:6px 12px; font-size:12px;" onclick="gantiTampilanMonitor('tabel')">📋 Tabel</button>
-    <button type="button" id="btnTampilStage" class="btn-co-secondary" style="padding:6px 12px; font-size:12px;" onclick="gantiTampilanMonitor('stage')">🗂️ Kelompok per Stage</button>
-  </div>
+ 
 </div>
 
   <div class="filter-panel">
@@ -155,6 +152,10 @@
           <label>Cari (No HP / Nama)</label>
           <input type="text" id="fuFilterCari" oninput="renderFollowUpTable()" placeholder="cth: 0812xxxx atau nama">
         </div>
+         <div style="display:flex; gap:6px;">
+    <button type="button" id="btnTampilTabel" class="btn-co-primary" style="padding:6px 12px; font-size:12px;" onclick="gantiTampilanMonitor('tabel')">📋 Tabel</button>
+    <button type="button" id="btnTampilStage" class="btn-co-secondary" style="padding:6px 12px; font-size:12px;" onclick="gantiTampilanMonitor('stage')">🗂️ Kelompok per Stage</button>
+  </div>
         <div class="form-group">
           <label>Stage</label>
           <select id="fuFilterStage" onchange="renderFollowUpTable()">
