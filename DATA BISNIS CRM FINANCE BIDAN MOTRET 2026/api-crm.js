@@ -24,12 +24,9 @@ async function fetchJsonAman(url, options) {
     throw new Error(json.message || 'Terjadi error di server.');
   }
   return json;
-}
-// api-crm.js — komunikasi ke Apps Script untuk crm.html
-// (sudah memakai fetchJsonAman dari nav.js supaya error server tampil jelas)
-async function tarikDataCrm() {
-  const overlay = document.getElementById('globalLoadingOverlay');
-  if (overlay) overlay.style.display = 'flex';
+}async function tarikDataCrm() {
+  const badge = document.getElementById('bgRefreshBadge');
+  if (badge) { badge.style.display = 'inline-block'; badge.style.background = '#0f172a'; badge.textContent = '🔄 Menyegarkan data…'; }
   try {
     const data = await fetchJsonAman(scriptURL + '?action=getCrmData');
     dataCrm = data.clients || [];
@@ -38,14 +35,27 @@ async function tarikDataCrm() {
     chatStat = data.chatStat || {};
     capiByKode = data.capiByKode || {};
     isiDropdownMinat_();
+
     const q = new URLSearchParams(location.search).get('cari');
     if (q && !window._cariTerapkan) { document.getElementById('fCari').value = q; window._cariTerapkan = true; }
-    renderCrm();
+
+    if (!window._filterAwalDiset) {
+      window._filterAwalDiset = true;
+      presetChat('bulan'); // otomatis set fChatS/fChatE ke bulan ini + panggil renderCrm()
+    } else {
+      renderCrm();
+    }
   } catch (err) {
-    alert('❌ Gagal memuat data CRM.\n\n' + err.message);
-  } finally {
-    if (overlay) overlay.style.display = 'none';
+    console.error('Gagal memuat data CRM:', err);
+    if (badge) {
+      badge.style.background = '#b91c1c';
+      badge.textContent = '⚠️ Gagal refresh (data lama masih tampil)';
+      badge.style.display = 'inline-block';
+      setTimeout(() => { badge.style.display = 'none'; }, 4000);
+    }
+    return;
   }
+  if (badge) badge.style.display = 'none';
 }
 
 async function simpanLead() {
