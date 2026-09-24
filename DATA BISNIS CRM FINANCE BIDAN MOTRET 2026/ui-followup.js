@@ -129,7 +129,6 @@ function renderFollowUpKpi_(gabungan) {
     <div class="fu-kpi-card fu-kpi-4"><div class="n">${sedangDiDrip}</div><div class="l">Sedang Dalam Reminder Drip</div></div>
   `;
 }
-
 function renderFollowUpTable() {
   const cari = (document.getElementById('fuFilterCari')?.value || '').toLowerCase().trim();
   const filterStage = document.getElementById('fuFilterStage')?.value || '';
@@ -157,6 +156,11 @@ function renderFollowUpTable() {
 
   renderFollowUpKpi_(gabungan);
 
+  if (tampilanMonitorSaatIni === 'stage') {
+    renderTampilanStage_(gabungan);
+    return;
+  }
+
   const tbody = document.getElementById('bFollowUpTable');
   if (!tbody) return;
 
@@ -165,19 +169,25 @@ function renderFollowUpTable() {
     return;
   }
 
-  tbody.innerHTML = gabungan.map(g => `
+  tbody.innerHTML = gabungan.map(g => {
+    const info = dataNamaKodeByHp[g.hp_norm] || {};
+    const window_ = hitungInfoWindow_(info.data_anak, g.produk);
+    return `
     <tr>
       <td>${g.no_hp}</td>
       <td>${g.nama}</td>
       <td>${g.kode_leads}</td>
       <td>${g.produk}</td>
       <td><span class="fu-badge fu-stage-${g.stage}">${labelStageFu(g.stage)}</span></td>
-      <td style="max-width:260px; white-space:normal;">${g.catatan || '-'}</td>
+      <td style="max-width:220px; white-space:normal;">${g.catatan || '-'}</td>
       <td style="white-space:nowrap;">${formatTanggalManusia(g.waktu_update)}</td>
-      <td style="text-align:center;">${g.drip ? g.drip.jumlah_reminder_terkirim + ' / 2' : '-'}</td>
-      <td style="white-space:nowrap;">${g.drip && g.drip.waktu_reminder_terakhir ? formatTanggalManusia(g.drip.waktu_reminder_terakhir) : '-'}</td>
-    </tr>
-  `).join('');
+      <td style="white-space:nowrap; font-size:11.5px;">${window_.teks}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-co-secondary" style="padding:4px 8px; font-size:11px;" onclick="bukaModalEdit('${g.hp_norm}', '${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">✏️</button>
+        <button type="button" class="btn-co-primary" style="padding:4px 8px; font-size:11px;" onclick="kirimFollowUpManual('${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">🔔</button>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 // =========================================================================
@@ -306,4 +316,107 @@ function hapusBarisProduk(idx) {
   if (!confirm('Hapus baris produk "' + (item.minat || '(tanpa nama)') + '"? Perubahan baru tersimpan permanen setelah klik "Simpan Semua Template".')) return;
   dataPengaturanFollowUpProduk.splice(idx, 1);
   renderPengaturanProduk();
+}
+
+// =========================================================================
+// TOGGLE TAMPILAN: TABEL vs KELOMPOK PER STAGE
+// =========================================================================
+let tampilanMonitorSaatIni = 'tabel';
+
+function gantiTampilanMonitor(mode) {
+  tampilanMonitorSaatIni = mode;
+  document.getElementById('viewTampilTabel').style.display = mode === 'tabel' ? 'block' : 'none';
+  document.getElementById('viewTampilStage').style.display = mode === 'stage' ? 'block' : 'none';
+  document.getElementById('btnTampilTabel').className = mode === 'tabel' ? 'btn-co-primary' : 'btn-co-secondary';
+  document.getElementById('btnTampilStage').className = mode === 'stage' ? 'btn-co-primary' : 'btn-co-secondary';
+  renderFollowUpTable();
+}
+
+// =========================================================================
+// HITUNG INFO WINDOW (berapa hari lagi / sudah lewat berapa hari)
+// =========================================================================
+function hitungInfoWindow_(dataAnakText, produk) {
+  if (!dataAnakText) return { teks: '-', kelas: '' };
+
+  const match = dataAnakText.match(/(Lahir|HPL):\s*(\d{4}-\d{2}-\d{2})/);
+  if (!match) return { teks: '-', kelas: '' };
+
+  const statusAnak = match[1] === 'Lahir' ? 'sudah_lahir' : 'belum_lahir';
+  const tglAnak = new Date(match[2]);
+  const now = new Date();
+  const usiaHari = Math.floor((now - tglAnak) / 86400000);
+
+  const cfgProduk = (dataPengaturanFollowUpProduk || []).find(p => p.minat === produk) || {};
+  const batasAman = Number(cfgProduk.batas_hari_aman) || 15;
+  const batasAbuabu = Number(cfgProduk.batas_hari_abuabu) || 30;
+  const butuhCek = cfgProduk.butuh_cek_usia_bayi === true || cfgProduk.butuh_cek_usia_bayi === 'TRUE';
+
+  if (statusAnak === 'belum_lahir') {
+    const hariMenujuLahir = Math.abs(usiaHari);
+    return { teks: `HPL dalam ${hariMenujuLahir} hari`, kelas: 'ok' };
+  }
+
+  if (!butuhCek) {
+    return { teks: `Usia ${usiaHari} hari (tanpa batas window)`, kelas: 'ok' };
+  }
+
+  if (usiaHari <= batasAman) {
+    return { teks: `${usiaHari} hari — masih ${batasAman - usiaHari} hari lagi aman`, kelas: 'aman' };
+  } else if (usiaHari <= batasAbuabu) {
+    return { teks: `${usiaHari} hari — sudah lewat ${usiaHari - batasAman} hari (zona abu-abu)`, kelas: 'abuabu' };
+  } else {
+    return { teks: `${usiaHari} hari — sudah lewat ${usiaHari - batasAbuabu} hari (di luar window)`, kelas: 'tolak' };
+  }
+}
+
+// =========================================================================
+// RENDER TAMPILAN KELOMPOK PER STAGE
+// =========================================================================
+function renderTampilanStage_(gabungan) {
+  const wrap = document.getElementById('viewTampilStage');
+  if (!wrap) return;
+
+  const urutanStage = [1, 4, 3, 0, 2, 100];
+  const kelompok = {};
+  urutanStage.forEach(s => kelompok[s] = []);
+  gabungan.forEach(g => { if (!kelompok[g.stage]) kelompok[g.stage] = []; kelompok[g.stage].push(g); });
+
+  wrap.innerHTML = urutanStage.map(stageNum => {
+    const list = kelompok[stageNum] || [];
+    if (list.length === 0) return '';
+    return `
+      <div class="card" style="margin-bottom:14px;">
+        <h4 style="margin:0 0 10px 0; display:flex; justify-content:space-between; align-items:center;">
+          <span><span class="fu-badge fu-stage-${stageNum}">${labelStageFu(stageNum)}</span></span>
+          <span style="font-size:13px; color:#64748b;">${list.length} nomor</span>
+        </h4>
+        <div class="table-responsive table-compact-wrap">
+          <table>
+            <thead><tr style="background:#f1f5f9;"><th>No HP</th><th>Nama</th><th>Produk</th><th>Window</th><th>Waktu Update</th><th>Aksi</th></tr></thead>
+            <tbody>
+              ${list.map(g => renderBarisNomor_(g)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderBarisNomor_(g) {
+  const info = dataNamaKodeByHp[g.hp_norm] || {};
+  const window_ = hitungInfoWindow_(info.data_anak, g.produk);
+  return `
+    <tr>
+      <td>${g.no_hp}</td>
+      <td>${g.nama}</td>
+      <td>${g.produk}</td>
+      <td>${window_.teks}</td>
+      <td style="white-space:nowrap;">${formatTanggalManusia(g.waktu_update)}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-co-secondary" style="padding:4px 8px; font-size:11px;" onclick="bukaModalEdit('${g.hp_norm}', '${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">✏️ Edit</button>
+        <button type="button" class="btn-co-primary" style="padding:4px 8px; font-size:11px;" onclick="kirimFollowUpManual('${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">🔔 Follow-up</button>
+      </td>
+    </tr>
+  `;
 }

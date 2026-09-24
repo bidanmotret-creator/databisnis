@@ -81,6 +81,12 @@
 <!-- ===================== TAB 1: AI CHAT ANALYSIS ===================== -->
 <div id="tabAiChat" class="tab-content active">
   <div class="fu-kpi-grid" id="aiKpiGrid"></div>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+  <div style="display:flex; gap:6px;">
+    <button type="button" id="btnTampilTabel" class="btn-co-primary" style="padding:6px 12px; font-size:12px;" onclick="gantiTampilanMonitor('tabel')">📋 Tabel</button>
+    <button type="button" id="btnTampilStage" class="btn-co-secondary" style="padding:6px 12px; font-size:12px;" onclick="gantiTampilanMonitor('stage')">🗂️ Kelompok per Stage</button>
+  </div>
+</div>
 
   <div class="filter-panel">
     <div class="filter-grid">
@@ -169,20 +175,63 @@
         </div>
       </div>
     </div>
-
-    <div class="card">
+    <div id="viewTampilTabel" class="card">
       <div class="table-responsive table-compact-wrap">
         <table>
           <thead>
             <tr style="background:#f1f5f9;">
               <th>No HP</th><th>Nama</th><th>Kode Leads</th><th>Produk</th><th>Stage Terakhir</th>
-              <th>Catatan</th><th>Waktu Update</th><th>Reminder Drip Terkirim</th><th>Reminder Terakhir</th>
+              <th>Catatan</th><th>Waktu Update</th><th>Window</th><th>Aksi</th>
             </tr>
           </thead>
           <tbody id="bFollowUpTable"><tr><td colspan="9" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
         </table>
       </div>
     </div>
+
+    <div id="viewTampilStage" style="display:none;"></div>
+  <div id="modalEditNomor" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9998; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:20px; width:420px; max-width:92vw; max-height:88vh; overflow-y:auto;">
+    <h4 style="margin:0 0 14px 0;" id="modalEditJudul">Edit Nomor</h4>
+    <div class="fu-prod-grid" style="grid-template-columns:1fr;">
+      <div>
+        <label>Stage</label>
+        <select id="editStage">
+          <option value="0">0 - Belum Dikirim Menu</option>
+          <option value="4">4 - Menunggu Pilih Layanan</option>
+          <option value="1">1 - Menunggu Jawaban</option>
+          <option value="2">2 - PL Terkirim</option>
+          <option value="3">3 - Perlu Review CS</option>
+          <option value="100">100 - Repeat Customer</option>
+        </select>
+      </div>
+      <div>
+        <label>Minat Produk</label>
+        <input type="text" id="editProduk" placeholder="cth: Newborn Photo by Bidan Motret">
+      </div>
+      <div>
+        <label>Status Anak</label>
+        <select id="editStatusAnak">
+          <option value="belum_lahir">Belum Lahir (HPL)</option>
+          <option value="sudah_lahir">Sudah Lahir</option>
+        </select>
+      </div>
+      <div>
+        <label>Tanggal Lahir / HPL</label>
+        <input type="date" id="editTglLahir">
+      </div>
+      <div>
+        <label>Lokasi / Domisili</label>
+        <input type="text" id="editLokasi" placeholder="cth: Way Halim">
+      </div>
+      <div id="editInfoWindow" style="font-size:12px; padding:8px; background:#f1f5f9; border-radius:6px;"></div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:14px;">
+      <button type="button" class="btn-co-secondary" style="flex:1;" onclick="tutupModalEdit()">Batal</button>
+      <button type="button" class="btn-co-primary" style="flex:1;" onclick="simpanEditNomor()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
   </div>
 
   <!-- SUB-TAB: PENGATURAN -->
@@ -383,11 +432,11 @@
 let dataPengaturanSistem = {};
 </script>
 
-<<script src="utils.js"></script>
+<script src="utils.js"></script>
 <script src="ui-followup.js"></script>
 <script src="ui-fewshot.js"></script>
-<script src="ui-evaluasi.js"></script>
 <script src="api-followup.js"></script>
-  
+<script src="ui-evaluasi.js"></script>
+
 </body>
 </html>
