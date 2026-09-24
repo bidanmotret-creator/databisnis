@@ -3,186 +3,335 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Follow-up & Analisis Chat — SentuhanMomen3D</title>
+<title>AI Chat & Follow-up Otomatis — SentuhanMomen3D</title>
+<link rel="stylesheet" href="style.css">
 <style>
-:root{--b:#e2e8f0;--t:#0f172a;--m:#64748b;--p:#4f46e5}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f8fafc;color:var(--t);font-size:13px}
-header{background:#fff;border-bottom:1px solid var(--b);padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
-header h1{font-size:16px;margin:0}header a{color:var(--p);text-decoration:none;font-weight:700;font-size:12.5px}
-main{padding:18px 20px;max-width:1400px;margin:auto}
-.btn{border:none;border-radius:7px;padding:7px 13px;font-weight:700;font-size:12.5px;cursor:pointer;background:#f1f5f9;color:var(--t)}
-.btn.p{background:var(--p);color:#fff}.btn.g{background:#25d366;color:#fff}.btn:disabled{opacity:.5}
-.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.kpi div{background:#fff;border:1px solid var(--b);border-radius:10px;padding:12px 14px}.kpi b{font-size:20px;display:block}.kpi span{font-size:11px;color:var(--m);text-transform:uppercase;font-weight:700}
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.bar input,.bar select,textarea,.sel{border:1px solid var(--b);border-radius:7px;padding:7px 10px;font:inherit;background:#fff}
-.bar input{min-width:220px}
-.card{background:#fff;border:1px solid var(--b);border-radius:12px;overflow:auto}
-table{width:100%;border-collapse:collapse}th{background:#f1f5f9;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;color:var(--m);white-space:nowrap}
-td{padding:9px 10px;border-top:1px solid #f1f5f9;vertical-align:top}tr:hover td{background:#fafbff}
-.badge{display:inline-block;padding:2px 9px;border-radius:20px;color:#fff;font-size:11px;font-weight:800;background:#94a3b8}
-.s1{background:#f59e0b}.s2{background:#0ea5e9}.s3{background:#ef4444}.s4{background:#8b5cf6}.s100{background:#10b981}
-.sm{font-size:11.5px;color:var(--m)}.clip{max-width:230px;white-space:normal;word-break:break-word}
-.tabs{display:flex;gap:6px;margin-bottom:12px}
-#ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:20;justify-content:flex-end}
-#pn{background:#fff;width:100%;max-width:620px;height:100%;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.box{border:1px solid var(--b);border-radius:10px;padding:10px 12px}
-.chat{display:flex;flex-direction:column;max-height:300px;overflow:auto;background:#f8fafc;border-radius:10px;padding:8px}
-.bub{max-width:80%;padding:7px 11px;border-radius:12px;margin-bottom:5px;white-space:pre-wrap;word-break:break-word}
-.bub small{display:block;font-size:10px;opacity:.6}.in{background:#fff;border:1px solid var(--b);align-self:flex-start}.out{background:#dcfce7;align-self:flex-end}
-textarea{width:100%;min-height:130px;resize:vertical}
-.bg{height:8px;background:#f1f5f9;border-radius:6px}.bg i{display:block;height:8px;border-radius:6px;background:var(--p)}
-#load{position:fixed;inset:0;background:#f8fafc;z-index:50;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--m)}
+  .fu-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+  .fu-kpi-card { border-radius:12px; padding:16px 18px; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.10); }
+  .fu-kpi-card .n { font-size:22px; font-weight:900; }
+  .fu-kpi-card .l { font-size:11px; text-transform:uppercase; opacity:.9; margin-top:4px; font-weight:700; }
+  .fu-kpi-1 { background:linear-gradient(160deg,#4f46e5,#312e81); }
+  .fu-kpi-2 { background:linear-gradient(160deg,#0ea5e9,#075985); }
+  .fu-kpi-3 { background:linear-gradient(160deg,#f59e0b,#b45309); }
+  .fu-kpi-4 { background:linear-gradient(160deg,#10b981,#065f46); }
+  .fu-kpi-5 { background:linear-gradient(160deg,#ef4444,#7f1d1d); }
+
+  .fu-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; color:#fff; }
+  .fu-stage-0 { background:#94a3b8; }
+  .fu-stage-1 { background:#f59e0b; }
+  .fu-stage-2 { background:#0ea5e9; }
+  .fu-stage-3 { background:#ef4444; }
+  .fu-stage-100 { background:#10b981; }
+  .fu-intent-High, .fu-intent-VeryHigh { background:#10b981; }
+  .fu-intent-Medium { background:#f59e0b; }
+  .fu-intent-Low { background:#94a3b8; }
+  .fu-intent-Unknown { background:#cbd5e1; color:#334155; }
+
+  .fu-prod-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; }
+  .fu-prod-card h4 { margin:0 0 10px 0; display:flex; align-items:center; justify-content:space-between; }
+  .fu-prod-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .fu-prod-grid .full { grid-column:1/-1; }
+  .fu-prod-grid label { display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:3px; }
+  .fu-prod-grid textarea, .fu-prod-grid input, .fu-prod-grid select { width:100%; border:1px solid var(--border); border-radius:6px; padding:7px 9px; font-size:12.5px; font-family:inherit; box-sizing:border-box; }
+  .fu-prod-grid textarea { min-height:64px; resize:vertical; }
+  .btn-fu-hapus { background:#fee2e2; color:#991b1b; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; }
+  .btn-fu-hapus:hover { background:#fecaca; }
+
+  #tabFollowUp .sub-tab-menu, #tabAiLearning .sub-tab-menu { margin-bottom:16px; }
 </style>
 </head>
 <body>
-<div id="load">Memuat data follow-up...</div>
-<header>
-  <h1>🤖 Follow-up & Analisis Chat</h1>
-  <a href="crm.html">👥 CRM Leads</a><a href="index.html">💰 Keuangan</a>
-  <a href="followup-pengaturan.html">⚙️ Pengaturan Template / AI Learning / Evaluasi</a>
-  <button class="btn" style="margin-left:auto" onclick="muat()">🔄 Refresh</button>
-</header>
-<main>
-  <div class="kpi" id="kpi"></div>
-  <div class="tabs"><button class="btn p" id="tb1" onclick="tab(1)">📋 Monitor Nomor</button><button class="btn" id="tb2" onclick="tab(2)">📣 Analisis Sumber Konten</button></div>
 
-  <div id="p1">
-    <div class="bar">
-      <input id="fq" placeholder="Cari nama / no HP / pesan / ringkasan" oninput="render()">
-      <select id="fst" onchange="render()"><option value="">Semua Stage</option><option value="4">Menunggu Pilih Layanan</option><option value="1">Menunggu Jawaban</option><option value="2">PL Terkirim</option><option value="3">Perlu Review CS</option><option value="100">Repeat Customer</option><option value="0">Belum Ada</option></select>
-      <select id="fin" onchange="render()"><option value="">Semua Intent</option><option>Very High</option><option>High</option><option>Medium</option><option>Low</option></select>
-      <select id="fsu" onchange="render()"><option value="">Semua Sumber</option></select>
-      <select id="fbk" onchange="render()"><option value="">Booking: semua</option><option value="1">Siap booking</option></select>
+<div id="globalLoadingOverlay" style="position:fixed; inset:0; z-index:9999; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+    <div style="width:48px; height:48px; border:4px solid #e2e8f0; border-top-color:#4f46e5; border-radius:50%; animation:spinFu 0.8s linear infinite;"></div>
+    <div style="font-size:14px; font-weight:600; color:#475569;">Memuat data AI Chat & Follow-up...</div>
+</div>
+<style>@keyframes spinFu { to { transform: rotate(360deg); } }</style>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🤖</div>
+      <div class="brand-text"><strong>AI Chat & Follow-up</strong><span>SentuhanMomen3D</span></div>
     </div>
-    <div class="card"><table>
-      <thead><tr><th>Kontak</th><th>Sumber Konten</th><th>Produk & Stage</th><th>Analisis AI</th><th>Pesan Terakhir</th><th></th></tr></thead>
-      <tbody id="tb"></tbody></table></div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <button class="nav-item active" onclick="bukaTab('tabAiChat', this)"><span class="nav-ico">🧠</span> AI Chat Analysis</button>
+        <button class="nav-item" onclick="bukaTab('tabFollowUp', this)"><span class="nav-ico">⚡</span> Follow-up Otomatis</button>
+        <button class="nav-item" onclick="bukaTab('tabAiLearning', this)"><span class="nav-ico">🎓</span> AI Learning</button>
+      </div>
+      <div class="nav-group" style="margin-top:auto;">
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title" id="topbarTitle">AI Chat Analysis</div>
+      <button type="button" onclick="tarikDataFollowUp()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
+    </div>
+
+    <div class="content-inner">
+
+<!-- ===================== TAB 1: AI CHAT ANALYSIS ===================== -->
+<div id="tabAiChat" class="tab-content active">
+  <div class="fu-kpi-grid" id="aiKpiGrid"></div>
+
+  <div class="filter-panel">
+    <div class="filter-grid">
+      <div class="form-group">
+        <label>Cari (No HP / Ringkasan)</label>
+        <input type="text" id="aiFilterCari" oninput="renderAiChatTable()" placeholder="cth: 0812xxxx atau kata kunci">
+      </div>
+      <div class="form-group">
+        <label>Product Interest</label>
+        <select id="aiFilterProduk" onchange="renderAiChatTable()">
+          <option value="">Semua</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Intent</label>
+        <select id="aiFilterIntent" onchange="renderAiChatTable()">
+          <option value="">Semua</option>
+          <option value="Very High">Very High</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Booking Signal</label>
+        <select id="aiFilterBooking" onchange="renderAiChatTable()">
+          <option value="">Semua</option>
+          <option value="true">Ya (siap booking)</option>
+          <option value="false">Belum</option>
+        </select>
+      </div>
+    </div>
   </div>
 
-  <div id="p2" style="display:none"><div class="card"><table>
-    <thead><tr><th>Sumber Konten (Headline Iklan)</th><th>Lead</th><th style="min-width:140px">Porsi</th><th>Intent Tinggi</th><th>Siap Booking</th><th>PL Terkirim</th><th>Perlu Review</th></tr></thead>
-    <tbody id="tsrc"></tbody></table></div>
-    <p class="sm">Sumber diambil dari data CTWA (klik iklan WhatsApp). Nomor tanpa data CTWA dikelompokkan sebagai "Organik / Tanpa Iklan".</p></div>
-</main>
+  <div class="card">
+    <div class="table-responsive table-compact-wrap">
+      <table>
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th>No HP</th><th>Nama</th><th>Produk Diminati</th><th>Timeline</th><th>Lokasi</th>
+            <th>Budget</th><th>Intent</th><th>Booking?</th><th>Confidence</th><th>Ringkasan</th><th>Waktu Analisis</th>
+          </tr>
+        </thead>
+        <tbody id="bAiChatTable"><tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-<div id="ov" onclick="if(event.target===this)tutup()"><div id="pn"></div></div>
+<!-- ===================== TAB 2: FOLLOW-UP OTOMATIS ===================== -->
+<div id="tabFollowUp" class="tab-content">
+  <div class="sub-tab-menu">
+    <button class="sub-tab-btn active" onclick="bukaSubTab('subFuMonitor', this)">📊 Monitor Stage & Drip</button>
+    <button class="sub-tab-btn" onclick="bukaSubTab('subFuPengaturan', this)">⚙️ Pengaturan Template per Produk</button>
+  </div>
+
+  <!-- SUB-TAB: MONITOR -->
+  <div id="subFuMonitor" class="sub-content active" style="display:block;">
+    <div class="fu-kpi-grid" id="fuKpiGrid"></div>
+
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>Cari (No HP / Nama)</label>
+          <input type="text" id="fuFilterCari" oninput="renderFollowUpTable()" placeholder="cth: 0812xxxx atau nama">
+        </div>
+        <div class="form-group">
+          <label>Stage</label>
+          <select id="fuFilterStage" onchange="renderFollowUpTable()">
+            <option value="">Semua</option>
+            <option value="0">0 - Belum ditanya qualifying</option>
+            <option value="1">1 - Sudah ditanya, menunggu jawaban</option>
+            <option value="2">2 - PL terkirim</option>
+            <option value="3">3 - Perlu review CS (abu-abu usia)</option>
+            <option value="100">100 - Repeat customer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Hanya yang sedang di-drip (stuck &gt; H+4)</label>
+          <select id="fuFilterDrip" onchange="renderFollowUpTable()">
+            <option value="">Semua</option>
+            <option value="ya">Ya, sedang menunggu reminder</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive table-compact-wrap">
+        <table>
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th>No HP</th><th>Nama</th><th>Kode Leads</th><th>Produk</th><th>Stage Terakhir</th>
+              <th>Catatan</th><th>Waktu Update</th><th>Reminder Drip Terkirim</th><th>Reminder Terakhir</th>
+            </tr>
+          </thead>
+          <tbody id="bFollowUpTable"><tr><td colspan="9" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB-TAB: PENGATURAN -->
+  <div id="subFuPengaturan" class="sub-content" style="display:none;">
+    <div class="card" style="margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:13.5px; margin:0;">
+        <input type="checkbox" id="fuAktifGlobal" style="width:18px; height:18px;">
+        Sistem Follow-up Otomatis Aktif
+      </label>
+      <button type="button" class="btn-co-primary" onclick="simpanAktifGlobal()">💾 Simpan Status Aktif</button>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+      <p style="font-size:12px; color:var(--text-light); margin:0; max-width:640px;">
+        Baris <b>__GLOBAL__</b> adalah fallback: kalau field pada baris produk dikosongkan, sistem otomatis pakai nilai dari baris ini.
+        Semua produk tetap menanyakan usia anak di Stage 1 — bedanya cuma di "Punya Batas Window Usia?": Newborn = Ya (bisa auto-tolak kalau kelewat usia),
+        produk lain = Tidak (usia cuma jadi info untuk pilih paket yang cocok, PL tetap selalu dikirim).
+      </p>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-co-secondary" onclick="tambahBarisProduk()">➕ Tambah Produk</button>
+        <button type="button" class="btn-co-primary" onclick="simpanPengaturanProduk()">💾 Simpan Semua Template</button>
+      </div>
+    </div>
+
+    <div id="fuPengaturanContainer"></div>
+  </div>
+</div>
+
+<!-- ===================== TAB 3: AI LEARNING (Error Log + Few-Shot) ===================== -->
+<div id="tabAiLearning" class="tab-content">
+  <div class="sub-tab-menu">
+    <button class="sub-tab-btn active" onclick="bukaSubTab('subErrLog', this)">🚨 Log Error AI</button>
+    <button class="sub-tab-btn" onclick="bukaSubTab('subFewShot', this)">📚 Kelola Contoh (Few-Shot)</button>
+  </div>
+
+  <!-- SUB-TAB: LOG ERROR -->
+  <div id="subErrLog" class="sub-content active" style="display:block;">
+    <p style="font-size:12px; color:var(--text-light); margin:0 0 12px 0;">
+      Setiap kali AI salah baca pesan customer (format rusak, atau nilainya aneh), sistem otomatis mencatatnya di sini.
+      Kalau kamu lihat kasus yang layak diajarkan ke AI, klik "Jadikan Contoh" untuk memindahkannya ke daftar Few-Shot.
+    </p>
+    <div class="fu-kpi-grid" id="errKpiGrid"></div>
+
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>Jenis Prompt</label>
+          <select id="errFilterJenis" onchange="renderErrorLogTable()"><option value="">Semua Jenis</option></select>
+        </div>
+        <div class="form-group">
+          <label>Status Review</label>
+          <select id="errFilterReview" onchange="renderErrorLogTable()">
+            <option value="">Semua</option>
+            <option value="belum">Belum Direview</option>
+            <option value="sudah">Sudah Direview</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive table-compact-wrap">
+        <table>
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th>Waktu</th><th>Jenis</th><th>Pesan Customer</th><th>Output AI (Salah)</th>
+              <th>Status</th><th>Sudah Ditangani?</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="bErrorLogTable"><tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB-TAB: KELOLA CONTOH -->
+  <div id="subFewShot" class="sub-content" style="display:none;">
+    <div class="card" style="margin-bottom:16px;">
+      <h4 style="margin:0 0 12px 0;">➕ Tambah Contoh Baru Secara Manual</h4>
+      <div class="fu-prod-grid">
+        <div>
+          <label>Jenis Prompt</label>
+          <select id="fsInputJenis">
+            <option value="ekstrak_usia">Ekstrak Usia Anak</option>
+            <option value="product_interest">Deteksi Minat Produk</option>
+            <option value="chat_analysis">Analisis Chat (Batch)</option>
+          </select>
+        </div>
+        <div></div>
+        <div class="full">
+          <label>Pesan Contoh (pesan asli dari customer)</label>
+          <textarea id="fsInputPesan" placeholder="cth: baby lahir tanggal 3 kemaren kak"></textarea>
+        </div>
+        <div class="full">
+          <label>Output JSON Ideal (harus format JSON valid)</label>
+          <textarea id="fsInputOutput" placeholder='{"status":"sudah_lahir","tanggal":"2026-09-19","domisili":""}'></textarea>
+        </div>
+        <div class="full">
+          <label>Catatan (opsional)</label>
+          <input type="text" id="fsInputCatatan" placeholder="cth: contoh tanggal relatif">
+        </div>
+      </div>
+      <button type="button" class="btn-co-primary" style="margin-top:10px;" onclick="tambahFewShotManual()">💾 Simpan & Aktifkan</button>
+    </div>
+
+    <div class="fu-kpi-grid" id="fsKpiGrid"></div>
+
+    <div class="filter-panel">
+      <div class="filter-grid">
+        <div class="form-group">
+          <label>Jenis Prompt</label>
+          <select id="fsFilterJenis" onchange="renderFewShotTable()"><option value="">Semua Jenis</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-responsive table-compact-wrap">
+        <table>
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th>Jenis</th><th>Pesan Contoh</th><th>Output Ideal</th><th>Catatan</th><th>Status</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="bFewShotTable"><tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </div>
+  </main>
+</div>
 
 <script>
-const scriptURL='https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
-const LS={0:'Belum Ada',1:'Menunggu Jawaban',2:'PL Terkirim',3:'Perlu Review CS',4:'Menunggu Pilih Layanan',100:'Repeat Customer'};
-const TPL=[['template_qualifying','Qualifying (tanya usia & domisili)'],['template_setelah_detail','Setelah detail / kirim PL'],['template_aman_lanjutan','Aman — ajak booking'],['template_abuabu','Zona abu-abu (cek BB/kesehatan)'],['template_tolak','Tolak halus (di luar window)'],['template_reminder_h4','Reminder 1'],['template_reminder_h20','Reminder 2'],['template_repeat_customer','Sapaan customer lama']];
-const ORG='Organik / Tanpa Iklan';
-let D={},rows=[],cur=null;
-const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const nh=p=>{let d=String(p||'').replace(/\D/g,'');if(!d)return'';if(d[0]==='0')d='62'+d.slice(1);if(d.indexOf('62')!==0)d='62'+d;return d};
-const $=id=>document.getElementById(id);
-
-async function muat(){
-  $('load').style.display='flex';
-  try{
-    const [a,b]=await Promise.all([fetch(scriptURL+'?action=getFollowUpData').then(r=>r.json()),fetch(scriptURL+'?action=getFollowUpMonitor').then(r=>r.json()).catch(()=>({}))]);
-    D={ai:a.aiAnalysis||[],st:a.followUpState||[],drip:a.dripTracking||[],nama:a.namaKodeByHp||{},tpl:a.pengaturanFollowUpPerProduk||[],chat:b.chatStat||{},ctwa:b.ctwaByHp||{}};
-    if(!b.chatStat)alert('⚠️ Endpoint getFollowUpMonitor belum aktif di Apps Script — kolom Sumber & Pesan Terakhir kosong. Tempel followup_backend_tambahan.gs lalu deploy New version.');
-    bangun();render();renderSumber();
-  }catch(e){alert('❌ Gagal memuat: '+e)}
-  $('load').style.display='none';
-}
-function bangun(){
-  const st={},ai={},nm={};
-  D.st.forEach(r=>st[nh(r.no_hp)]=r);D.ai.forEach(r=>ai[nh(r.no_hp)]=r);D.drip.forEach(r=>nm[nh(r.no_hp)]=r.nama_kontak);
-  const set=new Set([...Object.keys(st),...Object.keys(ai),...Object.keys(D.chat)]);
-  rows=[...set].filter(Boolean).map(h=>({hp:h,nama:(D.nama[h]||{}).nama||nm[h]||'',kode:(D.nama[h]||{}).kode_leads||'',anak:(D.nama[h]||{}).data_anak||'',
-    st:st[h]?st[h].stage:0,produk:(st[h]||{}).product_interest||(ai[h]||{}).product_interest||'',cat:(st[h]||{}).catatan||'',ai:ai[h]||null,
-    ch:D.chat[h]||null,ct:D.ctwa[h]||null,src:D.ctwa[h]?(D.ctwa[h].headline||D.ctwa[h].source_id||'Iklan (tanpa headline)'):ORG}));
-  rows.sort((a,b)=>((b.ch||{}).last||'').localeCompare((a.ch||{}).last||''));
-  const fs=$('fsu'),c=fs.value;fs.innerHTML='<option value="">Semua Sumber</option>'+[...new Set(rows.map(r=>r.src))].sort().map(s=>`<option>${esc(s)}</option>`).join('');fs.value=c;
-}
-function lolos(r){
-  const q=$('fq').value.toLowerCase();
-  if(q&&!(r.hp+' '+r.nama+' '+((r.ch||{}).teks||'')+' '+((r.ai||{}).summary||'')).toLowerCase().includes(q))return false;
-  if($('fst').value!==''&&String(r.st)!==$('fst').value)return false;
-  if($('fin').value&&(!r.ai||r.ai.intent!==$('fin').value))return false;
-  if($('fsu').value&&r.src!==$('fsu').value)return false;
-  if($('fbk').value&&!(r.ai&&r.ai.booking_signal))return false;
-  return true;
-}
-function render(){
-  const L=rows.filter(lolos);
-  const n=f=>rows.filter(f).length;
-  $('kpi').innerHTML=`<div><b>${rows.length}</b><span>Total Nomor</span></div><div><b>${n(r=>r.st===1||r.st===4)}</b><span>Menunggu Jawaban</span></div><div><b>${n(r=>r.st===3)}</b><span>Perlu Review CS</span></div><div><b>${n(r=>r.ai&&r.ai.booking_signal)}</b><span>Siap Booking 🔥</span></div><div><b>${n(r=>r.ct)}</b><span>Dari Iklan CTWA</span></div>`;
-  $('tb').innerHTML=L.slice(0,300).map(r=>`<tr>
-   <td><b>${esc(r.nama||'(tanpa nama)')}</b><div class="sm">${esc(r.hp)}</div><div class="sm">${esc(r.kode)}</div></td>
-   <td class="clip">${r.ct?`<b>📣 ${esc(r.src)}</b><div class="sm">${esc((r.ct.body||'').substring(0,80))}</div>`:`<span class="sm">${ORG}</span>`}</td>
-   <td>${esc(r.produk||'-')}<br><span class="badge s${r.st}">${LS[r.st]||'Stage '+r.st}</span></td>
-   <td class="clip">${r.ai?`<b>${esc(r.ai.intent||'-')}</b>${r.ai.booking_signal?' 🔥':''}<div class="sm">${esc((r.ai.summary||'').substring(0,110))}</div>`:'<span class="sm">Belum dianalisis</span>'}</td>
-   <td class="clip">${r.ch?`“${esc(r.ch.teks||'')}”<div class="sm">${esc((r.ch.last||'').substring(0,16))} · ${r.ch.n} pesan</div>`:'<span class="sm">-</span>'}</td>
-   <td style="white-space:nowrap"><button class="btn p" onclick="buka('${r.hp}')">💬 Chat & Follow-up</button></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">Tidak ada data.</td></tr>';
-}
-function renderSumber(){
-  const g={};rows.forEach(r=>{const x=g[r.src]=g[r.src]||{n:0,hi:0,bk:0,pl:0,rv:0};x.n++;
-    if(r.ai&&/high/i.test(r.ai.intent))x.hi++;if(r.ai&&r.ai.booking_signal)x.bk++;if(r.st===2)x.pl++;if(r.st===3)x.rv++});
-  const T=rows.length||1;
-  $('tsrc').innerHTML=Object.entries(g).sort((a,b)=>b[1].n-a[1].n).map(([k,x])=>`<tr><td class="clip"><b>${esc(k)}</b></td><td>${x.n}</td>
-   <td><div class="bg"><i style="width:${Math.round(x.n/T*100)}%"></i></div><span class="sm">${Math.round(x.n/T*100)}%</span></td>
-   <td>${x.hi} <span class="sm">(${Math.round(x.hi/x.n*100)}%)</span></td><td>${x.bk} <span class="sm">(${Math.round(x.bk/x.n*100)}%)</span></td><td>${x.pl}</td><td>${x.rv}</td></tr>`).join('');
-}
-function tab(k){$('p1').style.display=k===1?'block':'none';$('p2').style.display=k===2?'block':'none';$('tb1').className='btn'+(k===1?' p':'');$('tb2').className='btn'+(k===2?' p':'')}
-
-// ---------- PANEL CHAT & FOLLOW-UP ----------
-async function buka(hp){
-  cur=rows.find(r=>r.hp===hp);if(!cur)return;
-  const produk=[...new Set(D.tpl.map(t=>t.minat).filter(m=>m&&m!=='__GLOBAL__'))];
-  const jam=cur.ch&&cur.ch.last?(Date.now()-new Date(cur.ch.last.replace(' ','T')+'+07:00'))/36e5:null;
-  $('pn').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">${esc(cur.nama||cur.hp)} · ${cur.hp}</b><button class="btn" onclick="tutup()">✖</button></div>
-   ${cur.ct?`<div class="box" style="background:#fffbeb"><b>📣 Chat dari Iklan (CTWA)</b><div>${esc(cur.ct.headline||'-')}</div><div class="sm">${esc(cur.ct.body||'')}</div><div class="sm">Pesan pertama: “${esc(cur.ct.pesan_pertama||'')}” · ${esc(cur.ct.waktu)}${cur.ct.source_id?' · ID: '+esc(cur.ct.source_id):''}</div></div>`:''}
-   <div class="box" style="background:#eef2ff"><b>🧠 Analisis AI</b> ${cur.ai?`<div>Produk: <b>${esc(cur.ai.product_interest||'-')}</b> · Timeline: ${esc(cur.ai.timeline||'-')} · Lokasi: ${esc(cur.ai.location||'-')} · Budget: ${esc(cur.ai.budget_signal||'-')}</div><div>Intent: <b>${esc(cur.ai.intent||'-')}</b>${cur.ai.booking_signal?' 🔥 Siap booking':''} · Confidence ${Math.round((cur.ai.confidence||0)*100)}%</div><div class="sm">${esc(cur.ai.summary||'')}</div>`:'<div class="sm">Belum ada analisis.</div>'}
-     <div class="sm" style="margin-top:4px">Follow-up: ${LS[cur.st]||cur.st} — ${esc(cur.cat)}</div></div>
-   <div class="chat" id="cb"><span class="sm">Memuat percakapan...</span></div>
-   <div class="box"><b>✍️ Susun Follow-up</b>
-     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">
-      <select class="sel" id="tp" onchange="isiTpl()"><option value="">— Ketik sendiri —</option>${TPL.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select>
-      <select class="sel" id="pr" onchange="isiTpl()">${['',...produk].map(p=>`<option ${p===cur.produk?'selected':''} value="${esc(p)}">${p||'(produk umum)'}</option>`).join('')}</select></div>
-     ${jam!==null&&jam>24?`<div class="sm" style="color:#b45309;margin-bottom:6px">⚠️ Chat terakhir customer ${Math.round(jam)} jam lalu (lewat 24 jam) — WhatsApp bisa menolak pesan teks biasa.</div>`:''}
-     <textarea id="msg" placeholder="Pilih template lalu edit, atau ketik pesan sendiri..." oninput="$('cnt').textContent=this.value.length+' karakter'"></textarea>
-     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="sm" id="cnt">0 karakter</span>
-       <span><button class="btn" onclick="chatMuat()">🔄 Muat ulang chat</button> <button class="btn g" id="snd" onclick="kirim()">📤 Kirim WhatsApp</button></span></div></div>`;
-  $('ov').style.display='flex';chatMuat();
-}
-function tutup(){$('ov').style.display='none'}
-async function chatMuat(){
-  try{
-    const d=await fetch(scriptURL+'?action=getChatHistory&hp='+cur.hp).then(r=>r.json());
-    $('cb').innerHTML=(d.timeline||[]).map(m=>`<div class="bub ${m.arah==='keluar'?'out':'in'}">${esc(m.teks)}<small>${m.arah==='keluar'?'🤖 '+esc(m.tipe||'')+' · ':''}${esc((m.waktu||'').substring(0,16))}</small></div>`).join('')||'<span class="sm">Belum ada pesan.</span>';
-    $('cb').scrollTop=1e9;
-  }catch(e){$('cb').innerHTML='<span class="sm">Gagal memuat chat.</span>'}
-}
-function ambilTpl(produk,key){
-  const f=m=>D.tpl.find(t=>String(t.minat||'').toLowerCase()===String(m).toLowerCase());
-  const p=f(produk),g=f('__GLOBAL__');
-  return (p&&p[key])||(g&&g[key])||'';
-}
-function isiTpl(){
-  const k=$('tp').value;if(!k)return;
-  const p=$('pr').value,cfg=D.tpl.find(t=>t.minat===p)||D.tpl.find(t=>t.minat==='__GLOBAL__')||{};
-  const lh=(cur.anak.match(/Lahir:\s*(\d{4}-\d{2}-\d{2})/)||[])[1];
-  const map={NAMA:cur.nama||'Kak',PROMO_LINE:cur.ct&&cur.ct.headline?`Kami lihat kamu tertarik dengan promo "${cur.ct.headline}" ya! `:'',BATAS_AMAN:cfg.batas_hari_aman||15,LOKASI_NOTE:'',USIA_HARI:lh?Math.floor((Date.now()-new Date(lh))/864e5):'[USIA_HARI]'};
-  let t=ambilTpl(p,k);Object.keys(map).forEach(x=>t=t.split('['+x+']').join(map[x]));
-  $('msg').value=t||'(Template ini kosong untuk produk tersebut — ketik sendiri.)';$('msg').dispatchEvent(new Event('input'));
-}
-async function kirim(){
-  const t=$('msg').value.trim();if(!t)return alert('Pesan masih kosong.');
-  if(/\[[A-Z_]+\]/.test(t)&&!confirm('Masih ada placeholder [SEPERTI_INI] di pesan. Tetap kirim?'))return;
-  if(!confirm('Kirim pesan ini ke '+(cur.nama||cur.hp)+' ('+cur.hp+') sekarang?'))return;
-  const b=$('snd');b.disabled=true;b.textContent='Mengirim...';
-  try{
-    const p=new URLSearchParams({action:'kirimPesanManualNomor',noHp:cur.hp,pesan:t});
-    const r=await fetch(scriptURL,{method:'POST',body:p}).then(x=>x.json());
-    if(r.result==='success'){$('msg').value='';$('cnt').textContent='0 karakter';await chatMuat()}else alert('❌ '+(r.message||'gagal'));
-  }catch(e){alert('❌ '+e)}
-  b.disabled=false;b.textContent='📤 Kirim WhatsApp';
-}
-document.addEventListener('DOMContentLoaded',muat);
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+  let dataAiAnalysis = [];
+  let dataFollowUpState = [];
+  let dataDripTracking = [];
+  let dataNamaKodeByHp = {};
+  let dataPengaturanFollowUp = { aktif: true };
+  let dataPengaturanFollowUpProduk = [];
+  let dataKolomFupProduk = [];
+  let dataAiErrorLog = [];
+  let dataFewShotList = [];
 </script>
+
+<script src="utils.js"></script>
+<script src="ui-followup.js"></script>
+<script src="ui-fewshot.js"></script>
+<script src="api-followup.js"></script>
+
 </body>
 </html>
