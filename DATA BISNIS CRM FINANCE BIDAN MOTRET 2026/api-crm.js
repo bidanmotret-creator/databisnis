@@ -9,6 +9,7 @@ async function tarikDataCrm() {
     stageByHp = data.stageByHp || {};
     aiByHp = data.aiByHp || {};
     chatStat = data.chatStat || {};
+        capiByKode = data.capiByKode || {};
     isiDropdownMinat_();
     const q = new URLSearchParams(location.search).get('cari');
     if (q && !window._cariTerapkan) { document.getElementById('fCari').value = q; window._cariTerapkan = true; }
@@ -17,6 +18,20 @@ async function tarikDataCrm() {
     alert('❌ Gagal memuat data CRM.\n\n' + err.message);
   } finally {
     if (overlay) overlay.style.display = 'none';
+  }
+}
+
+async function kirimUlangCapi(kode) {
+  if (!confirm('Kirim ulang event CAPI untuk lead ' + kode + '?')) return;
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'resendCapiLead');
+    p.append('kodeLeads', kode);
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') { alert('✅ CAPI terkirim ulang (' + r.data.eventsSent + ' event).'); await tarikDataCrm(); }
+    else alert('❌ Gagal: ' + (r.message || 'unknown'));
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
   }
 }
 

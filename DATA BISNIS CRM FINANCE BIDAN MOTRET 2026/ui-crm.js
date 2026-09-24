@@ -68,6 +68,7 @@ function renderCrm() {
   const omzet = list.reduce((a, r) => a + r.total, 0);
   const masuk = list.reduce((a, r) => a + r.jml_bayar1 + r.jml_bayar2, 0);
   const piutang = list.reduce((a, r) => a + r.sisa_hutang, 0);
+
   document.getElementById('crmKpi').innerHTML = `
     <div class="fu-kpi-card fu-kpi-1"><div class="n">${uniq.size}</div><div class="l">Klien Unik</div></div>
     <div class="fu-kpi-card fu-kpi-2"><div class="n">${rpC(omzet)}</div><div class="l">Total Penjualan</div></div>
@@ -85,9 +86,14 @@ function renderCrm() {
       hari = s < 0 ? `<br><small style="color:#ef4444;">Lewat ${-s} hr</small>` : `<br><small style="color:#0ea5e9;">${s} hr lagi</small>`;
     }
     const h = hpNorm(r.no_hp), st = stageByHp[h], ai = aiByHp[h];
+    const capi = capiByKode[r.kode_leads];
+    const capiHtml = capi
+      ? `<br><span class="fu-badge ${capi.sudah_kirim_purchase ? 'b-green' : 'b-yellow'}">${capi.sudah_kirim_purchase ? '✅ CAPI: Purchase' : '📨 CAPI: Lead'}</span> <small style="color:#94a3b8;">${esc(capi.last_synced || '')}</small>`
+      : '<br><small style="color:#94a3b8;">CAPI: belum sync</small>';
     const fuHtml = (st ? `<span class="fu-badge st-${st.stage}">${esc(LABEL_STAGE[st.stage] || 'Stage ' + st.stage)}</span>` : '<small style="color:#94a3b8;">Belum ada</small>')
       + (chatStat[h] ? `<br><small>💬 ${chatStat[h].n} pesan · ${esc((chatStat[h].last || '').substring(0, 16))}</small><br><small style="color:#334155; display:inline-block; max-width:220px; white-space:normal;">“${esc(chatStat[h].teks || '')}”</small>` : '')
-      + (ai ? `<br><small>Intent: <b>${esc(ai.intent || '-')}</b>${ai.booking ? ' · 🔥 siap booking' : ''}</small><br><small style="color:#64748b; display:inline-block; max-width:220px; white-space:normal;">${esc((ai.summary || '').substring(0, 90))}</small>` : '');
+      + (ai ? `<br><small>Intent: <b>${esc(ai.intent || '-')}</b>${ai.booking ? ' · 🔥 siap booking' : ''}</small><br><small style="color:#64748b; display:inline-block; max-width:220px; white-space:normal;">${esc((ai.summary || '').substring(0, 90))}</small>` : '')
+      + capiHtml;
     return `<tr>
       <td><strong>${esc(r.kode_leads || '-')}</strong></td>
       <td><strong>${esc(r.nama || '-')}</strong><br><small style="color:#64748b;">${esc(r.no_hp)}</small></td>
@@ -100,6 +106,7 @@ function renderCrm() {
         <button class="row-btn" style="background:#0ea5e9;" title="Riwayat chat & analisis" onclick="bukaChat('${esc(r.no_hp)}','${esc((r.nama || '').replace(/'/g, ''))}')">💬</button>
         <a class="row-btn" style="background:#25d366;" title="Buka WhatsApp" target="_blank" href="https://wa.me/${h}">📲</a>
         <a class="row-btn" style="background:#4f46e5;" title="Lihat AI Analysis & Follow-up" href="followup.html?cari=${h}">🤖</a>
+        <button class="row-btn" style="background:#8b5cf6;" title="Kirim ulang CAPI" onclick="kirimUlangCapi('${esc(r.kode_leads)}')">📡</button>
       </td></tr>`;
   }).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8;">Tidak ada data.</td></tr>';
 }
