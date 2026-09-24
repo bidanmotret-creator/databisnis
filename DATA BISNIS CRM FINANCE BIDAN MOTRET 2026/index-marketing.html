@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="marketing.css">
 <script src="nav.js"></script>
 </head>
 <body>
@@ -53,9 +54,7 @@
         <div style="width:16px; height:16px; border:2.5px solid #fde68a; border-top-color:#d97706; border-radius:50%; animation:spinLoadingOverlay 0.8s linear infinite; flex-shrink:0;"></div>
         ⏳ Data Marketing masih dimuat di belakang layar (Keuangan sudah lebih dulu tampil supaya lebih cepat) — halaman ini akan otomatis terisi begitu selesai.
     </div>
-    <button onclick="downloadPDF('tabMarketing', 'Laporan_Marketing_&_Funnel', 'Laporan Analisis Marketing Funnel BIDAN MOTRET')" class="btn-pdf-global">
-        📥 Download PDF Marketing
-        </button>
+    
     <h2>📢 Metrik Marketing & ROAS (Funnel Analysis)</h2>
     <p style="color:var(--text-light); margin-top:-10px;">Perjalanan calon klien dari <strong>dilihat iklannya</strong> sampai <strong>bayar DP</strong> — empat tahap, empat warna.</p>
 
@@ -227,7 +226,18 @@
         </div>
     </div>
 
-<div id="bannerTargetMingguan"></div>
+
+
+<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
+
+<div class="mkt-sub" id="mktSub_sync">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🔗 Sinkronisasi Meta Ads</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('sync', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_sync', 'Sinkronisasi Meta Ads', this)">📥 PDF</button>
+  </div>
+</div>
 
     <div class="funnel-legend" style="border-left:4px solid #0ea5e9; background:#f0f9ff;">
         <h3 style="margin-top:0; font-size:14.5px; color:#0369a1;">🔗 Sinkronisasi Meta Ads</h3>
@@ -266,6 +276,18 @@
             <div id="riwayatSyncMetaList" style="margin-top:6px; font-size:11px; color:#475569;"></div>
         </div>
     </div>
+
+
+</div>
+
+<div class="mkt-sub" id="mktSub_capi">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">👥 CAPI & Audience</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('capi', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_capi', 'CAPI & Audience', this)">📥 PDF</button>
+  </div>
+</div>
 
     <div class="funnel-legend" style="border-left:4px solid #db2777; background:#fdf2f8;">
         <h3 style="margin-top:0; font-size:14.5px; color:#9d174d;">👥 Custom Audience & Conversions API (CAPI)</h3>
@@ -310,7 +332,38 @@
             </div>
         </div>
         <p style="font-size:10.5px; color:#5b21b6; margin-top:10px;">📘 <b>Input → Proses → Output:</b> Input = data Leads (CRM) yang statusnya berubah. Proses = dicocokkan ke kategori Minat×Status, di-hash (SHA-256), dikirim ke Custom Audience & Pixel Meta. Output = baris log di atas (audience_id yang dipakai + status pengiriman event Purchase).</p>
+    
+        <div style="margin-top:22px; padding-top:14px; border-top:2px solid #6b21a8;">
+            <h4 style="font-size:14px; color:#3b0764; margin:0 0 4px;">🧾 Status CAPI per Lead</h4>
+            <p style="font-size:11.5px; color:#1f2937; margin:0 0 8px;">Setiap lead di CRM dicocokkan dengan log sinkronisasi (<code>Meta_Sync_Log</code>) lewat Kode Leads. <b>✔ Lead</b> = lead sudah tercatat di log sync (masuk audience &amp; event Lead). <b>Purchase</b> = flag <i>sudah_kirim_purchase</i> di log; <b>⚠</b> berarti lead sudah punya pembayaran tetapi event Purchase belum tercatat terkirim.</p>
+            <div id="capiLeadRingkas" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:10px;"></div>
+            <div class="capi-filter mkt-noprint">
+                <input type="text" id="capiCari" placeholder="Cari nama / no HP / kode / minat" oninput="renderCapiPerLead()">
+                <select id="capiFilter" onchange="renderCapiPerLead()">
+                    <option value="">Semua lead</option><option value="sinkron">Sudah tersinkron</option><option value="belum">Belum tersinkron</option>
+                    <option value="perlu">Sudah bayar, Purchase belum terkirim</option><option value="purchase">Purchase terkirim</option>
+                </select>
+            </div>
+            <div id="capiLeadCount" style="font-size:11.5px; color:#374151; margin-bottom:6px;"></div>
+            <div class="table-responsive table-compact-wrap">
+                <table style="width:100%; font-size:12px;">
+                    <thead><tr><th style="padding:8px; text-align:left;">Lead</th><th style="padding:8px; text-align:left;">Minat / Status CRM</th><th style="padding:8px; text-align:left;">Tgl Chat</th><th style="padding:8px; text-align:left;">Event CAPI</th><th style="padding:8px; text-align:left;">Audience</th><th style="padding:8px; text-align:left;">Audience ID</th><th style="padding:8px; text-align:left;">Sync Terakhir</th></tr></thead>
+                    <tbody id="capiLeadBody"><tr><td colspan="7" style="text-align:center; padding:16px; color:#4b5563;">Klik <b>Muat Log Audit</b> dulu untuk melihat status CAPI tiap lead.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+</div>
+
+<div class="mkt-sub" id="mktSub_funnel">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🎯 Funnel & Insight</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('funnel', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_funnel', 'Funnel & Insight', this)">📥 PDF</button>
+  </div>
+</div>
 
     <div class="funnel-legend">
         📖 <b>Cara baca funnel ini:</b> iklan Meta dilihat orang (<b>Awareness</b>) → sebagian menghubungi via chat (<b>Leads</b>, dicatat sebagai "Leads Meta" mentah dari Meta dan "Leads CRM" yang sudah tercocokkan nomor HP-nya ke database) → sebagian bayar DP (<b>Closing</b>) → menghasilkan uang masuk (<b>Revenue</b>). Semakin ke bawah tahapnya, semakin sedikit orangnya — itu wajar, namanya juga funnel (corong).
@@ -413,6 +466,18 @@
         </div>
     </div>
 
+
+</div>
+
+<div class="mkt-sub" id="mktSub_produk">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🏆 Performa per Produk</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('produk', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_produk', 'Performa per Produk', this)">📥 PDF</button>
+  </div>
+</div>
+
     <h3 class="mkt-section-title">🏆 Performa per Produk</h3>
     <div class="chart-container" style="height: 300px; margin-bottom: 18px;">
         <canvas id="chartMarketingProduk"></canvas>
@@ -449,6 +514,19 @@
         <div id="aiProdukOutput" style="display:none; white-space:pre-wrap; font-size:13px; line-height:1.7; background:#f0fdf4; border-radius:8px; padding:14px; margin-top:10px;"></div>
     </div>
 
+
+</div>
+
+<div class="mkt-sub" id="mktSub_tren">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">📈 Tren Bulanan, Mingguan & Harian</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('tren', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_tren', 'Tren Bulanan, Mingguan & Harian', this)">📥 PDF</button>
+  </div>
+</div>
+
+<div id="bannerTargetMingguan"></div>
     <h3 class="mkt-section-title">📊 Tren Perbandingan Bulanan</h3>
     <div class="chart-container" style="height: 300px; margin-bottom: 18px;">
         <canvas id="chartMarketingBulanan"></canvas>
@@ -503,6 +581,18 @@
         </table>
             </div>
 
+
+</div>
+
+<div class="mkt-sub" id="mktSub_adset">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🧩 Breakdown Adset</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('adset', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_adset', 'Breakdown Adset', this)">📥 PDF</button>
+  </div>
+</div>
+<div class="mkt-groupbtns"><button type="button" onclick="mktToggleSemuaGrup('adset', true)">▼ Buka semua campaign</button><button type="button" onclick="mktToggleSemuaGrup('adset', false)">▶ Tutup semua campaign</button></div>
     <h3 class="mkt-section-title">🔍 Breakdown per Adset (Level Lebih Detail dari Campaign)</h3>
     <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
         Kalau di "Performa per Produk" ada campaign yang ROAS-nya rendah, cek di sini <b>adset mana</b> yang jadi biang keroknya —
@@ -529,6 +619,18 @@
         </table>
     </div>
 
+
+</div>
+
+<div class="mkt-sub" id="mktSub_creative">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🎨 Breakdown Creative</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('creative', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_creative', 'Breakdown Creative', this)">📥 PDF</button>
+  </div>
+</div>
+<div class="mkt-groupbtns"><button type="button" onclick="mktToggleSemuaGrup('content', true)">▼ Buka semua campaign</button><button type="button" onclick="mktToggleSemuaGrup('content', false)">▶ Tutup semua campaign</button></div>
     <h3 class="mkt-section-title">🎨 Breakdown per Creative/Konten Iklan</h3>
     <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
         Kreatif (foto/video/copy) mana yang paling menarik perhatian & paling menghasilkan closing.
@@ -552,6 +654,34 @@
         </table>
     </div>
 
+
+</div>
+
+<div class="mkt-sub" id="mktSub_iklan">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🔍 Analisis Iklan</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('iklan', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_iklan', 'Analisis Iklan', this)">📥 PDF</button>
+  </div>
+</div>
+
+<div class="ik-controls">
+  <div><label>Breakdown (kelompok bar)</label><select id="ikBreak" onchange="renderAnalisisIklan()"><option value="ad">Ad name</option><option value="adset">Ad set name</option><option value="campaign">Campaign name</option></select></div>
+  <div><label>Urutkan berdasarkan</label><select id="ikSort" onchange="renderAnalisisIklan()"><option value="results">Messaging conversations (Results)</option><option value="spend">Amount spent</option><option value="cpl">CPL (Cost per Result)</option><option value="purchases">Purchases</option></select></div>
+  <div><label>Arah</label><select id="ikDir" onchange="renderAnalisisIklan()"><option value="desc">Terbesar → terkecil</option><option value="asc">Terkecil → terbesar</option></select></div>
+  <div><label>Jumlah bar</label><select id="ikN" onchange="renderAnalisisIklan()"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option><option value="9999">Semua</option></select></div>
+  <div><label class="chk"><input type="checkbox" id="ikAdaResults" onchange="renderAnalisisIklan()"> Hanya yang punya Results</label></div>
+</div>
+<p style="font-size:11.5px; color:#64748b; margin:0 0 8px;">Mengikuti filter tanggal &amp; campaign di atas. Grafik menampilkan maksimal 15 bar teratas; tabel di bawahnya menampilkan sesuai “Jumlah bar”.</p>
+<div id="ikRingkas" class="ik-summary"></div>
+<div class="ik-chartwrap"><canvas id="chartAnalisisIklan"></canvas></div>
+<div class="table-responsive table-compact-wrap">
+  <table id="tblAnalisisIklan" style="width:100%;">
+    <thead><tr style="background:#f1f5f9;"><th>#</th><th>Nama</th><th class="num">Results</th><th class="num">Amount spent</th><th class="num">CPL</th><th class="num">Purchases</th><th class="num">CTR</th><th class="num">% Spend</th></tr></thead>
+    <tbody id="bAnalisisIklan"><tr><td colspan="8" style="text-align:center; padding:18px; color:#94a3b8;">Memuat...</td></tr></tbody>
+  </table>
+</div>
      <div class="funnel-legend" id="cardKandidatAdsetContent" style="border-left:4px solid #f59e0b; margin-top:18px;">
         <h3 style="margin-top:0; font-size:14.5px; color:#1e293b;">🏅 Kandidat Terbaik & Terburuk</h3>
         <p style="font-size:11.5px; color:#64748b; margin:4px 0 6px;">Berdasarkan efisiensi CPL (Cost per Lead) — dipakai sebagai bahan cepat ambil keputusan mana yang di-scale, mana yang dimatikan.</p>
@@ -564,6 +694,9 @@
         </div>
     </div>
 
+
+
+</div>
 
 <div id="tmModalSet" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:14px; padding:24px; max-width:720px; width:92%; max-height:85vh; overflow-y:auto;">
@@ -625,6 +758,7 @@
 
 <script src="utils.js"></script>
 <script src="ui-marketing.js"></script>
+<script src="mkt-extra.js"></script>
 <script src="api-marketing.js"></script>
 
 </body>

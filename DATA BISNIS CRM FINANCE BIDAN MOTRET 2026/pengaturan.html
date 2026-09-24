@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pengaturan — SentuhanMomen3D</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
+  .form-group.full-width { grid-column:1/-1; }
+  .form-group label { display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:4px; }
+  .form-group textarea, .form-group input { width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:13px; }
+  .btn-submit { background:#4f46e5; color:#fff; border:none; border-radius:8px; padding:10px 16px; font-weight:800; cursor:pointer; margin-top:14px; }
+  .template-btn { border:1px solid #c7d2fe; background:#fff; color:#4338ca; border-radius:6px; padding:5px 10px; font-size:11.5px; cursor:pointer; }
+  .card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; }
+</style>
+</head>
+<body>
+
+<div id="bgRefreshBadge" style="position:fixed; top:14px; right:14px; z-index:9999; background:#0f172a; color:#fff; padding:6px 14px; border-radius:20px; font-size:11.5px; font-weight:700; display:none; box-shadow:0 4px 10px rgba(0,0,0,.2); pointer-events:none;">🔄 Menyegarkan data…</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">👥</div>
+      <div class="brand-text"><strong>CRM Leads</strong><span>SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> CRM Leads</a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> AI Chat & Follow-up</a>
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
+        <a class="nav-item active" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> Pengaturan</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">Pengaturan</div>
+    </div>
+    <div class="content-inner">
+
+      <div class="card">
+        <h2 style="margin-top:0;">⚙️ Pusat Kustomisasi Modular Varian</h2>
+        <form id="formSettings">
+          <div class="form-grid">
+            <div class="form-group"><label>Daftar Sumber Leads</label><textarea id="set_sumber" rows="4"></textarea></div>
+            <div class="form-group"><label>Daftar Kategori Utama (Sbg Campaign)</label><textarea id="set_minat" rows="4"></textarea></div>
+            <div class="form-group"><label>Daftar Lokasi Sesi</label><textarea id="set_lokasi" rows="4"></textarea></div>
+            <div class="form-group"><label>Daftar Promo</label><textarea id="set_promo" rows="4"></textarea></div>
+
+            <div class="form-group full-width" style="background:#e0e7ff; padding:15px; border-radius:8px; margin-top:10px;">
+              <label style="color:#4f46e5;">Script Template WA Follow-Up</label>
+              <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+                <button type="button" class="template-btn" onclick="document.getElementById('set_wa').value='Halo Ibu [NAMA], terima kasih sudah menghubungi kami. Untuk detail harga sesi [MINAT] adalah sebagai berikut:\n\nApakah ada yang ingin ditanyakan?'">💰 Harga Baru</button>
+                <button type="button" class="template-btn" onclick="document.getElementById('set_wa').value='Halo Ibu [NAMA], kami informasikan slot promo sesi [MINAT] bulan ini tersisa sedikit. Mari amankan slotnya dengan DP ringan terlebih dahulu ya bu 😊'">🔥 F.U Promo</button>
+                <button type="button" class="template-btn" onclick="document.getElementById('set_wa').value='Halo Ibu [NAMA], sekadar mengingatkan untuk jadwal sesi [MINAT] besok. Mohon dipersiapkan kelengkapannya ya bu. Sampai jumpa di studio!'">⏰ Reminder H-1</button>
+                <button type="button" class="template-btn" onclick="document.getElementById('set_wa').value='Halo Ibu [NAMA], terima kasih sudah melakukan sesi [MINAT]. Bagaimana kesan-kesannya bu? Jika berkenan, boleh minta testimoni singkatnya? 🙏'">⭐ Minta Testimoni</button>
+                <button type="button" class="template-btn" onclick="document.getElementById('set_wa').value='Halo Ibu [NAMA], foto sesi [MINAT] sudah selesai kami edit. Mohon ditunggu kedatangannya atau pengirimannya ya bu!'">📸 Foto Selesai</button>
+              </div>
+              <textarea id="set_wa" rows="4"></textarea>
+            </div>
+
+            <div class="form-group full-width" style="border-top:1px solid var(--border); padding-top:15px;"><label style="color:#0ea5e9;">1. Pemetaan Minat ke Paket (JSON)</label><textarea id="set_paketMap" rows="6" style="font-family:monospace; font-size:13px; background:#1e293b; color:#38bdf8;"></textarea></div>
+            <div class="form-group full-width"><label style="color:#f59e0b;">2. Pemetaan Paket ke Varian Tema (JSON)</label><textarea id="set_varianMap" rows="6" style="font-family:monospace; font-size:13px; background:#1e293b; color:#38bdf8;"></textarea></div>
+          </div>
+          <button type="submit" class="btn-submit">💾 Simpan Konfigurasi</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">🛠️ Perawatan Data</h3>
+        <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">Aman dijalankan berkali-kali — data yang sudah lengkap tidak akan ditimpa/diduplikasi.</p>
+        <button type="button" class="btn-submit" style="width:auto; margin-top:0; background:#0f172a;" onclick="backfillKodeLeadsLama()">🔖 Generate Kode Leads untuk Data Lama</button>
+      </div>
+
+      <div class="card" style="background:#eff6ff;">
+        <h3 style="margin-top:0; color:#1e40af;">📖 Sinkronkan Riwayat Pembayaran Lama ke Jurnal</h3>
+        <p style="color:#1e3a8a; font-size:12.5px; margin-top:-6px;">
+          Untuk transaksi lama yang nominal bayarnya sudah tercatat di Database Klien, tapi BELUM pernah masuk ke Buku Jurnal.
+          Wajib jalankan "Generate Kode Leads untuk Data Lama" dulu kalau belum. Aman diklik berkali-kali.
+        </p>
+
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Akun Kas/Bank Tujuan (Debit)</label>
+            <input type="text" id="bf_akun_kas" list="listAkun" placeholder="Cth: 111 - Kas Studio">
+          </div>
+          <div class="form-group">
+            <label>Akun Pendapatan Default (Kredit)</label>
+            <input type="text" id="bf_akun_pendapatan_default" list="listAkun" placeholder="Cth: 410 - Pelunasan Sesi Foto">
+          </div>
+        </div>
+        <datalist id="listAkun"></datalist>
+
+        <p style="color:#1e3a8a; font-size:12px; margin:10px 0 4px 0;">Opsional: mapping akun pendapatan per kategori Minat (kalau kosong, pakai akun default di atas)</p>
+        <div id="bf_map_minat_container" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:14px;"></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn-submit" style="width:auto; margin:0; background:#0369a1;" onclick="previewBackfillJurnal()">🔍 Preview Sinkronisasi</button>
+          <button type="button" id="btnJalankanBackfillJurnal" class="btn-submit" style="width:auto; margin:0; background:#166534;" disabled onclick="jalankanBackfillJurnal()">✅ Jalankan Sinkronisasi</button>
+        </div>
+
+        <div id="bf_hasil_preview" style="display:none; margin-top:16px; background:#fff; border:1px solid #93c5fd; border-radius:8px; padding:14px;"></div>
+      </div>
+
+      <div class="card" style="background:#f0fdf4;">
+        <h3 style="margin-top:0; color:#166534;">🤖 Follow-Up Otomatis WhatsApp (24 Jam Pertama)</h3>
+        <p style="color:#166534; font-size:12.5px; margin-top:-6px;">Atur pesan auto-reply, kualifikasi HPL/domisili, dan kirim PL otomatis — tanpa perlu edit kode.</p>
+
+        <div style="display:flex; align-items:center; gap:10px; margin:14px 0; padding:10px; background:#fff; border-radius:6px;">
+          <input type="checkbox" id="fuAktif" style="width:20px; height:20px; cursor:pointer;">
+          <label for="fuAktif" style="font-weight:700; color:#166534; cursor:pointer; margin:0;">Aktifkan sistem Follow-Up Otomatis</label>
+        </div>
+
+        <div class="form-grid" style="grid-template-columns:1fr;">
+          <div class="form-group">
+            <label>Pesan Qualifying (Stage 0 — tanya HPL/domisili)</label>
+            <p style="font-size:11px; color:#64748b; margin:2px 0;">Placeholder: [NAMA], [PROMO_LINE]</p>
+            <textarea id="fuTemplateQualifying" rows="5"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Pesan "Aman" — sebelum kirim PL</label>
+            <p style="font-size:11px; color:#64748b; margin:2px 0;">Placeholder: [LOKASI_NOTE]</p>
+            <textarea id="fuTemplateAman" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Pesan "Aman" — lanjutan setelah PL terkirim</label>
+            <p style="font-size:11px; color:#64748b; margin:2px 0;">Placeholder: [BATAS_AMAN], [LOKASI_NOTE]</p>
+            <textarea id="fuTemplateAmanLanjutan" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Pesan "Abu-abu" (16-30 hari — minta BB & kondisi kesehatan)</label>
+            <p style="font-size:11px; color:#64748b; margin:2px 0;">Placeholder: [USIA_HARI]</p>
+            <textarea id="fuTemplateAbuabu" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Pesan "Tolak Halus" (di luar window)</label>
+            <p style="font-size:11px; color:#64748b; margin:2px 0;">Placeholder: [USIA_HARI]</p>
+            <textarea id="fuTemplateTolak" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Pesan untuk Customer Lama (repeat order)</label>
+            <p style="font-size:11px; color:#64748b; margin:2px 0;">Placeholder: [NAMA]</p>
+            <textarea id="fuTemplateRepeat" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Catatan Lokasi Luar Kota (ditambahkan otomatis ke pesan lain)</label>
+            <textarea id="fuTemplateLokasi" rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:14px;">
+          <div class="form-group"><label>Batas Hari "Aman" (auto kirim PL)</label><input type="number" id="fuBatasAman"></div>
+          <div class="form-group"><label>Batas Hari "Abu-abu" (butuh review CS)</label><input type="number" id="fuBatasAbuabu"></div>
+        </div>
+        <div class="form-group full-width" style="margin-top:10px;"><label>Link PDF Price List</label><input type="text" id="fuUrlPdf"></div>
+        <div class="form-group full-width"><label>Nama File PDF (muncul di WhatsApp)</label><input type="text" id="fuNamaFilePdf"></div>
+
+        <button type="button" class="btn-submit" style="width:auto; margin-top:16px; background:#166534;" onclick="simpanPengaturanFollowUpUI()">💾 Simpan Pengaturan Follow-Up</button>
+        <div id="fuHasilSimpan" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:12.5px;"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+  let STUDIO_CONFIG = {};
+</script>
+<script src="api-pengaturan.js"></script>
+</body>
+</html>

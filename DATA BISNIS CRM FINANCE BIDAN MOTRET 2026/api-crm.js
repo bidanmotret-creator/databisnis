@@ -24,7 +24,8 @@ async function fetchJsonAman(url, options) {
     throw new Error(json.message || 'Terjadi error di server.');
   }
   return json;
-}async function tarikDataCrm() {
+}
+async function tarikDataCrm() {
   const badge = document.getElementById('bgRefreshBadge');
   if (badge) { badge.style.display = 'inline-block'; badge.style.background = '#0f172a'; badge.textContent = '🔄 Menyegarkan data…'; }
   try {

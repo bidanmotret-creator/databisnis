@@ -34,9 +34,7 @@
 </style>
 </head>
 <body>
-
-<div id="globalLoadingOverlay" style="position:fixed; inset:0; z-index:9999; background:#f8fafc; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; color:#475569;">Memuat data CRM...</div>
-
+<div id="bgRefreshBadge" style="position:fixed; top:14px; right:14px; z-index:9999; background:#0f172a; color:#fff; padding:6px 14px; border-radius:20px; font-size:11.5px; font-weight:700; display:none; box-shadow:0 4px 10px rgba(0,0,0,.2); pointer-events:none;">🔄 Menyegarkan data…</div>
 <div class="app-shell">
   <aside class="sidebar">
     <div class="sidebar-brand">
@@ -47,6 +45,7 @@
       <div class="nav-group">
         <a class="nav-item active" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> CRM Leads</a>
         <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> AI Chat & Follow-up</a>
+        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> Pengaturan</a>
         <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
       </div>
     </nav>
