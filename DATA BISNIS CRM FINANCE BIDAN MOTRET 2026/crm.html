@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Leads — SentuhanMomen3D</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .fu-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+  .fu-kpi-card { border-radius:12px; padding:16px 18px; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.10); }
+  .fu-kpi-card .n { font-size:20px; font-weight:900; }
+  .fu-kpi-card .l { font-size:11px; text-transform:uppercase; opacity:.9; margin-top:4px; font-weight:700; }
+  .fu-kpi-1 { background:linear-gradient(160deg,#4f46e5,#312e81); }
+  .fu-kpi-2 { background:linear-gradient(160deg,#0ea5e9,#075985); }
+  .fu-kpi-3 { background:linear-gradient(160deg,#f59e0b,#b45309); }
+  .fu-kpi-4 { background:linear-gradient(160deg,#10b981,#065f46); }
+  .fu-kpi-5 { background:linear-gradient(160deg,#ef4444,#7f1d1d); }
+  .fu-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; color:#fff; background:#94a3b8; }
+  .st-1 { background:#f59e0b; } .st-2 { background:#0ea5e9; } .st-3 { background:#ef4444; } .st-100 { background:#10b981; }
+  .b-green { background:#10b981; } .b-yellow { background:#f59e0b; } .b-red { background:#ef4444; }
+  .row-btn { border:none; border-radius:6px; padding:5px 8px; cursor:pointer; font-size:12px; text-decoration:none; color:#fff; display:inline-block; }
+  #modalCrm { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; padding:16px; }
+  #modalCrm .box { background:#fff; border-radius:14px; padding:20px; width:100%; max-width:560px; max-height:90vh; overflow:auto; }
+  .mg { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .mg .full { grid-column:1/-1; }
+  .mg label { display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:3px; }
+  .mg input, .mg select { width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:7px 9px; font-size:13px; }
+  .bub { max-width:78%; padding:8px 12px; border-radius:12px; font-size:13px; margin-bottom:6px; white-space:pre-wrap; word-break:break-word; }
+  .bub small { display:block; font-size:10px; opacity:.6; margin-top:3px; }
+  .bub-in { background:#f1f5f9; align-self:flex-start; }
+  .bub-out { background:#dcfce7; align-self:flex-end; }
+  .ai-card { border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:12.5px; }
+  .mg input[readonly] { background:#f1f5f9; color:#64748b; }
+</style>
+</head>
+<body>
+
+<div id="globalLoadingOverlay" style="position:fixed; inset:0; z-index:9999; background:#f8fafc; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; color:#475569;">Memuat data CRM...</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">👥</div>
+      <div class="brand-text"><strong>CRM Leads</strong><span>SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a class="nav-item active" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> CRM Leads</a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> AI Chat & Follow-up</a>
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">CRM Leads</div>
+      <button type="button" onclick="tarikDataCrm()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
+    </div>
+    <div class="content-inner">
+
+      <div class="fu-kpi-grid" id="crmKpi"></div>
+
+      <div class="filter-panel">
+        <div class="filter-grid">
+          <div class="form-group"><label>Cari (Nama / No HP / Kode)</label><input type="text" id="fCari" oninput="renderCrm()" placeholder="ketik untuk mencari"></div>
+          <div class="form-group"><label>Minat</label><select id="fMinat" onchange="renderCrm()"><option value="">Semua</option></select></div>
+          <div class="form-group"><label>Status</label>
+            <select id="fStatus" onchange="renderCrm()">
+              <option value="">Semua</option><option value="pending">Pending</option><option value="dp">DP</option><option value="lunas">Lunas</option>
+            </select></div>
+          <div class="form-group"><label>Stage Follow-up</label>
+            <select id="fStage" onchange="renderCrm()">
+              <option value="">Semua</option><option value="0">Belum Qualifying</option><option value="1">Menunggu Jawaban</option>
+              <option value="2">PL Terkirim</option><option value="3">Perlu Review CS</option><option value="100">Repeat Customer</option>
+            </select></div>
+          <div class="form-group"><label>Urutkan</label>
+            <select id="fSort" onchange="renderCrm()">
+              <option value="chat_desc">Chat Terbaru</option><option value="chat_asc">Chat Terlama</option>
+              <option value="total_desc">Total Terbesar</option><option value="hutang_desc">Sisa Hutang Terbesar</option>
+              <option value="jadwal_asc">Jadwal Terdekat</option>
+            </select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="crmCount" style="font-size:12px; color:#64748b; margin-bottom:8px;"></div>
+        <div class="table-responsive table-compact-wrap">
+          <table>
+            <thead><tr style="background:#f1f5f9;">
+              <th>Kode</th><th>Klien</th><th>Minat / Paket</th><th>Tanggal</th><th>Total / Status</th><th>Follow-up & AI</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="crmBody"><tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL RIWAYAT CHAT -->
+<div id="modalChat" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#fff; border-radius:14px; width:100%; max-width:720px; max-height:92vh; display:flex; flex-direction:column;">
+    <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="cJudul" style="margin:0; font-size:15px;">Riwayat Chat</h3>
+      <div style="display:flex; gap:6px;"><button type="button" class="btn-co-secondary" id="btnAnalisisUlang" onclick="analisisUlang()">🧠 Analisis Ulang</button><button type="button" class="btn-co-secondary" onclick="refreshChat()">🔄 Refresh</button><button type="button" class="btn-co-secondary" onclick="tutupChat()">✖ Tutup</button></div>
+    </div>
+    <div id="cBody" style="padding:16px; overflow:auto;"></div>
+  </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div id="modalCrm">
+  <div class="box">
+    <h3 id="mJudul" style="margin:0 0 12px 0;">Edit Lead</h3>
+    <div class="mg">
+      <div><label>No HP (terkunci)</label><input id="mHp" readonly></div>
+      <div><label>Tanggal Chat (terkunci)</label><input id="mTglChat" readonly></div>
+      <div><label>Minat (terkunci)</label><input id="mMinat" readonly></div>
+      <div><label>Nama</label><input id="mNama"></div>
+      <div class="full"><label>Alamat</label><input id="mAlamat"></div>
+      <div><label>Data Anak (cth: Lahir: 2026-09-01)</label><input id="mDataAnak"></div>
+      <div><label>Jadwal Sesi</label><input type="date" id="mJadwal"></div>
+      <div><label>Status</label>
+        <select id="mStatus">
+          <option>Follow-up / Pending</option><option>DP Masuk</option><option>Lunas</option><option>Batal</option>
+        </select></div>
+      <div><label>Paket</label><input id="mPaket"></div>
+      <div><label>Total (Rp)</label><input type="number" id="mTotal" oninput="hitungSisa()"></div>
+      <div><label>Transport (Rp)</label><input type="number" id="mTransport"></div>
+      <div><label>Tgl Bayar 1 (DP)</label><input type="date" id="mTgl1"></div>
+      <div><label>Jumlah Bayar 1</label><input type="number" id="mJml1" oninput="hitungSisa()"></div>
+      <div><label>Tgl Bayar 2 (Lunas)</label><input type="date" id="mTgl2"></div>
+      <div><label>Jumlah Bayar 2</label><input type="number" id="mJml2" oninput="hitungSisa()"></div>
+      <div class="full" id="mSisa" style="font-weight:800; color:#b45309;"></div>
+    </div>
+    <p style="font-size:11px; color:#94a3b8; margin:10px 0 0;">Catatan: perubahan pembayaran di sini TIDAK otomatis membuat jurnal. Untuk auto-jurnal, tetap gunakan menu di aplikasi utama.</p>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+      <button type="button" class="btn-co-secondary" onclick="tutupModal()">Batal</button>
+      <button type="button" class="btn-co-primary" id="mSimpan" onclick="simpanLead()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+  let dataCrm = [], stageByHp = {}, aiByHp = {}, chatStat = {};
+</script>
+<script src="ui-crm.js"></script>
+<script src="api-crm.js"></script>
+</body>
+</html>
