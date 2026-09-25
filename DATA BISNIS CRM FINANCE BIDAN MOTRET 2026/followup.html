@@ -5,49 +5,147 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Follow-up & Analisis Chat — SentuhanMomen3D</title>
 <style>
-:root{--b:#e2e8f0;--t:#0f172a;--m:#64748b;--p:#4f46e5}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f8fafc;color:var(--t);font-size:13px}
+:root{
+  --b:#e2e8f0;--t:#0f172a;--m:#64748b;--p:#4f46e5;--p-l:#eef2ff;
+  --amber:#f59e0b;--sky:#0ea5e9;--red:#ef4444;--violet:#8b5cf6;--green:#10b981;--gray:#94a3b8;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f8fafc;color:var(--t);font-size:13px}
 header{background:#fff;border-bottom:1px solid var(--b);padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
-header h1{font-size:16px;margin:0}header a{color:var(--p);text-decoration:none;font-weight:700;font-size:12.5px}
-main{padding:18px 20px;max-width:1400px;margin:auto}
-.btn{border:none;border-radius:7px;padding:7px 13px;font-weight:700;font-size:12.5px;cursor:pointer;background:#f1f5f9;color:var(--t)}
-.btn.p{background:var(--p);color:#fff}.btn.g{background:#25d366;color:#fff}.btn:disabled{opacity:.5}
+header h1{font-size:16px;margin:0}
+main{padding:18px 20px;max-width:1500px;margin:auto}
+
+.btn{border:none;border-radius:7px;padding:7px 13px;font-weight:700;font-size:12.5px;cursor:pointer;background:#f1f5f9;color:var(--t);transition:filter .12s}
+.btn:hover{filter:brightness(.96)}
+.btn.p{background:var(--p);color:#fff}
+.btn.g{background:#25d366;color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* aliases used by the settings/analytics tabs, same visual language as .btn */
+.btn-co-primary{border:none;border-radius:7px;padding:7px 13px;font-weight:700;font-size:12.5px;cursor:pointer;background:var(--p);color:#fff}
+.btn-co-primary:hover{filter:brightness(1.06)}
+.btn-co-secondary{border:none;border-radius:7px;padding:7px 13px;font-weight:700;font-size:12.5px;cursor:pointer;background:#f1f5f9;color:var(--t)}
+.btn-co-secondary:hover{filter:brightness(.96)}
+.btn-fu-hapus{border:none;border-radius:7px;padding:7px 13px;font-weight:700;font-size:11.5px;cursor:pointer;background:#fee2e2;color:#b91c1c}
+.btn-fu-hapus:hover{background:#fecaca}
+
 .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.kpi div{background:#fff;border:1px solid var(--b);border-radius:10px;padding:12px 14px}.kpi b{font-size:20px;display:block}.kpi span{font-size:11px;color:var(--m);text-transform:uppercase;font-weight:700}
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.kpi div{background:#fff;border:1px solid var(--b);border-radius:10px;padding:12px 14px}
+.kpi b{font-size:20px;display:block}
+.kpi span{font-size:11px;color:var(--m);text-transform:uppercase;font-weight:700}
+
+/* KPI cards used by the AI/settings tabs — same card shell, colored accent bar */
+.fu-kpi-card{background:#fff;border:1px solid var(--b);border-left:4px solid var(--gray);border-radius:10px;padding:12px 14px}
+.fu-kpi-card .n{font-size:20px;font-weight:800;line-height:1.2}
+.fu-kpi-card .l{font-size:11px;color:var(--m);text-transform:uppercase;font-weight:700;margin-top:2px}
+.fu-kpi-1{border-left-color:var(--p)}
+.fu-kpi-2{border-left-color:var(--sky)}
+.fu-kpi-3{border-left-color:var(--amber)}
+.fu-kpi-4{border-left-color:var(--violet)}
+.fu-kpi-5{border-left-color:var(--red)}
+
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
 .bar input,.bar select,textarea,.sel{border:1px solid var(--b);border-radius:7px;padding:7px 10px;font:inherit;background:#fff}
 .bar input{min-width:220px}
+
 .card{background:#fff;border:1px solid var(--b);border-radius:12px;overflow:auto}
-table{width:100%;border-collapse:collapse}th{background:#f1f5f9;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;color:var(--m);white-space:nowrap}
-td{padding:9px 10px;border-top:1px solid #f1f5f9;vertical-align:top}tr:hover td{background:#fafbff}
-.badge{display:inline-block;padding:2px 9px;border-radius:20px;color:#fff;font-size:11px;font-weight:800;background:#94a3b8}
-.s1{background:#f59e0b}.s2{background:#0ea5e9}.s3{background:#ef4444}.s4{background:#8b5cf6}.s100{background:#10b981}
-.sm{font-size:11.5px;color:var(--m)}.clip{max-width:230px;white-space:normal;word-break:break-word}
-.tabs{display:flex;gap:6px;margin-bottom:12px}
+.table-responsive{overflow-x:auto}
+.table-compact-wrap table td,.table-compact-wrap table th{padding:7px 9px}
+
+table{width:100%;border-collapse:collapse}
+th{background:#f1f5f9;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;color:var(--m);white-space:nowrap}
+td{padding:9px 10px;border-top:1px solid #f1f5f9;vertical-align:top}
+tr:hover td{background:#fafbff}
+
+.badge,.fu-badge{display:inline-block;padding:2px 9px;border-radius:20px;color:#fff;font-size:11px;font-weight:800;background:var(--gray);white-space:nowrap}
+.s1,.fu-stage-1{background:var(--amber)}
+.s2,.fu-stage-2{background:var(--sky)}
+.s3,.fu-stage-3{background:var(--red)}
+.s4,.fu-stage-4{background:var(--violet)}
+.s100,.fu-stage-100{background:var(--green)}
+.s0,.fu-stage-0{background:var(--gray)}
+
+.fu-intent-VeryHigh{background:var(--green)}
+.fu-intent-High{background:var(--amber)}
+.fu-intent-Medium{background:var(--sky)}
+.fu-intent-Low{background:var(--gray)}
+.fu-intent-Unknown{background:#cbd5e1;color:#334155}
+
+.sm{font-size:11.5px;color:var(--m)}
+.clip{max-width:230px;white-space:normal;word-break:break-word}
+
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;border-bottom:1px solid var(--b);padding-bottom:10px}
+.tabs .btn{border-radius:20px}
+
 #ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:20;justify-content:flex-end}
 #pn{background:#fff;width:100%;max-width:620px;height:100%;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+
 .box{border:1px solid var(--b);border-radius:10px;padding:10px 12px}
 .chat{display:flex;flex-direction:column;max-height:300px;overflow:auto;background:#f8fafc;border-radius:10px;padding:8px}
 .bub{max-width:80%;padding:7px 11px;border-radius:12px;margin-bottom:5px;white-space:pre-wrap;word-break:break-word}
-.bub small{display:block;font-size:10px;opacity:.6}.in{background:#fff;border:1px solid var(--b);align-self:flex-start}.out{background:#dcfce7;align-self:flex-end}
-textarea{width:100%;min-height:130px;resize:vertical}
-.bg{height:8px;background:#f1f5f9;border-radius:6px}.bg i{display:block;height:8px;border-radius:6px;background:var(--p)}
+.bub small{display:block;font-size:10px;opacity:.6}
+.in{background:#fff;border:1px solid var(--b);align-self:flex-start}
+.out{background:#dcfce7;align-self:flex-end}
+
+textarea{width:100%;min-height:110px;resize:vertical}
+.bg{height:8px;background:#f1f5f9;border-radius:6px}
+.bg i{display:block;height:8px;border-radius:6px;background:var(--p)}
+
 #load{position:fixed;inset:0;background:#f8fafc;z-index:50;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--m)}
+
+/* slim top progress bar used by the settings/AI tabs while (re)loading */
+#globalLoadingOverlay{position:fixed;top:0;left:0;right:0;height:3px;background:var(--p-l);z-index:40;display:none;overflow:hidden;transition:opacity .25s}
+#globalLoadingOverlay::after{content:'';position:absolute;left:-30%;top:0;bottom:0;width:30%;background:var(--p);animation:fu-load-slide 1s infinite linear}
+@keyframes fu-load-slide{0%{left:-30%}100%{left:100%}}
+
+/* Pengaturan Template per-produk */
+.fu-prod-card{border:1px solid var(--b);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fff}
+.fu-prod-card h4{margin:0 0 10px 0;display:flex;justify-content:space-between;align-items:center;font-size:13.5px}
+.fu-prod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px}
+.fu-prod-grid .full{grid-column:1/-1}
+.fu-prod-grid label{display:block;font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:4px}
+.fu-prod-grid input,.fu-prod-grid select,.fu-prod-grid textarea{width:100%}
+.fu-prod-grid textarea{min-height:64px}
+@media (max-width:760px){.fu-prod-grid{grid-template-columns:1fr}}
+
+.switch-row{display:flex;align-items:center;gap:8px;font-weight:700}
+.switch-row input{width:16px;height:16px}
+
+/* Modal edit nomor — same right-drawer pattern as chat panel */
+#modalEditNomor{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:25;align-items:center;justify-content:center}
+#modalEditNomor .box{background:#fff;width:100%;max-width:440px;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+#modalEditNomor label{display:block;font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;margin:6px 0 4px}
+#modalEditNomor input,#modalEditNomor select{width:100%}
+#modalEditJudul{font-size:14.5px}
+
+.view-toggle{display:flex;gap:6px}
 </style>
 </head>
 <body>
 <div id="load">Memuat data follow-up...</div>
+<div id="globalLoadingOverlay"></div>
+
 <header>
   <h1>🤖 Follow-up & Analisis Chat</h1>
-  <a href="crm.html">👥 CRM Leads</a><a href="index.html">💰 Keuangan</a>
-  <a href="followup-pengaturan.html">⚙️ Pengaturan Template / AI Learning / Evaluasi</a>
-  <button class="btn" style="margin-left:auto" onclick="muat()">🔄 Refresh</button>
+  <a href="crm.html" class="sm" style="font-weight:700">👥 CRM Leads</a>
+  <a href="index.html" class="sm" style="font-weight:700">💰 Keuangan</a>
+  <button class="btn" style="margin-left:auto" onclick="muat();tarikDataFollowUp()">🔄 Refresh Semua</button>
 </header>
-<main>
-  <div class="kpi" id="kpi"></div>
-  <div class="tabs"><button class="btn p" id="tb1" onclick="tab(1)">📋 Monitor Nomor</button><button class="btn" id="tb2" onclick="tab(2)">📣 Analisis Sumber Konten</button></div>
 
-  <div id="p1">
+<main>
+  <div class="tabs">
+    <button class="btn p" id="tabbtn-monitor" onclick="gantiTabUtama('monitor')">📋 Monitor Nomor</button>
+    <button class="btn" id="tabbtn-sumber" onclick="gantiTabUtama('sumber')">📣 Analisis Sumber Konten</button>
+    <button class="btn" id="tabbtn-aichat" onclick="gantiTabUtama('aichat')">🧠 AI Chat Analysis</button>
+    <button class="btn" id="tabbtn-stage" onclick="gantiTabUtama('stage')">🔄 Monitor Stage &amp; Drip</button>
+    <button class="btn" id="tabbtn-template" onclick="gantiTabUtama('template')">⚙️ Pengaturan Template</button>
+    <button class="btn" id="tabbtn-error" onclick="gantiTabUtama('error')">❗ Log Error AI</button>
+    <button class="btn" id="tabbtn-fewshot" onclick="gantiTabUtama('fewshot')">🎯 Few-Shot Manager</button>
+  </div>
+
+  <!-- ============ TAB: MONITOR NOMOR ============ -->
+  <div id="tab-monitor">
+    <div class="kpi" id="kpi"></div>
     <div class="bar">
       <input id="fq" placeholder="Cari nama / no HP / pesan / ringkasan" oninput="render()">
       <select id="fst" onchange="render()"><option value="">Semua Stage</option><option value="4">Menunggu Pilih Layanan</option><option value="1">Menunggu Jawaban</option><option value="2">PL Terkirim</option><option value="3">Perlu Review CS</option><option value="100">Repeat Customer</option><option value="0">Belum Ada</option></select>
@@ -60,23 +158,190 @@ textarea{width:100%;min-height:130px;resize:vertical}
       <tbody id="tb"></tbody></table></div>
   </div>
 
-  <div id="p2" style="display:none"><div class="card"><table>
-    <thead><tr><th>Sumber Konten (Headline Iklan)</th><th>Lead</th><th style="min-width:140px">Porsi</th><th>Intent Tinggi</th><th>Siap Booking</th><th>PL Terkirim</th><th>Perlu Review</th></tr></thead>
-    <tbody id="tsrc"></tbody></table></div>
-    <p class="sm">Sumber diambil dari data CTWA (klik iklan WhatsApp). Nomor tanpa data CTWA dikelompokkan sebagai "Organik / Tanpa Iklan".</p></div>
+  <!-- ============ TAB: ANALISIS SUMBER KONTEN ============ -->
+  <div id="tab-sumber" style="display:none">
+    <div class="card"><table>
+      <thead><tr><th>Sumber Konten (Headline Iklan)</th><th>Lead</th><th style="min-width:140px">Porsi</th><th>Intent Tinggi</th><th>Siap Booking</th><th>PL Terkirim</th><th>Perlu Review</th></tr></thead>
+      <tbody id="tsrc"></tbody></table></div>
+    <p class="sm">Sumber diambil dari data CTWA (klik iklan WhatsApp). Nomor tanpa data CTWA dikelompokkan sebagai "Organik / Tanpa Iklan".</p>
+  </div>
+
+  <!-- ============ TAB: AI CHAT ANALYSIS ============ -->
+  <div id="tab-aichat" style="display:none">
+    <div class="kpi" id="aiKpiGrid"></div>
+    <div class="bar">
+      <input id="aiFilterCari" placeholder="Cari no HP / ringkasan" oninput="renderAiChatTable()">
+      <select id="aiFilterProduk" class="sel" onchange="renderAiChatTable()"><option value="">Semua</option></select>
+      <select id="aiFilterIntent" class="sel" onchange="renderAiChatTable()"><option value="">Semua Intent</option><option>Very High</option><option>High</option><option>Medium</option><option>Low</option></select>
+      <select id="aiFilterBooking" class="sel" onchange="renderAiChatTable()"><option value="">Booking: semua</option><option value="true">Siap booking</option><option value="false">Belum</option></select>
+    </div>
+    <div class="card table-responsive"><table>
+      <thead><tr><th>No HP</th><th>Nama</th><th>Produk</th><th>Timeline</th><th>Lokasi</th><th>Budget</th><th>Intent</th><th>Booking</th><th>Confidence</th><th>Ringkasan</th><th>Waktu</th></tr></thead>
+      <tbody id="bAiChatTable"></tbody></table></div>
+  </div>
+
+  <!-- ============ TAB: MONITOR STAGE & DRIP ============ -->
+  <div id="tab-stage" style="display:none">
+    <div class="kpi" id="fuKpiGrid"></div>
+    <div class="bar">
+      <input id="fuFilterCari" placeholder="Cari no HP / nama" oninput="renderFollowUpTable()">
+      <select id="fuFilterStage" class="sel" onchange="renderFollowUpTable()"><option value="">Semua Stage</option><option value="0">Belum Qualifying</option><option value="1">Menunggu Jawaban</option><option value="2">PL Terkirim</option><option value="3">Perlu Review CS</option><option value="100">Repeat Customer</option></select>
+      <select id="fuFilterDrip" class="sel" onchange="renderFollowUpTable()"><option value="">Drip: semua</option><option value="ya">Sedang di-drip</option></select>
+      <span class="view-toggle" style="margin-left:auto">
+        <button type="button" class="btn-co-primary" id="btnTampilTabel" onclick="gantiTampilanMonitor('tabel')">📋 Tabel</button>
+        <button type="button" class="btn-co-secondary" id="btnTampilStage" onclick="gantiTampilanMonitor('stage')">🗂️ Per Stage</button>
+      </span>
+    </div>
+    <div id="viewTampilTabel" class="card table-responsive">
+      <table>
+        <thead><tr><th>No HP</th><th>Nama</th><th>Kode Leads</th><th>Produk</th><th>Stage</th><th>Catatan</th><th>Waktu Update</th><th>Window</th><th>Aksi</th></tr></thead>
+        <tbody id="bFollowUpTable"></tbody>
+      </table>
+    </div>
+    <div id="viewTampilStage" style="display:none"></div>
+  </div>
+
+  <!-- ============ TAB: PENGATURAN TEMPLATE ============ -->
+  <div id="tab-template" style="display:none">
+    <div class="card" style="padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <label class="switch-row"><input type="checkbox" id="fuAktifGlobal"> Sistem Follow-up Otomatis Aktif</label>
+      <button type="button" class="btn-co-primary" onclick="simpanAktifGlobal()">💾 Simpan Status</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <b>Template per Produk</b>
+      <span>
+        <button type="button" class="btn-co-secondary" onclick="tambahBarisProduk()">➕ Tambah Produk</button>
+        <button type="button" class="btn-co-primary" onclick="simpanPengaturanProduk()">💾 Simpan Semua Template</button>
+      </span>
+    </div>
+    <div id="fuPengaturanContainer"></div>
+  </div>
+
+  <!-- ============ TAB: LOG ERROR AI ============ -->
+  <div id="tab-error" style="display:none">
+    <div class="kpi" id="errKpiGrid"></div>
+    <div class="bar">
+      <select id="errFilterJenis" class="sel" onchange="renderErrorLogTable()"><option value="">Semua Jenis</option></select>
+      <select id="errFilterReview" class="sel" onchange="renderErrorLogTable()"><option value="">Status: semua</option><option value="belum">Belum Direview</option><option value="sudah">Sudah Direview</option></select>
+    </div>
+    <div class="card table-responsive"><table>
+      <thead><tr><th>Waktu</th><th>Jenis Prompt</th><th>Pesan Asli</th><th>Output AI</th><th>Status</th><th>Progres</th><th>Aksi</th></tr></thead>
+      <tbody id="bErrorLogTable"></tbody></table></div>
+  </div>
+
+  <!-- ============ TAB: FEW-SHOT MANAGER ============ -->
+  <div id="tab-fewshot" style="display:none">
+    <div class="kpi" id="fsKpiGrid"></div>
+    <div class="card" style="padding:14px 16px;margin-bottom:14px">
+      <b>➕ Tambah Contoh Manual</b>
+      <div class="bar" style="margin-top:10px">
+        <select id="fsInputJenis" class="sel">
+          <option value="ekstrak_usia">Ekstrak Usia Anak</option>
+          <option value="product_interest">Deteksi Minat Produk</option>
+          <option value="chat_analysis">Analisis Chat (Batch)</option>
+        </select>
+      </div>
+      <label class="sm" style="display:block;margin:8px 0 4px;font-weight:700">Pesan Contoh</label>
+      <textarea id="fsInputPesan" placeholder="Contoh pesan customer..." style="min-height:60px"></textarea>
+      <label class="sm" style="display:block;margin:8px 0 4px;font-weight:700">Output JSON Ideal</label>
+      <textarea id="fsInputOutput" placeholder='{"...": "..."}' style="min-height:60px;font-family:monospace"></textarea>
+      <label class="sm" style="display:block;margin:8px 0 4px;font-weight:700">Catatan (opsional)</label>
+      <textarea id="fsInputCatatan" placeholder="Catatan tambahan..." style="min-height:44px"></textarea>
+      <button type="button" class="btn-co-primary" style="margin-top:10px" onclick="tambahFewShotManual()">💾 Simpan Contoh</button>
+    </div>
+    <div class="bar">
+      <select id="fsFilterJenis" class="sel" onchange="renderFewShotTable()"><option value="">Semua Jenis</option></select>
+    </div>
+    <div class="card table-responsive"><table>
+      <thead><tr><th>Jenis Prompt</th><th>Pesan Contoh</th><th>Output Ideal</th><th>Catatan</th><th>Status</th><th></th></tr></thead>
+      <tbody id="bFewShotTable"></tbody></table></div>
+  </div>
 </main>
 
+<!-- Panel Chat & Follow-up (dari Monitor Nomor) -->
 <div id="ov" onclick="if(event.target===this)tutup()"><div id="pn"></div></div>
 
+<!-- Modal Edit Nomor (dipakai oleh tampilan Per Stage & tab lain) -->
+<div id="modalEditNomor" onclick="if(event.target===this)tutupModalEdit()">
+  <div class="box">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <b id="modalEditJudul">Edit Nomor</b>
+      <button type="button" class="btn" onclick="tutupModalEdit()">✖</button>
+    </div>
+    <label>Stage</label>
+    <select id="editStage">
+      <option value="0">Belum Qualifying</option>
+      <option value="1">Menunggu Jawaban</option>
+      <option value="2">PL Terkirim</option>
+      <option value="3">Perlu Review CS</option>
+      <option value="4">Menunggu Pilih Layanan</option>
+      <option value="100">Repeat Customer</option>
+    </select>
+    <label>Produk / Minat</label>
+    <input type="text" id="editProduk" placeholder="Contoh: Newborn">
+    <label>Lokasi / Domisili</label>
+    <input type="text" id="editLokasi" placeholder="Contoh: Bandar Lampung">
+    <label>Status Anak</label>
+    <select id="editStatusAnak">
+      <option value="belum_lahir">Belum Lahir (HPL)</option>
+      <option value="sudah_lahir">Sudah Lahir</option>
+    </select>
+    <label>Tanggal (HPL / Lahir)</label>
+    <input type="date" id="editTglLahir">
+    <div class="box sm" id="editInfoWindow" style="background:#f8fafc">Isi tanggal untuk lihat perhitungan window.</div>
+    <button type="button" class="btn-co-primary" style="margin-top:6px" onclick="simpanEditNomor()">💾 Simpan Perubahan</button>
+  </div>
+</div>
+
 <script>
+/* =========================================================================
+   KONFIGURASI & HELPER BERSAMA
+   ========================================================================= */
 const scriptURL='https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nh=p=>{let d=String(p||'').replace(/\D/g,'');if(!d)return'';if(d[0]==='0')d='62'+d.slice(1);if(d.indexOf('62')!==0)d='62'+d;return d};
+
+// Dipakai oleh semua panggilan action=... POST/GET di seluruh tab.
+// Melempar error yang jelas kalau server balas HTML/redirect, bukan JSON.
+async function fetchJsonAman(url, opts) {
+  const r = await fetch(url, opts);
+  const teks = await r.text();
+  try {
+    return JSON.parse(teks);
+  } catch (e) {
+    throw new Error('Response server bukan JSON valid (cek deployment Apps Script): ' + teks.substring(0, 200));
+  }
+}
+
+// Format tanggal "YYYY-MM-DD HH:mm:ss" (atau ISO) jadi "24 Sep 2026, 14:05"
+function formatTanggalManusia(waktu) {
+  if (!waktu) return '-';
+  const d = new Date(String(waktu).replace(' ', 'T'));
+  if (isNaN(d.getTime())) return String(waktu).substring(0, 16);
+  return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+/* =========================================================================
+   NAVIGASI TAB UTAMA
+   ========================================================================= */
+const TAB_IDS_=['monitor','sumber','aichat','stage','template','error','fewshot'];
+function gantiTabUtama(nama){
+  TAB_IDS_.forEach(t=>{
+    $('tab-'+t).style.display = t===nama ? 'block' : 'none';
+    $('tabbtn-'+t).className = 'btn'+(t===nama?' p':'');
+  });
+}
+
+/* =========================================================================
+   TAB: MONITOR NOMOR  &  ANALISIS SUMBER KONTEN
+   (logika asli followup.html — model data D/rows terpisah dari tab AI/Settings
+    karena memakai endpoint ringan getFollowUpMonitor khusus percakapan)
+   ========================================================================= */
 const LS={0:'Belum Ada',1:'Menunggu Jawaban',2:'PL Terkirim',3:'Perlu Review CS',4:'Menunggu Pilih Layanan',100:'Repeat Customer'};
 const TPL=[['template_qualifying','Qualifying (tanya usia & domisili)'],['template_setelah_detail','Setelah detail / kirim PL'],['template_aman_lanjutan','Aman — ajak booking'],['template_abuabu','Zona abu-abu (cek BB/kesehatan)'],['template_tolak','Tolak halus (di luar window)'],['template_reminder_h4','Reminder 1'],['template_reminder_h20','Reminder 2'],['template_repeat_customer','Sapaan customer lama']];
 const ORG='Organik / Tanpa Iklan';
 let D={},rows=[],cur=null;
-const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const nh=p=>{let d=String(p||'').replace(/\D/g,'');if(!d)return'';if(d[0]==='0')d='62'+d.slice(1);if(d.indexOf('62')!==0)d='62'+d;return d};
-const $=id=>document.getElementById(id);
 
 async function muat(){
   $('load').style.display='flex';
@@ -127,7 +392,6 @@ function renderSumber(){
    <td><div class="bg"><i style="width:${Math.round(x.n/T*100)}%"></i></div><span class="sm">${Math.round(x.n/T*100)}%</span></td>
    <td>${x.hi} <span class="sm">(${Math.round(x.hi/x.n*100)}%)</span></td><td>${x.bk} <span class="sm">(${Math.round(x.bk/x.n*100)}%)</span></td><td>${x.pl}</td><td>${x.rv}</td></tr>`).join('');
 }
-function tab(k){$('p1').style.display=k===1?'block':'none';$('p2').style.display=k===2?'block':'none';$('tb1').className='btn'+(k===1?' p':'');$('tb2').className='btn'+(k===2?' p':'')}
 
 // ---------- PANEL CHAT & FOLLOW-UP ----------
 async function buka(hp){
@@ -182,7 +446,914 @@ async function kirim(){
   }catch(e){alert('❌ '+e)}
   b.disabled=false;b.textContent='📤 Kirim WhatsApp';
 }
-document.addEventListener('DOMContentLoaded',muat);
+
+document.addEventListener('DOMContentLoaded',()=>{ gantiTabUtama('monitor'); muat(); });
+</script>
+
+<script>
+/* =========================================================================
+   ui-followup.js — render untuk tab AI Chat Analysis, Monitor Stage & Drip,
+   dan Pengaturan Template per Produk.
+   ========================================================================= */
+
+function normalizeHpFu_(phone) {
+  if (!phone) return "";
+  let digits = String(phone).replace(/\D/g, "");
+  if (digits.indexOf("0") === 0) digits = "62" + digits.slice(1);
+  if (digits.indexOf("62") !== 0) digits = "62" + digits;
+  return digits;
+}
+
+function labelStageFu(stage) {
+  const map = {
+    0: "Belum Qualifying", 1: "Menunggu Jawaban", 2: "PL Terkirim",
+    3: "Perlu Review CS", 100: "Repeat Customer"
+  };
+  return map.hasOwnProperty(stage) ? map[stage] : ("Stage " + stage);
+}
+
+// =========================================================================
+// TAB: AI CHAT ANALYSIS
+// =========================================================================
+function isiDropdownProdukAiChat() {
+  const sel = document.getElementById('aiFilterProduk');
+  if (!sel) return;
+  const nilaiSekarang = sel.value;
+  const produkSet = new Set(dataAiAnalysis.map(r => r.product_interest).filter(Boolean));
+  sel.innerHTML = '<option value="">Semua</option>' +
+    Array.from(produkSet).sort().map(p => `<option value="${p}">${p}</option>`).join('');
+  if (nilaiSekarang) sel.value = nilaiSekarang;
+}
+
+function renderAiChatKpi_(list) {
+  const el = document.getElementById('aiKpiGrid');
+  if (!el) return;
+  const total = list.length;
+  const siapBooking = list.filter(r => r.booking_signal).length;
+  const intentTinggi = list.filter(r => r.intent === 'High' || r.intent === 'Very High').length;
+  const rataConfidence = total ? (list.reduce((a, r) => a + (r.confidence || 0), 0) / total * 100).toFixed(0) : 0;
+
+  el.innerHTML = `
+    <div class="fu-kpi-card fu-kpi-1"><div class="n">${total}</div><div class="l">Total Chat Dianalisis</div></div>
+    <div class="fu-kpi-card fu-kpi-4"><div class="n">${siapBooking}</div><div class="l">Sinyal Siap Booking</div></div>
+    <div class="fu-kpi-card fu-kpi-3"><div class="n">${intentTinggi}</div><div class="l">Intent Tinggi/Sangat Tinggi</div></div>
+    <div class="fu-kpi-card fu-kpi-2"><div class="n">${rataConfidence}%</div><div class="l">Rata-rata Confidence AI</div></div>
+  `;
+}
+
+function renderAiChatTable() {
+  const cari = (document.getElementById('aiFilterCari')?.value || '').toLowerCase().trim();
+  const filterProduk = document.getElementById('aiFilterProduk')?.value || '';
+  const filterIntent = document.getElementById('aiFilterIntent')?.value || '';
+  const filterBooking = document.getElementById('aiFilterBooking')?.value || '';
+
+  let list = [...dataAiAnalysis].sort((a, b) => (b.waktu_analisis || '').localeCompare(a.waktu_analisis || ''));
+
+  if (cari) list = list.filter(r => (r.no_hp || '').toLowerCase().includes(cari) || (r.summary || '').toLowerCase().includes(cari));
+  if (filterProduk) list = list.filter(r => r.product_interest === filterProduk);
+  if (filterIntent) list = list.filter(r => r.intent === filterIntent);
+  if (filterBooking) list = list.filter(r => String(!!r.booking_signal) === filterBooking);
+
+  renderAiChatKpi_(list);
+
+  const tbody = document.getElementById('bAiChatTable');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:20px;">Tidak ada data yang cocok dengan filter.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(r => {
+    const info = dataNamaKodeByHp[normalizeHpFu_(r.no_hp)] || {};
+    const intentClass = 'fu-intent-' + String(r.intent || 'Unknown').replace(/\s+/g, '');
+    return `<tr>
+      <td>${r.no_hp}</td>
+      <td>${info.nama || '-'}</td>
+      <td>${r.product_interest || '-'}</td>
+      <td>${r.timeline || '-'}</td>
+      <td>${r.location || '-'}</td>
+      <td>${r.budget_signal || '-'}</td>
+      <td><span class="fu-badge ${intentClass}">${r.intent || 'Unknown'}</span></td>
+      <td>${r.booking_signal ? '✅ Ya' : '—'}</td>
+      <td>${Math.round((r.confidence || 0) * 100)}%</td>
+      <td style="max-width:280px; white-space:normal;">${r.summary || '-'}</td>
+      <td style="white-space:nowrap;">${formatTanggalManusia(r.waktu_analisis)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// =========================================================================
+// TAB: MONITOR STAGE & DRIP
+// =========================================================================
+function ambilStageTerakhirPerHp_() {
+  const map = {};
+  dataFollowUpState.forEach(r => {
+    const key = normalizeHpFu_(r.no_hp);
+    if (!key) return;
+    if (!map[key] || (r.waktu_update || '') >= (map[key].waktu_update || '')) map[key] = r;
+  });
+  return map;
+}
+
+function ambilDripByHp_() {
+  const map = {};
+  dataDripTracking.forEach(r => { map[normalizeHpFu_(r.no_hp)] = r; });
+  return map;
+}
+
+function renderFollowUpKpi_(gabungan) {
+  const el = document.getElementById('fuKpiGrid');
+  if (!el) return;
+  const total = gabungan.length;
+  const stuck1 = gabungan.filter(g => g.stage === 1).length;
+  const terkirimPL = gabungan.filter(g => g.stage === 2).length;
+  const perluReview = gabungan.filter(g => g.stage === 3).length;
+  const sedangDiDrip = gabungan.filter(g => g.drip && g.drip.jumlah_reminder_terkirim > 0 && g.stage === 1).length;
+
+  el.innerHTML = `
+    <div class="fu-kpi-card fu-kpi-1"><div class="n">${total}</div><div class="l">Total Nomor Terpantau</div></div>
+    <div class="fu-kpi-card fu-kpi-3"><div class="n">${stuck1}</div><div class="l">Menunggu Jawaban (Stage 1)</div></div>
+    <div class="fu-kpi-card fu-kpi-2"><div class="n">${terkirimPL}</div><div class="l">PL Sudah Terkirim</div></div>
+    <div class="fu-kpi-card fu-kpi-5"><div class="n">${perluReview}</div><div class="l">Perlu Review CS Manual</div></div>
+    <div class="fu-kpi-card fu-kpi-4"><div class="n">${sedangDiDrip}</div><div class="l">Sedang Dalam Reminder Drip</div></div>
+  `;
+}
+function renderFollowUpTable() {
+  const cari = (document.getElementById('fuFilterCari')?.value || '').toLowerCase().trim();
+  const filterStage = document.getElementById('fuFilterStage')?.value || '';
+  const filterDrip = document.getElementById('fuFilterDrip')?.value || '';
+
+  const stageMap = ambilStageTerakhirPerHp_();
+  const dripMap = ambilDripByHp_();
+
+  let gabungan = Object.keys(stageMap).map(hp => {
+    const st = stageMap[hp];
+    const drip = dripMap[hp] || null;
+    const info = dataNamaKodeByHp[hp] || {};
+    return {
+      no_hp: st.no_hp, hp_norm: hp, nama: info.nama || (drip ? drip.nama_kontak : '') || '-',
+      kode_leads: info.kode_leads || '-', produk: st.product_interest || '-',
+      stage: st.stage, catatan: st.catatan, waktu_update: st.waktu_update, drip: drip
+    };
+  });
+
+  if (cari) gabungan = gabungan.filter(g => g.no_hp.toLowerCase().includes(cari) || (g.nama || '').toLowerCase().includes(cari));
+  if (filterStage !== '') gabungan = gabungan.filter(g => String(g.stage) === filterStage);
+  if (filterDrip === 'ya') gabungan = gabungan.filter(g => g.drip && g.stage === 1 && (g.drip.jumlah_reminder_terkirim > 0));
+
+  gabungan.sort((a, b) => (b.waktu_update || '').localeCompare(a.waktu_update || ''));
+
+  renderFollowUpKpi_(gabungan);
+
+  if (tampilanMonitorSaatIni === 'stage') {
+    renderTampilanStage_(gabungan);
+    return;
+  }
+
+  const tbody = document.getElementById('bFollowUpTable');
+  if (!tbody) return;
+
+  if (gabungan.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#94a3b8; padding:20px;">Tidak ada data yang cocok dengan filter.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = gabungan.map(g => {
+    const info = dataNamaKodeByHp[g.hp_norm] || {};
+    const window_ = hitungInfoWindow_(info.data_anak, g.produk);
+    return `
+    <tr>
+      <td>${g.no_hp}</td>
+      <td>${g.nama}</td>
+      <td>${g.kode_leads}</td>
+      <td>${g.produk}</td>
+      <td><span class="fu-badge fu-stage-${g.stage}">${labelStageFu(g.stage)}</span></td>
+      <td style="max-width:220px; white-space:normal;">${g.catatan || '-'}</td>
+      <td style="white-space:nowrap;">${formatTanggalManusia(g.waktu_update)}</td>
+      <td style="white-space:nowrap; font-size:11.5px;">${window_.teks}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-co-secondary" style="padding:4px 8px; font-size:11px;" onclick="bukaModalEdit('${g.hp_norm}', '${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">✏️</button>
+        <button type="button" class="btn-co-primary" style="padding:4px 8px; font-size:11px;" onclick="kirimFollowUpManual('${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">🔔</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// =========================================================================
+// SUB-TAB: PENGATURAN TEMPLATE PER PRODUK
+// =========================================================================
+function renderPengaturanAktif() {
+  const cb = document.getElementById('fuAktifGlobal');
+  if (cb) cb.checked = !!(dataPengaturanFollowUp && dataPengaturanFollowUp.aktif);
+}
+
+const LABEL_KOLOM_FU_ = {
+  minat: 'Minat / Kategori Produk',
+  butuh_cek_usia_bayi: 'Punya Batas Window Usia? (bisa auto-tolak — hanya Newborn yang seharusnya "Ya")',
+  template_qualifying: 'Template Qualifying (Stage 0 → 1) — tanyakan usia/tanggal lahir anak di sini',
+  template_setelah_detail: 'Caption Dikirim Bareng PL (untuk produk TANPA batas window)',
+  template_aman_lanjutan: 'Template Setelah PL — Dalam Window Aman (khusus produk dengan batas window)',
+  template_abuabu: 'Template Zona Abu-abu (khusus produk dengan batas window)',
+  template_tolak: 'Template Ditolak / Di Luar Window (khusus produk dengan batas window)',
+  template_repeat_customer: 'Template Sapaan Repeat Customer (khusus __GLOBAL__)',
+  template_lokasi_luar_kota: 'Template Catatan Lokasi Luar Kota (khusus __GLOBAL__)',
+  template_reminder_h4: 'Template Reminder Drip H+4 Jam',
+  template_reminder_h20: 'Template Reminder Drip H+20 Jam',
+  batas_hari_aman: 'Batas Hari Aman (khusus produk dengan batas window)',
+  batas_hari_abuabu: 'Batas Hari Abu-abu (khusus produk dengan batas window)',
+  url_pl_pdf: 'URL PDF Price List',
+  nama_file_pdf: 'Nama File PDF'
+};
+const FIELD_TEXTAREA_ = ['template_qualifying', 'template_setelah_detail', 'template_aman_lanjutan', 'template_abuabu', 'template_tolak', 'template_repeat_customer', 'template_lokasi_luar_kota', 'template_reminder_h4', 'template_reminder_h20'];
+const FIELD_GLOBAL_ONLY_ = ['template_repeat_customer', 'template_lokasi_luar_kota'];
+
+const CONTOH_PLACEHOLDER_ = {
+  template_qualifying: "Contoh: Halo [NAMA]! Boleh info dulu ya kak: 1) HPL/tanggal lahir baby 2) Domisili tinggal di mana?",
+  template_setelah_detail: "Contoh: Ini Price List kami kak, boleh dicek dulu 😊",
+  template_aman_lanjutan: "Contoh: Kalau fix mau foto, bisa segera booking ya kak, usia pemotretan maksimal [BATAS_AMAN] hari.[LOKASI_NOTE]",
+  template_abuabu: "Contoh: Usia baby sudah [USIA_HARI] hari. Boleh info BB lahir & kondisi kesehatan? Tim kami cek dulu ya.",
+  template_tolak: "Contoh: Mohon maaf, usia baby [USIA_HARI] hari sudah di luar window. Kami ada paket lain yang cocok, mau kami kirim infonya?",
+  template_repeat_customer: "Contoh: Halo kembali [NAMA]! Senang bisa terhubung lagi 🤍 Ada yang bisa kami bantu kali ini?",
+  template_lokasi_luar_kota: "Contoh: Kami lihat domisili kakak di luar kota. Boleh share pin lokasi untuk cek estimasi transport?",
+  template_reminder_h4: "Contoh: Halo [NAMA] 👋 Masih ditunggu infonya ya kak, biar kami bisa bantu cek jadwal.",
+  template_reminder_h20: "Contoh: Halo kak [NAMA], kami masih standby kalau mau lanjut ya 🙏"
+};
+
+function renderPengaturanProduk() {
+  const container = document.getElementById('fuPengaturanContainer');
+  if (!container) return;
+
+  if (!dataPengaturanFollowUpProduk || dataPengaturanFollowUpProduk.length === 0) {
+    dataPengaturanFollowUpProduk = [{ minat: '__GLOBAL__', butuh_cek_usia_bayi: true }];
+  }
+
+  container.innerHTML = dataPengaturanFollowUpProduk.map((item, idx) => {
+    const isGlobal = item.minat === '__GLOBAL__';
+    const judul = isGlobal ? '🌐 __GLOBAL__ (fallback default)' : ('📦 ' + (item.minat || '(belum diisi)'));
+    return `
+      <div class="fu-prod-card">
+        <h4>
+          <span>${judul}</span>
+          ${!isGlobal ? `<button type="button" class="btn-fu-hapus" onclick="hapusBarisProduk(${idx})">🗑️ Hapus</button>` : ''}
+        </h4>
+        <div class="fu-prod-grid">
+          <div>
+            <label>Nama Minat/Produk (persis sama seperti di dropdown Minat)</label>
+            <input type="text" ${isGlobal ? 'disabled' : ''} value="${isGlobal ? '__GLOBAL__' : (item.minat || '')}"
+              placeholder="Contoh: Newborn, Maternity, Handcasting, Birthday, Family"
+              onchange="updateFieldProduk(${idx}, 'minat', this.value)">
+          </div>
+          <div>
+            <label>${LABEL_KOLOM_FU_.butuh_cek_usia_bayi}</label>
+            <select onchange="updateFieldProduk(${idx}, 'butuh_cek_usia_bayi', this.value === 'true')">
+              <option value="true" ${item.butuh_cek_usia_bayi ? 'selected' : ''}>Ya — bisa auto-tolak kalau di luar window (Newborn)</option>
+              <option value="false" ${!item.butuh_cek_usia_bayi ? 'selected' : ''}>Tidak — usia cuma info, PL selalu dikirim</option>
+            </select>
+          </div>
+          ${FIELD_TEXTAREA_.filter(f => isGlobal || !FIELD_GLOBAL_ONLY_.includes(f)).map(f => `
+            <div class="full">
+              <label>${LABEL_KOLOM_FU_[f]}${isGlobal ? '' : ' (kosongkan = ikut __GLOBAL__)'}</label>
+              <textarea placeholder="${CONTOH_PLACEHOLDER_[f] || ''}" onchange="updateFieldProduk(${idx}, '${f}', this.value)">${(item[f] || '')}</textarea>
+            </div>
+          `).join('')}
+          <div>
+            <label>${LABEL_KOLOM_FU_.batas_hari_aman}</label>
+            <input type="number" value="${item.batas_hari_aman || ''}" placeholder="${isGlobal ? '15' : '(ikut global)'}"
+              onchange="updateFieldProduk(${idx}, 'batas_hari_aman', this.value)">
+          </div>
+          <div>
+            <label>${LABEL_KOLOM_FU_.batas_hari_abuabu}</label>
+            <input type="number" value="${item.batas_hari_abuabu || ''}" placeholder="${isGlobal ? '30' : '(ikut global)'}"
+              onchange="updateFieldProduk(${idx}, 'batas_hari_abuabu', this.value)">
+          </div>
+          <div>
+            <label>${LABEL_KOLOM_FU_.url_pl_pdf}</label>
+            <input type="text" value="${item.url_pl_pdf || ''}" placeholder="${isGlobal ? 'https://drive.google.com/uc?export=download&id=...' : '(ikut global)'}"
+              onchange="updateFieldProduk(${idx}, 'url_pl_pdf', this.value)">
+          </div>
+          <div>
+            <label>${LABEL_KOLOM_FU_.nama_file_pdf}</label>
+            <input type="text" value="${item.nama_file_pdf || ''}" placeholder="${isGlobal ? 'PL Newborn Bidan Motret 2026.pdf' : '(ikut global)'}"
+              onchange="updateFieldProduk(${idx}, 'nama_file_pdf', this.value)">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateFieldProduk(idx, field, value) {
+  if (!dataPengaturanFollowUpProduk[idx]) return;
+  dataPengaturanFollowUpProduk[idx][field] = value;
+}
+
+function tambahBarisProduk() {
+  dataPengaturanFollowUpProduk.push({ minat: '', butuh_cek_usia_bayi: false });
+  renderPengaturanProduk();
+}
+
+function hapusBarisProduk(idx) {
+  const item = dataPengaturanFollowUpProduk[idx];
+  if (item && item.minat === '__GLOBAL__') { alert('Baris __GLOBAL__ tidak bisa dihapus.'); return; }
+  if (!confirm('Hapus baris produk "' + (item.minat || '(tanpa nama)') + '"? Perubahan baru tersimpan permanen setelah klik "Simpan Semua Template".')) return;
+  dataPengaturanFollowUpProduk.splice(idx, 1);
+  renderPengaturanProduk();
+}
+
+// =========================================================================
+// TOGGLE TAMPILAN: TABEL vs KELOMPOK PER STAGE
+// =========================================================================
+let tampilanMonitorSaatIni = 'tabel';
+
+function gantiTampilanMonitor(mode) {
+  tampilanMonitorSaatIni = mode;
+  document.getElementById('viewTampilTabel').style.display = mode === 'tabel' ? 'block' : 'none';
+  document.getElementById('viewTampilStage').style.display = mode === 'stage' ? 'block' : 'none';
+  document.getElementById('btnTampilTabel').className = mode === 'tabel' ? 'btn-co-primary' : 'btn-co-secondary';
+  document.getElementById('btnTampilStage').className = mode === 'stage' ? 'btn-co-primary' : 'btn-co-secondary';
+  renderFollowUpTable();
+}
+
+// =========================================================================
+// HITUNG INFO WINDOW
+// =========================================================================
+function hitungInfoWindow_(dataAnakText, produk) {
+  if (!dataAnakText) return { teks: '-', kelas: '' };
+
+  const match = dataAnakText.match(/(Lahir|HPL):\s*(\d{4}-\d{2}-\d{2})/);
+  if (!match) return { teks: '-', kelas: '' };
+
+  const statusAnak = match[1] === 'Lahir' ? 'sudah_lahir' : 'belum_lahir';
+  const tglAnak = new Date(match[2]);
+  const now = new Date();
+  const usiaHari = Math.floor((now - tglAnak) / 86400000);
+
+  const cfgProduk = (dataPengaturanFollowUpProduk || []).find(p => p.minat === produk) || {};
+  const batasAman = Number(cfgProduk.batas_hari_aman) || 15;
+  const batasAbuabu = Number(cfgProduk.batas_hari_abuabu) || 30;
+  const butuhCek = cfgProduk.butuh_cek_usia_bayi === true || cfgProduk.butuh_cek_usia_bayi === 'TRUE';
+
+  if (statusAnak === 'belum_lahir') {
+    const hariMenujuLahir = Math.abs(usiaHari);
+    return { teks: `HPL dalam ${hariMenujuLahir} hari`, kelas: 'ok' };
+  }
+
+  if (!butuhCek) {
+    return { teks: `Usia ${usiaHari} hari (tanpa batas window)`, kelas: 'ok' };
+  }
+
+  if (usiaHari <= batasAman) {
+    return { teks: `${usiaHari} hari — masih ${batasAman - usiaHari} hari lagi aman`, kelas: 'aman' };
+  } else if (usiaHari <= batasAbuabu) {
+    return { teks: `${usiaHari} hari — sudah lewat ${usiaHari - batasAman} hari (zona abu-abu)`, kelas: 'abuabu' };
+  } else {
+    return { teks: `${usiaHari} hari — sudah lewat ${usiaHari - batasAbuabu} hari (di luar window)`, kelas: 'tolak' };
+  }
+}
+
+// =========================================================================
+// RENDER TAMPILAN KELOMPOK PER STAGE
+// =========================================================================
+function renderTampilanStage_(gabungan) {
+  const wrap = document.getElementById('viewTampilStage');
+  if (!wrap) return;
+
+  const urutanStage = [1, 4, 3, 0, 2, 100];
+  const kelompok = {};
+  urutanStage.forEach(s => kelompok[s] = []);
+  gabungan.forEach(g => { if (!kelompok[g.stage]) kelompok[g.stage] = []; kelompok[g.stage].push(g); });
+
+  wrap.innerHTML = urutanStage.map(stageNum => {
+    const list = kelompok[stageNum] || [];
+    if (list.length === 0) return '';
+    return `
+      <div class="card" style="margin-bottom:14px;">
+        <h4 style="margin:0 0 10px 0; display:flex; justify-content:space-between; align-items:center; padding:14px 16px 0;">
+          <span><span class="fu-badge fu-stage-${stageNum}">${labelStageFu(stageNum)}</span></span>
+          <span style="font-size:13px; color:#64748b;">${list.length} nomor</span>
+        </h4>
+        <div class="table-responsive table-compact-wrap">
+          <table>
+            <thead><tr style="background:#f1f5f9;"><th>No HP</th><th>Nama</th><th>Produk</th><th>Window</th><th>Waktu Update</th><th>Aksi</th></tr></thead>
+            <tbody>
+              ${list.map(g => renderBarisNomor_(g)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderBarisNomor_(g) {
+  const info = dataNamaKodeByHp[g.hp_norm] || {};
+  const window_ = hitungInfoWindow_(info.data_anak, g.produk);
+  return `
+    <tr>
+      <td>${g.no_hp}</td>
+      <td>${g.nama}</td>
+      <td>${g.produk}</td>
+      <td>${window_.teks}</td>
+      <td style="white-space:nowrap;">${formatTanggalManusia(g.waktu_update)}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-co-secondary" style="padding:4px 8px; font-size:11px;" onclick="bukaModalEdit('${g.hp_norm}', '${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">✏️ Edit</button>
+        <button type="button" class="btn-co-primary" style="padding:4px 8px; font-size:11px;" onclick="kirimFollowUpManual('${g.no_hp}', '${g.nama.replace(/'/g,"\\'")}')">🔔 Follow-up</button>
+      </td>
+    </tr>
+  `;
+}
+</script>
+
+<script>
+/* =========================================================================
+   ui-fewshot.js — render untuk tab Log Error AI & Few-Shot Manager
+   ========================================================================= */
+
+const LABEL_JENIS_PROMPT_ = {
+  ekstrak_usia: "Ekstrak Usia Anak",
+  product_interest: "Deteksi Minat Produk",
+  chat_analysis: "Analisis Chat (Batch)"
+};
+
+function labelJenisPrompt_(j) {
+  return LABEL_JENIS_PROMPT_[j] || j || "-";
+}
+
+// =========================================================================
+// SUB-TAB: LOG ERROR AI
+// =========================================================================
+function renderErrorLogKpi_(list) {
+  const el = document.getElementById('errKpiGrid');
+  if (!el) return;
+  const total = list.length;
+  const belumReview = list.filter(r => !r.sudah_direview).length;
+  const sudahJadiContoh = list.filter(r => r.jadi_fewshot).length;
+  const jsonInvalid = list.filter(r => r.status_deteksi === 'JSON_INVALID').length;
+
+  el.innerHTML = `
+    <div class="fu-kpi-card fu-kpi-1"><div class="n">${total}</div><div class="l">Total Error Tercatat</div></div>
+    <div class="fu-kpi-card fu-kpi-5"><div class="n">${belumReview}</div><div class="l">Belum Direview</div></div>
+    <div class="fu-kpi-card fu-kpi-4"><div class="n">${sudahJadiContoh}</div><div class="l">Sudah Jadi Contoh</div></div>
+    <div class="fu-kpi-card fu-kpi-3"><div class="n">${jsonInvalid}</div><div class="l">Gagal Format JSON</div></div>
+  `;
+}
+
+function renderErrorLogTable() {
+  const filterJenis = document.getElementById('errFilterJenis')?.value || '';
+  const filterStatus = document.getElementById('errFilterReview')?.value || '';
+
+  let list = [...(dataAiErrorLog || [])].sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+
+  if (filterJenis) list = list.filter(r => r.jenis_prompt === filterJenis);
+  if (filterStatus === 'belum') list = list.filter(r => !r.sudah_direview);
+  if (filterStatus === 'sudah') list = list.filter(r => r.sudah_direview);
+
+  renderErrorLogKpi_(dataAiErrorLog || []);
+
+  const tbody = document.getElementById('bErrorLogTable');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">Belum ada error tercatat. Bagus! 🎉</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(r => `
+    <tr>
+      <td style="white-space:nowrap;">${formatTanggalManusia(r.timestamp)}</td>
+      <td>${labelJenisPrompt_(r.jenis_prompt)}</td>
+      <td style="max-width:220px; white-space:normal;">${r.pesan_asli || '-'}</td>
+      <td style="max-width:220px; white-space:normal; font-family:monospace; font-size:11px;">${r.output_ai || '-'}</td>
+      <td><span class="fu-badge" style="background:${r.status_deteksi === 'JSON_INVALID' ? '#ef4444' : '#f59e0b'};">${r.status_deteksi || '-'}</span></td>
+      <td>${r.jadi_fewshot ? '✅ Sudah' : (r.sudah_direview ? '👁️ Direview' : '—')}</td>
+      <td style="white-space:nowrap;">
+        ${!r.jadi_fewshot ? `<button type="button" class="btn-co-secondary" style="padding:4px 8px; font-size:11px;" onclick="bukaModalPromosiFewShot(${r.row_index})">➕ Jadikan Contoh</button>` : ''}
+        ${!r.sudah_direview && !r.jadi_fewshot ? `<button type="button" class="btn-fu-hapus" style="margin-left:4px;" onclick="tandaiErrorSudahDireview(${r.row_index})">Tandai Sudah Dicek</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function isiDropdownJenisPromptError_() {
+  const sel = document.getElementById('errFilterJenis');
+  if (!sel) return;
+  const nilaiSekarang = sel.value;
+  sel.innerHTML = '<option value="">Semua Jenis</option>' +
+    Object.keys(LABEL_JENIS_PROMPT_).map(k => `<option value="${k}">${LABEL_JENIS_PROMPT_[k]}</option>`).join('');
+  if (nilaiSekarang) sel.value = nilaiSekarang;
+}
+
+async function tandaiErrorSudahDireview(rowIndex) {
+  const params = new URLSearchParams();
+  params.append('action', 'tandaiErrorDireview');
+  params.append('rowIndex', rowIndex);
+  try {
+    const res = await fetch(scriptURL, { method: 'POST', body: params });
+    const result = await res.json();
+    if (result.result === 'success') {
+      await tarikDataFollowUp();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+
+async function bukaModalPromosiFewShot(rowIndexErrorLog) {
+  const item = (dataAiErrorLog || []).find(r => r.row_index === rowIndexErrorLog);
+  if (!item) return;
+
+  const outputIdeal = prompt(
+    'Pesan customer:\n"' + item.pesan_asli + '"\n\n' +
+    'Output AI yang salah:\n' + item.output_ai + '\n\n' +
+    'Tulis OUTPUT JSON YANG SEHARUSNYA (format JSON valid):',
+    item.output_ai || ''
+  );
+  if (!outputIdeal) return;
+
+  try {
+    JSON.parse(outputIdeal);
+  } catch (eJson) {
+    alert('⚠️ Teks yang kamu tulis bukan format JSON yang valid. Coba cek lagi tanda kutip/kurungnya.');
+    return;
+  }
+
+  const params = new URLSearchParams();
+  params.append('action', 'promosikanErrorJadiFewShot');
+  params.append('rowIndexErrorLog', rowIndexErrorLog);
+  params.append('outputIdeal', outputIdeal);
+
+  try {
+    const res = await fetch(scriptURL, { method: 'POST', body: params });
+    const result = await res.json();
+    if (result.result === 'success') {
+      alert('✅ Berhasil dijadikan contoh baru! Statusnya masih NONAKTIF -- buka sub-tab "Kelola Contoh" untuk aktifkan setelah kamu cek lagi.');
+      await tarikDataFollowUp();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+
+// =========================================================================
+// SUB-TAB: KELOLA CONTOH (FEW-SHOT)
+// =========================================================================
+function renderFewShotKpi_(list) {
+  const el = document.getElementById('fsKpiGrid');
+  if (!el) return;
+  const total = list.length;
+  const aktif = list.filter(r => r.aktif).length;
+  const perJenis = {};
+  list.forEach(r => { perJenis[r.jenis_prompt] = (perJenis[r.jenis_prompt] || 0) + 1; });
+  const jenisTerbanyak = Object.keys(perJenis).sort((a, b) => perJenis[b] - perJenis[a])[0];
+
+  el.innerHTML = `
+    <div class="fu-kpi-card fu-kpi-1"><div class="n">${total}</div><div class="l">Total Contoh Tersimpan</div></div>
+    <div class="fu-kpi-card fu-kpi-4"><div class="n">${aktif}</div><div class="l">Sedang Aktif (Dipakai AI)</div></div>
+    <div class="fu-kpi-card fu-kpi-2"><div class="n">${total - aktif}</div><div class="l">Nonaktif</div></div>
+    <div class="fu-kpi-card fu-kpi-3"><div class="n" style="font-size:14px;">${labelJenisPrompt_(jenisTerbanyak) || '-'}</div><div class="l">Jenis Prompt Terbanyak</div></div>
+  `;
+}
+
+function renderFewShotTable() {
+  const filterJenis = document.getElementById('fsFilterJenis')?.value || '';
+
+  let list = [...(dataFewShotList || [])];
+  if (filterJenis) list = list.filter(r => r.jenis_prompt === filterJenis);
+
+  renderFewShotKpi_(dataFewShotList || []);
+
+  const tbody = document.getElementById('bFewShotTable');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">Belum ada contoh untuk jenis ini.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(r => `
+    <tr>
+      <td>${labelJenisPrompt_(r.jenis_prompt)}</td>
+      <td style="max-width:220px; white-space:normal;">${r.pesan_contoh || '-'}</td>
+      <td style="max-width:220px; white-space:normal; font-family:monospace; font-size:11px;">${r.output_ideal || '-'}</td>
+      <td style="max-width:160px; white-space:normal;">${r.catatan || '-'}</td>
+      <td style="text-align:center;">
+        <label style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+          <input type="checkbox" ${r.aktif ? 'checked' : ''} onchange="toggleFewShotAktif(${r.row_index}, this.checked)">
+          ${r.aktif ? '✅ Aktif' : '⏸️ Nonaktif'}
+        </label>
+      </td>
+      <td>
+        <button type="button" class="btn-fu-hapus" onclick="hapusFewShot(${r.row_index}, '${(r.pesan_contoh || '').replace(/'/g, "\\'").substring(0, 30)}')">🗑️ Hapus</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function isiDropdownJenisPromptFewShot_() {
+  const sel = document.getElementById('fsFilterJenis');
+  if (!sel) return;
+  const nilaiSekarang = sel.value;
+  sel.innerHTML = '<option value="">Semua Jenis</option>' +
+    Object.keys(LABEL_JENIS_PROMPT_).map(k => `<option value="${k}">${LABEL_JENIS_PROMPT_[k]}</option>`).join('');
+  if (nilaiSekarang) sel.value = nilaiSekarang;
+}
+
+async function toggleFewShotAktif(rowIndex, statusBaru) {
+  const params = new URLSearchParams();
+  params.append('action', 'toggleFewShotAktif');
+  params.append('rowIndex', rowIndex);
+  params.append('aktif', statusBaru);
+  try {
+    const res = await fetch(scriptURL, { method: 'POST', body: params });
+    const result = await res.json();
+    if (result.result === 'success') {
+      const item = dataFewShotList.find(r => r.row_index === rowIndex);
+      if (item) item.aktif = statusBaru;
+      renderFewShotTable();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+      await tarikDataFollowUp();
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+
+async function hapusFewShot(rowIndex, namaSingkat) {
+  if (!confirm('Hapus contoh "' + namaSingkat + '..." ? Tindakan ini tidak bisa dibatalkan.')) return;
+  const params = new URLSearchParams();
+  params.append('action', 'hapusFewShot');
+  params.append('rowIndex', rowIndex);
+  try {
+    const res = await fetch(scriptURL, { method: 'POST', body: params });
+    const result = await res.json();
+    if (result.result === 'success') {
+      await tarikDataFollowUp();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+
+async function tambahFewShotManual() {
+  const jenis = document.getElementById('fsInputJenis').value;
+  const pesan = document.getElementById('fsInputPesan').value.trim();
+  const output = document.getElementById('fsInputOutput').value.trim();
+  const catatan = document.getElementById('fsInputCatatan').value.trim();
+
+  if (!pesan || !output) { alert('⚠️ Pesan Contoh dan Output JSON Ideal wajib diisi.'); return; }
+  try {
+    JSON.parse(output);
+  } catch (eJson) {
+    alert('⚠️ Output JSON Ideal bukan format JSON yang valid.');
+    return;
+  }
+
+  const params = new URLSearchParams();
+  params.append('action', 'tambahFewShot');
+  params.append('dataJson', JSON.stringify({
+    jenis_prompt: jenis, pesan_contoh: pesan, output_ideal: output, catatan: catatan, aktif: true
+  }));
+
+  try {
+    const res = await fetch(scriptURL, { method: 'POST', body: params });
+    const result = await res.json();
+    if (result.result === 'success') {
+      alert('✅ Contoh baru berhasil ditambahkan & langsung aktif.');
+      document.getElementById('fsInputPesan').value = '';
+      document.getElementById('fsInputOutput').value = '';
+      document.getElementById('fsInputCatatan').value = '';
+      await tarikDataFollowUp();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+</script>
+
+<script>
+/* =========================================================================
+   api-followup.js — tarik data untuk tab AI Chat Analysis, Monitor Stage &
+   Drip, Pengaturan Template, Log Error, Few-Shot Manager + modal edit nomor.
+   ========================================================================= */
+
+let dataAiAnalysis = [], dataFollowUpState = [], dataDripTracking = [], dataNamaKodeByHp = {};
+let dataPengaturanFollowUp = { aktif: true }, dataPengaturanFollowUpProduk = [], dataKolomFupProduk = [];
+let dataAiErrorLog = [], dataFewShotList = [], dataAnalisisEvaluasi = {}, dataPengaturanSistem = {};
+
+async function tarikDataFollowUp() {
+  const overlay = document.getElementById('globalLoadingOverlay');
+  if (overlay) overlay.style.display = 'block';
+
+  try {
+    const data = await fetchJsonAman(scriptURL + '?action=getFollowUpData');
+
+    dataAiAnalysis = data.aiAnalysis || [];
+    dataFollowUpState = data.followUpState || [];
+    dataDripTracking = data.dripTracking || [];
+    dataNamaKodeByHp = data.namaKodeByHp || {};
+    dataPengaturanFollowUp = data.pengaturanFollowUp || { aktif: true };
+    dataPengaturanFollowUpProduk = data.pengaturanFollowUpPerProduk || [];
+    dataKolomFupProduk = data.kolomFupProduk || [];
+    dataAiErrorLog = data.aiErrorLog || [];
+    dataFewShotList = data.fewShotList || [];
+    dataAnalisisEvaluasi = data.analisisEvaluasi || {};
+    dataPengaturanSistem = data.pengaturanSistem || {};
+
+    if (typeof isiDropdownProdukAiChat === 'function') isiDropdownProdukAiChat();
+    if (typeof renderAiChatTable === 'function') renderAiChatTable();
+    if (typeof renderFollowUpTable === 'function') renderFollowUpTable();
+    if (typeof renderPengaturanAktif === 'function') renderPengaturanAktif();
+    if (typeof renderPengaturanProduk === 'function') renderPengaturanProduk();
+    if (typeof isiDropdownJenisPromptError_ === 'function') isiDropdownJenisPromptError_();
+    if (typeof renderErrorLogTable === 'function') renderErrorLogTable();
+    if (typeof isiDropdownJenisPromptFewShot_ === 'function') isiDropdownJenisPromptFewShot_();
+    if (typeof renderFewShotTable === 'function') renderFewShotTable();
+    if (typeof renderAnalisisEvaluasi === 'function') renderAnalisisEvaluasi();
+    if (typeof renderPengaturanSistem === 'function') renderPengaturanSistem();
+  } catch (err) {
+    console.error('Gagal memuat data Follow-up:', err);
+    alert('❌ Gagal memuat data dari server. Cek koneksi atau scriptURL.\n\n' + err);
+  } finally {
+    if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; overlay.style.opacity = '1'; }, 250); }
+  }
+}
+
+async function simpanAktifGlobal() {
+  const aktifBaru = document.getElementById('fuAktifGlobal').checked;
+  const cfg = dataPengaturanFollowUp || {};
+
+  const params = new URLSearchParams();
+  params.append('action', 'simpanPengaturanFollowUp');
+  params.append('aktif', aktifBaru);
+  params.append('templateQualifying', cfg.template_qualifying || '');
+  params.append('templateAman', cfg.template_aman || '');
+  params.append('templateAmanLanjutan', cfg.template_aman_lanjutan || '');
+  params.append('templateAbuabu', cfg.template_abuabu || '');
+  params.append('templateTolak', cfg.template_tolak || '');
+  params.append('templateRepeatCustomer', cfg.template_repeat_customer || '');
+  params.append('templateLokasiLuarKota', cfg.template_lokasi_luar_kota || '');
+  params.append('batasHariAman', cfg.batas_hari_aman || 15);
+  params.append('batasHariAbuabu', cfg.batas_hari_abuabu || 30);
+  params.append('urlPlPdf', cfg.url_pl_pdf || '');
+  params.append('namaFilePdf', cfg.nama_file_pdf || '');
+
+  try {
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: params });
+    if (result.result === 'success') {
+      alert('✅ Status sistem follow-up berhasil disimpan.');
+      dataPengaturanFollowUp.aktif = aktifBaru;
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+
+async function simpanPengaturanProduk() {
+  if (!confirm('Simpan semua perubahan template follow-up per produk sekarang?')) return;
+
+  const params = new URLSearchParams();
+  params.append('action', 'simpanPengaturanFollowUpProduk');
+  params.append('dataJson', JSON.stringify(dataPengaturanFollowUpProduk));
+
+  try {
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: params });
+    if (result.result === 'success') {
+      alert('✅ Semua template berhasil disimpan.');
+      await tarikDataFollowUp();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  tarikDataFollowUp();
+});
+
+// =========================================================================
+// MODAL EDIT NOMOR (stage, minat, lokasi, tanggal lahir anak)
+// =========================================================================
+let editModalHpNorm = '';
+let editModalNoHp = '';
+let editModalNama = '';
+
+function bukaModalEdit(hpNorm, noHp, nama) {
+  editModalHpNorm = hpNorm;
+  editModalNoHp = noHp;
+  editModalNama = nama;
+
+  const stageMap = ambilStageTerakhirPerHp_();
+  const info = dataNamaKodeByHp[hpNorm] || {};
+  const st = stageMap[hpNorm] || { stage: 0, product_interest: '' };
+
+  document.getElementById('modalEditJudul').textContent = 'Edit: ' + nama + ' (' + noHp + ')';
+  document.getElementById('editStage').value = st.stage;
+  document.getElementById('editProduk').value = st.product_interest || '';
+  document.getElementById('editLokasi').value = info.alamat || '';
+
+  const match = (info.data_anak || '').match(/(Lahir|HPL):\s*(\d{4}-\d{2}-\d{2})/);
+  if (match) {
+    document.getElementById('editStatusAnak').value = match[1] === 'Lahir' ? 'sudah_lahir' : 'belum_lahir';
+    document.getElementById('editTglLahir').value = match[2];
+  } else {
+    document.getElementById('editStatusAnak').value = 'belum_lahir';
+    document.getElementById('editTglLahir').value = '';
+  }
+
+  updateInfoWindowModal();
+  document.getElementById('modalEditNomor').style.display = 'flex';
+}
+
+function updateInfoWindowModal() {
+  const tgl = document.getElementById('editTglLahir').value;
+  const status = document.getElementById('editStatusAnak').value;
+  const produk = document.getElementById('editProduk').value;
+  const el = document.getElementById('editInfoWindow');
+  if (!tgl) { el.textContent = 'Isi tanggal untuk lihat perhitungan window.'; return; }
+  const prefix = status === 'sudah_lahir' ? 'Lahir' : 'HPL';
+  const info = hitungInfoWindow_(prefix + ': ' + tgl, produk);
+  el.textContent = info.teks;
+}
+
+document.addEventListener('change', (e) => {
+  if (['editTglLahir', 'editStatusAnak', 'editProduk'].includes(e.target.id)) updateInfoWindowModal();
+});
+
+function tutupModalEdit() {
+  document.getElementById('modalEditNomor').style.display = 'none';
+}
+
+async function simpanEditNomor() {
+  const stageBaru = document.getElementById('editStage').value;
+  const produkBaru = document.getElementById('editProduk').value.trim();
+  const statusAnak = document.getElementById('editStatusAnak').value;
+  const tglLahir = document.getElementById('editTglLahir').value;
+  const lokasi = document.getElementById('editLokasi').value.trim();
+
+  try {
+    const params1 = new URLSearchParams();
+    params1.append('action', 'updateFollowUpManual');
+    params1.append('noHp', editModalNoHp);
+    params1.append('stageBaru', stageBaru);
+    params1.append('produkBaru', produkBaru);
+    params1.append('namaKontak', editModalNama);
+    await fetch(scriptURL, { method: 'POST', body: params1 });
+
+    if (tglLahir || lokasi) {
+      const params2 = new URLSearchParams();
+      params2.append('action', 'updateDataAnakManual');
+      params2.append('noHp', editModalNoHp);
+      params2.append('statusBaru', statusAnak);
+      params2.append('tglLahirBaru', tglLahir);
+      params2.append('lokasiBaru', lokasi);
+      await fetch(scriptURL, { method: 'POST', body: params2 });
+    }
+
+    alert('✅ Data berhasil diperbarui.');
+    tutupModalEdit();
+    await tarikDataFollowUp();
+  } catch (err) {
+    alert('❌ Gagal menyimpan: ' + err);
+  }
+}
+
+// =========================================================================
+// FOLLOW-UP MANUAL SEKARANG
+// =========================================================================
+async function kirimFollowUpManual(noHp, nama) {
+  if (!confirm('Kirim follow-up manual ke ' + nama + ' (' + noHp + ') sekarang juga?')) return;
+
+  const params = new URLSearchParams();
+  params.append('action', 'kirimFollowUpManual');
+  params.append('noHp', noHp);
+  params.append('namaKontak', nama);
+
+  try {
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: params });
+    if (result.result === 'success') {
+      alert('✅ ' + (result.message || 'Follow-up terkirim.'));
+      await tarikDataFollowUp();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
 </script>
 </body>
 </html>
