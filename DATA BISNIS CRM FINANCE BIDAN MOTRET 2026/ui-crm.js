@@ -24,6 +24,13 @@ function isiDropdownMinat_() {
   const set = [...new Set(dataCrm.map(r => r.minat).filter(Boolean))].sort();
   sel.innerHTML = '<option value="">Semua</option>' + set.map(m => `<option>${esc(m)}</option>`).join('');
   sel.value = cur;
+
+  // isi juga dropdown Import Massal
+  const setSumber = [...new Set(dataCrm.map(r => r.sumber).filter(v => v && v !== '-'))].sort();
+  const selImportSumber = document.getElementById('import_sumber');
+  if (selImportSumber) selImportSumber.innerHTML = setSumber.map(v => `<option>${esc(v)}</option>`).join('') || '<option>Import Massal WA</option>';
+  const selImportMinat = document.getElementById('import_minat');
+  if (selImportMinat) selImportMinat.innerHTML = '<option value="">- Tidak diisi -</option>' + set.map(m => `<option>${esc(m)}</option>`).join('');
 }
 
 function kategoriStatus_(s) {
@@ -110,7 +117,6 @@ function renderCrm() {
       </td></tr>`;
   }).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8;">Tidak ada data.</td></tr>';
 }
-
 function bukaModal(kode) {
   const r = dataCrm.find(x => x.kode_leads === kode);
   if (!r) return;
@@ -120,6 +126,10 @@ function bukaModal(kode) {
   set('mNama', r.nama); set('mAlamat', r.alamat); set('mDataAnak', r.data_anak); set('mJadwal', r.jadwal);
   set('mPaket', r.paket !== '-' ? r.paket : ''); set('mTotal', r.total); set('mTransport', r.transport);
   set('mTgl1', r.tgl_bayar1); set('mJml1', r.jml_bayar1); set('mTgl2', r.tgl_bayar2); set('mJml2', r.jml_bayar2);
+  isiDropdownProvinsi('mProvinsi');
+  document.getElementById('mProvinsi').value = r.provinsi || '';
+  isiDropdownKabupaten(r.provinsi || '', 'mKabupaten');
+  document.getElementById('mKabupaten').value = r.kabupaten_kota || '';
   const sel = document.getElementById('mStatus');
   if (![...sel.options].some(o => o.value === r.status)) sel.add(new Option(r.status, r.status));
   sel.value = r.status;
@@ -127,6 +137,7 @@ function bukaModal(kode) {
   hitungSisa();
   document.getElementById('modalCrm').style.display = 'flex';
 }
+
 function tutupModal() { document.getElementById('modalCrm').style.display = 'none'; }
 function hitungSisa() {
   const n = id => Number(document.getElementById(id).value) || 0;
@@ -253,4 +264,110 @@ function renderKohort() {
   ins.push(c[0] > c[1] ? '📌 <b>Fast Respon Penting:</b> klien cenderung closing di 0-3 hari pertama chat. Beri insentif untuk CS yang closing di hari yang sama.' : '📌 <b>Butuh Nurturing:</b> klien butuh 4-30 hari untuk memutuskan. Manfaatkan follow-up otomatis untuk menyelamatkan prospek.');
   if (l[0] > (l[1] + l[2] + l[3])) ins.push('📌 <b>Fokus Akuisisi Baru:</b> penjualan bertumpu pada leads bulan berjalan (M0). Pantau CPL/CAC agar ROI iklan tetap sehat.');
   document.getElementById('insightList').innerHTML = ins.map(i => `<li>${i}</li>`).join('');
+}
+
+// ================= WILAYAH: PROVINSI / KABUPATEN =================
+let dataWilayahOptions = { provinsi: [], kabupatenByProvinsi: {} };
+
+function isiDropdownProvinsi(selectId) {
+  const el = document.getElementById(selectId);
+  if (!el) return;
+  const nilaiSaatIni = el.value;
+  el.innerHTML = '<option value="">- Pilih Provinsi -</option>' +
+    dataWilayahOptions.provinsi.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  if (nilaiSaatIni) el.value = nilaiSaatIni;
+}
+
+function isiDropdownKabupaten(provinsi, kabupatenSelectId) {
+  const el = document.getElementById(kabupatenSelectId);
+  if (!el) return;
+  const list = dataWilayahOptions.kabupatenByProvinsi[provinsi] || [];
+  el.innerHTML = '<option value="">- Pilih Kabupaten/Kota -</option>' +
+    list.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+}
+
+// ================= IMPORT MASSAL DARI SCRAPE CHAT WA =================
+function bukaImportMassal() {
+  document.getElementById('rawImportMassal').value = '';
+  document.getElementById('hasilCekImportMassal').style.display = 'none';
+  dataSiapImportMassal = [];
+  document.getElementById('modalImport').style.display = 'flex';
+}
+function tutupImportMassal() { document.getElementById('modalImport').style.display = 'none'; }
+
+function parseTeksImportMassal(teks) {
+  const baris = teks.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const hasil = [];
+  baris.forEach(line => {
+    const match = line.match(/(\+?62|0)?[\s\-]?8[\d\s\-]{7,13}\d/);
+    if (!match) return;
+    const hpMentah = match[0];
+    const nama = line.replace(hpMentah, '').replace(/^[\s,;:\-–]+|[\s,;:\-–]+$/g, '').trim();
+    hasil.push({ nama: nama || '(Tanpa Nama)', no_hp_mentah: hpMentah.replace(/\s/g, '') });
+  });
+  return hasil;
+}
+
+let dataSiapImportMassal = [];
+
+function cekDuplikatImportMassal() {
+  const teks = document.getElementById('rawImportMassal').value;
+  if (!teks.trim()) { alert('Tempel dulu data mentahnya di textarea.'); return; }
+
+  const parsed = parseTeksImportMassal(teks);
+  if (parsed.length === 0) { alert('Tidak ada nomor HP yang terdeteksi. Cek lagi formatnya.'); return; }
+
+  const setNoHpAda = new Set(dataCrm.map(r => hpNorm(r.no_hp)).filter(Boolean));
+  const setSudahDiproses = new Set();
+  let cntBaru = 0, cntAda = 0, cntDup = 0, rows = '';
+  dataSiapImportMassal = [];
+
+  parsed.forEach(item => {
+    const h = hpNorm(item.no_hp_mentah);
+    let status = '', warna = '';
+    if (setNoHpAda.has(h) && !setSudahDiproses.has(h)) {
+      status = '⚠️ Sudah Ada di Database'; warna = 'color:#ef4444; font-weight:700;'; cntAda++;
+    } else if (setSudahDiproses.has(h)) {
+      status = '🔁 Duplikat dalam List Ini'; warna = 'color:#f59e0b; font-weight:700;'; cntDup++;
+    } else {
+      status = '🆕 Baru, Akan Diimport'; warna = 'color:#10b981; font-weight:700;'; cntBaru++;
+      dataSiapImportMassal.push({ nama: item.nama, no_hp: h });
+    }
+    setSudahDiproses.add(h);
+    rows += `<tr><td>${esc(item.nama)}</td><td>${esc(h)}</td><td style="${warna}">${status}</td></tr>`;
+  });
+
+  document.getElementById('tabelPreviewImport').innerHTML = rows;
+  document.getElementById('cntBaru').textContent = cntBaru;
+  document.getElementById('cntAda').textContent = cntAda;
+  document.getElementById('cntDupBatch').textContent = cntDup;
+  document.getElementById('hasilCekImportMassal').style.display = 'block';
+}
+
+async function importLeadsBaruSaja() {
+  if (dataSiapImportMassal.length === 0) {
+    alert('Tidak ada kontak berstatus "Baru". Klik "Cek Duplikat Dulu" terlebih dahulu.');
+    return;
+  }
+  const sumberTerpilih = document.getElementById('import_sumber').value || 'Import Massal WA';
+  const minatTerpilih = document.getElementById('import_minat').value || '';
+  const tglHariIni = new Date().toISOString().split('T')[0];
+
+  const payload = dataSiapImportMassal.map(item => ({
+    nama: item.nama, no_hp: item.no_hp, sumber: sumberTerpilih, minat: minatTerpilih, tanggal_chat: tglHariIni
+  }));
+
+  if (!confirm(`Import ${payload.length} kontak baru ke Database Leads sekarang?`)) return;
+
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'bulkInsertLeads');
+    p.append('dataJson', JSON.stringify(payload));
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    alert(`✅ Import selesai!\nBerhasil ditambahkan: ${r.inserted}\nDilewati (sudah ada / duplikat): ${r.skipped}`);
+    tutupImportMassal();
+    await tarikDataCrm();
+  } catch (err) {
+    alert('❌ Gagal import: ' + err.message);
+  }
 }

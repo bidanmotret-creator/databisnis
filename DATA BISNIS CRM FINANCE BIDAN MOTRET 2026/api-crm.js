@@ -25,6 +25,7 @@ async function fetchJsonAman(url, options) {
   }
   return json;
 }
+
 async function tarikDataCrm() {
   const badge = document.getElementById('bgRefreshBadge');
   if (badge) { badge.style.display = 'inline-block'; badge.style.background = '#0f172a'; badge.textContent = '🔄 Menyegarkan data…'; }
@@ -35,6 +36,7 @@ async function tarikDataCrm() {
     aiByHp = data.aiByHp || {};
     chatStat = data.chatStat || {};
     capiByKode = data.capiByKode || {};
+    dataWilayahOptions = data.wilayahOptions || { provinsi: [], kabupatenByProvinsi: {} };
     isiDropdownMinat_();
 
     const q = new URLSearchParams(location.search).get('cari');
@@ -42,7 +44,7 @@ async function tarikDataCrm() {
 
     if (!window._filterAwalDiset) {
       window._filterAwalDiset = true;
-      presetChat('bulan'); // otomatis set fChatS/fChatE ke bulan ini + panggil renderCrm()
+      presetChat('bulan');
     } else {
       renderCrm();
     }
@@ -74,6 +76,11 @@ async function simpanLead() {
   p.append('sumber', asli.sumber || ''); p.append('gender_anak', asli.gender_anak || '');
   p.append('varian', asli.varian || '-'); p.append('promo', asli.promo || '-');
   p.append('lokasi', asli.lokasi || '-'); p.append('hpp', asli.hpp || 0);
+    p.append('sumber', asli.sumber || ''); p.append('gender_anak', asli.gender_anak || '');
+  p.append('varian', asli.varian || '-'); p.append('promo', asli.promo || '-');
+  p.append('lokasi', asli.lokasi || '-'); p.append('hpp', asli.hpp || 0);
+  p.append('provinsi', document.getElementById('mProvinsi').value || '');
+  p.append('kabupaten_kota', document.getElementById('mKabupaten').value || '');
 
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
