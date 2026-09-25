@@ -95,7 +95,7 @@ function renderCrm() {
     const h = hpNorm(r.no_hp), st = stageByHp[h], ai = aiByHp[h];
     const capi = capiByKode[r.kode_leads];
     const capiHtml = capi
-      ? `<br><span class="fu-badge ${capi.sudah_kirim_purchase ? 'b-green' : 'b-yellow'}">${capi.sudah_kirim_purchase ? '✅ CAPI: Purchase' : '📨 CAPI: Lead'}</span> <small style="color:#94a3b8;">${esc(capi.last_synced || '')}</small>`
+      ? `<br><span class="fu-badge ${capi.sudah_kirim_purchase ? 'b-green' : 'b-yellow'}">${capi.sudah_kirim_purchase ? '✅ CAPI: Purchase ' + rpC(r.total) : '📨 CAPI: Lead'}</span> <small style="color:#94a3b8;">${esc(capi.last_synced || '')}</small>`
       : '<br><small style="color:#94a3b8;">CAPI: belum sync</small>';
     const fuHtml = (st ? `<span class="fu-badge st-${st.stage}">${esc(LABEL_STAGE[st.stage] || 'Stage ' + st.stage)}</span>` : '<small style="color:#94a3b8;">Belum ada</small>')
       + (chatStat[h] ? `<br><small>💬 ${chatStat[h].n} pesan · ${esc((chatStat[h].last || '').substring(0, 16))}</small><br><small style="color:#334155; display:inline-block; max-width:220px; white-space:normal;">“${esc(chatStat[h].teks || '')}”</small>` : '')
@@ -211,11 +211,12 @@ function resetFilterCrm() {
 
 function gantiTabCrm(t) {
   tabCrm = t;
-  ['master', 'produk', 'kohort', 'evaluasi'].forEach(k => {
+  ['master', 'produk', 'kohort', 'evaluasi', 'setupcapi'].forEach(k => {
     document.getElementById('panel_' + k).style.display = (k === t) ? 'block' : 'none';
     document.getElementById('tabBtn_' + k).className = (k === t) ? 'btn-co-primary' : 'btn-co-secondary';
   });
-  if (t !== 'master') renderAnalitik();
+  if (t === 'setupcapi') muatSetupCapi();
+  else if (t !== 'master') renderAnalitik();
 }
 
 
@@ -310,16 +311,18 @@ function renderEvaluasi() {
   });
 
   // --- 2. Kesehatan CAPI ---
-  let capiPurchase = 0, capiLeadOnly = 0, capiBelum = 0;
+  let capiPurchase = 0, capiLeadOnly = 0, capiBelum = 0, capiPurchaseValue = 0;
   list.forEach(r => {
     const c = capiByKode[r.kode_leads];
-    if (!c) capiBelum++; else if (c.sudah_kirim_purchase) capiPurchase++; else capiLeadOnly++;
+    if (!c) capiBelum++;
+    else if (c.sudah_kirim_purchase) { capiPurchase++; capiPurchaseValue += Number(r.total) || 0; }
+    else capiLeadOnly++;
   });
   const capiLabels = ['✅ Purchase Terkirim', '📨 Lead Saja', '⚠️ Belum Sync'];
   const capiValues = [capiPurchase, capiLeadOnly, capiBelum];
   document.getElementById('bCapi').innerHTML = capiLabels.map((k, i) =>
     `<tr><td>${k}</td><td>${capiValues[i]}</td><td>${pc(capiValues[i], total)}</td></tr>`
-  ).join('');
+  ).join('') + `<tr><td><strong>💰 Total Value Purchase (ke Meta)</strong></td><td colspan="2"><strong>${rpC(capiPurchaseValue)}</strong></td></tr>`;
   gambar('cvCapi', {
     type: 'doughnut',
     data: { labels: capiLabels, datasets: [{ data: capiValues, backgroundColor: ['#10b981', '#f59e0b', '#ef4444'] }] },
@@ -573,4 +576,120 @@ function printEvaluasi() {
   document.body.classList.add('printing-evaluasi');
   window.print();
   setTimeout(() => document.body.classList.remove('printing-evaluasi'), 500);
+}
+// =========================================================================
+// SETUP CAPI — Multi Akun / Multi Pixel (tab "⚙️ Setup CAPI")
+// =========================================================================
+let akunCapiRows = []; // array of {sumber, account_id, pixel_id, role, group_id, aktif}
+
+async function muatSetupCapi() {
+  const tbody = document.getElementById('bAkunCapi');
+  tbody.innerHTML = '<tr><td colspan="7" style="color:#94a3b8;">Memuat...</td></tr>';
+  try {
+    const data = await fetchJsonAman(scriptURL + '?action=getMetaCapiConfig');
+
+    document.getElementById('scAccessToken').value = '';
+    document.getElementById('scAccessToken').placeholder = data.settings.ACCESS_TOKEN_TERISI
+      ? ('Sudah tersimpan (' + data.settings.ACCESS_TOKEN + ') — kosongkan kalau tidak mau ganti')
+      : 'Belum diisi — tempel System User Access Token di sini';
+    document.getElementById('scTokenHint').textContent = data.settings.ACCESS_TOKEN_TERISI
+      ? 'Token tersembunyi demi keamanan. Isi ulang field ini hanya kalau mau mengganti token.'
+      : '⚠️ Access Token belum diisi — sync CAPI tidak akan jalan.';
+    document.getElementById('scApiVersion').value = data.settings.API_VERSION || 'v21.0';
+    document.getElementById('scTestEventCode').value = data.settings.TEST_EVENT_CODE || '';
+    document.getElementById('scDefaultPixel').value = data.settings.DEFAULT_PIXEL_ID || '';
+    document.getElementById('scHanyaMetaAds').checked = !!data.settings.HANYA_SUMBER_META_ADS;
+
+    akunCapiRows = data.akunList || [];
+    window._sumberLeadsOptions = data.sumberLeadsOptions || [];
+    renderTabelAkunCapi();
+
+    document.getElementById('scMinatList').value = (data.daftarMinat || []).join('\n');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#ef4444;">❌ Gagal memuat: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+function renderTabelAkunCapi() {
+  const tbody = document.getElementById('bAkunCapi');
+  if (akunCapiRows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:#94a3b8;">Belum ada akun. Klik "➕ Tambah Akun".</td></tr>';
+    return;
+  }
+  const opsiSumber = (window._sumberLeadsOptions || []);
+  tbody.innerHTML = akunCapiRows.map((a, i) => {
+    const datalistId = 'dlSumberCapi';
+    return `<tr>
+      <td><input list="${datalistId}" value="${esc(a.sumber)}" style="min-width:170px;" onchange="akunCapiRows[${i}].sumber=this.value"></td>
+      <td><input value="${esc(a.account_id)}" placeholder="tanpa act_" style="min-width:130px;" onchange="akunCapiRows[${i}].account_id=this.value.replace(/^act_/,'')"></td>
+      <td><input value="${esc(a.pixel_id)}" placeholder="kosongkan = ikut UTAMA" style="min-width:140px;" onchange="akunCapiRows[${i}].pixel_id=this.value"></td>
+      <td>
+        <select onchange="akunCapiRows[${i}].role=this.value">
+          <option value="UTAMA" ${a.role === 'UTAMA' ? 'selected' : ''}>UTAMA</option>
+          <option value="LAIN" ${a.role !== 'UTAMA' ? 'selected' : ''}>LAIN</option>
+        </select>
+      </td>
+      <td><input value="${esc(a.group_id)}" placeholder="nama klien/grup" style="min-width:120px;" onchange="akunCapiRows[${i}].group_id=this.value"></td>
+      <td style="text-align:center;"><input type="checkbox" ${a.aktif ? 'checked' : ''} onchange="akunCapiRows[${i}].aktif=this.checked"></td>
+      <td><button type="button" class="btn-co-secondary" onclick="hapusBarisAkunCapi(${i})">🗑️</button></td>
+    </tr>`;
+  }).join('') + `<datalist id="dlSumberCapi">${opsiSumber.map(s => `<option value="${esc(s)}">`).join('')}</datalist>`;
+}
+
+function tambahBarisAkunCapi() {
+  akunCapiRows.push({ sumber: '', account_id: '', pixel_id: '', role: 'LAIN', group_id: '', aktif: true });
+  renderTabelAkunCapi();
+}
+
+function hapusBarisAkunCapi(idx) {
+  akunCapiRows.splice(idx, 1);
+  renderTabelAkunCapi();
+}
+
+async function simpanSetupSettingsCapi() {
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'saveMetaCapiSettings');
+    p.append('accessToken', document.getElementById('scAccessToken').value.trim());
+    p.append('apiVersion', document.getElementById('scApiVersion').value.trim() || 'v21.0');
+    p.append('testEventCode', document.getElementById('scTestEventCode').value.trim());
+    p.append('defaultPixelId', document.getElementById('scDefaultPixel').value.trim());
+    p.append('hanyaSumberMetaAds', document.getElementById('scHanyaMetaAds').checked ? 'true' : 'false');
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') { alert('✅ Pengaturan tersimpan.'); await muatSetupCapi(); }
+    else alert('❌ Gagal: ' + (r.message || 'unknown'));
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
+}
+
+async function simpanAkunCapi() {
+  // validasi ringan di sisi UI sebelum kirim
+  const kosong = akunCapiRows.some(a => !a.sumber.trim() || !a.account_id.trim());
+  if (kosong && !confirm('Ada baris dengan Sumber/Account ID kosong — tetap lanjut simpan (baris kosong akan diabaikan server)?')) return;
+
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'saveMetaConfigAkun');
+    p.append('dataJson', JSON.stringify(akunCapiRows));
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') { alert('✅ Daftar akun tersimpan.'); await muatSetupCapi(); }
+    else alert('❌ Gagal: ' + (r.message || 'unknown'));
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
+}
+
+async function simpanMinatCapi() {
+  const daftar = document.getElementById('scMinatList').value.split('\n').map(s => s.trim()).filter(Boolean);
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'saveMetaMinat');
+    p.append('dataJson', JSON.stringify(daftar));
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') { alert('✅ Daftar minat tersimpan.'); await muatSetupCapi(); }
+    else alert('❌ Gagal: ' + (r.message || 'unknown'));
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
 }

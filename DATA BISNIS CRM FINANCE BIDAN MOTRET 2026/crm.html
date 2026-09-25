@@ -117,6 +117,7 @@
         <button type="button" class="btn-co-secondary" id="tabBtn_produk" onclick="gantiTabCrm('produk')">💰 Produk & Keuangan</button>
         <button type="button" class="btn-co-secondary" id="tabBtn_kohort" onclick="gantiTabCrm('kohort')">📊 Kohort</button>
         <button type="button" class="btn-co-secondary" id="tabBtn_evaluasi" onclick="gantiTabCrm('evaluasi')">📈 Evaluasi</button>
+        <button type="button" class="btn-co-secondary" id="tabBtn_setupcapi" onclick="gantiTabCrm('setupcapi')">⚙️ Setup CAPI</button>
       </div>
 
       <div id="panel_produk" style="display:none;">
@@ -187,6 +188,66 @@
           <h4 style="margin:0 0 4px;">Performa per Paket / Varian</h4>
           <div style="height:220px; margin:8px 0;"><canvas id="cvPaket"></canvas></div>
           <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Minat</th><th>Paket</th><th>Varian</th><th>Trx</th><th>Closing</th><th>Close Rate</th><th>Omzet</th><th>Rata-rata</th></tr></thead><tbody id="bPaketEval"></tbody></table></div>
+        </div>
+      </div>
+
+      <div id="panel_setupcapi" style="display:none;">
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 8px;">⚙️ Pengaturan Umum Meta CAPI</h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label style="font-size:12px; font-weight:600;">Access Token (System User)</label>
+              <input type="password" id="scAccessToken" placeholder="Kosongkan kalau tidak mau ganti" style="width:100%;">
+              <small id="scTokenHint" style="color:#64748b;"></small>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600;">API Version</label>
+              <input type="text" id="scApiVersion" placeholder="v21.0" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600;">Test Event Code (opsional, saat testing)</label>
+              <input type="text" id="scTestEventCode" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600;">Default Pixel ID (untuk sumber tak terdaftar)</label>
+              <input type="text" id="scDefaultPixel" style="width:100%;">
+            </div>
+          </div>
+          <label style="display:flex; align-items:center; gap:6px; margin-top:10px; font-size:13px;">
+            <input type="checkbox" id="scHanyaMetaAds" style="width:auto;">
+            Hanya lead dari sumber terdaftar di bawah yang masuk Custom Audience
+          </label>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-co-primary" onclick="simpanSetupSettingsCapi()">💾 Simpan Pengaturan</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h4 style="margin:0;">🏢 Akun Iklan & Pixel (Multi-Akun)</h4>
+            <button type="button" class="btn-co-secondary" onclick="tambahBarisAkunCapi()">➕ Tambah Akun</button>
+          </div>
+          <small style="color:#64748b;">Tiap <b>group_id</b> wajib punya tepat 1 baris <b>UTAMA</b> (pemilik Custom Audience). Baris <b>LAIN</b> = akun sewa/whitelist yang menerima share audience.</small>
+          <div class="table-responsive" style="margin-top:10px;">
+            <table>
+              <thead><tr style="background:#f1f5f9;">
+                <th>Sumber (harus sama persis dgn dropdown CRM)</th><th>Account ID</th><th>Pixel ID</th><th>Role</th><th>Group ID</th><th>Aktif</th><th></th>
+              </tr></thead>
+              <tbody id="bAkunCapi"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-co-primary" onclick="simpanAkunCapi()">💾 Simpan Daftar Akun</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 style="margin:0 0 8px;">🏷️ Daftar Minat / Kategori Produk (untuk segmentasi Audience)</h4>
+          <small style="color:#64748b;">Satu baris per minat. Ini dipakai untuk membuat Custom Audience per Grup x Minat x Kategori.</small>
+          <textarea id="scMinatList" rows="8" style="width:100%; margin-top:8px; font-family:monospace; font-size:13px;" placeholder="Newborn&#10;Handcasting 3D&#10;Sitter Session"></textarea>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-co-primary" onclick="simpanMinatCapi()">💾 Simpan Daftar Minat</button>
+          </div>
         </div>
       </div>
 
