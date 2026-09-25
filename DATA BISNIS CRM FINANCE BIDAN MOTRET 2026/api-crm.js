@@ -154,3 +154,24 @@ async function kirimUlangCapi(kode) {
     alert('❌ Gagal koneksi: ' + err.message);
   }
 }
+
+async function hapusLead(kode, paksa) {
+  if (!kode) return;
+  if (!paksa && !confirm('Hapus lead ' + kode + ' dari database? Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'deleteLeadByKode');
+    p.append('kode', kode);
+    if (paksa) p.append('paksa', 'true');
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') {
+      await tarikDataCrm();
+    } else if (r.result === 'perlu_konfirmasi') {
+      if (confirm(r.message + '\n\nTetap hapus paksa?')) await hapusLead(kode, true);
+    } else {
+      alert('❌ Gagal: ' + (r.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
+}

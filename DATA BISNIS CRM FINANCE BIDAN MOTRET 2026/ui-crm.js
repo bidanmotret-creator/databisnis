@@ -101,22 +101,36 @@ function renderCrm() {
       + (chatStat[h] ? `<br><small>💬 ${chatStat[h].n} pesan · ${esc((chatStat[h].last || '').substring(0, 16))}</small><br><small style="color:#334155; display:inline-block; max-width:220px; white-space:normal;">“${esc(chatStat[h].teks || '')}”</small>` : '')
       + (ai ? `<br><small>Intent: <b>${esc(ai.intent || '-')}</b>${ai.booking ? ' · 🔥 siap booking' : ''}</small><br><small style="color:#64748b; display:inline-block; max-width:220px; white-space:normal;">${esc((ai.summary || '').substring(0, 90))}</small>` : '')
       + capiHtml;
-    return `<tr>
+        return `<tr>
       <td><strong>${esc(r.kode_leads || '-')}</strong></td>
       <td><strong>${esc(r.nama || '-')}</strong><br><small style="color:#64748b;">${esc(r.no_hp)}</small></td>
       <td>${esc(r.minat || '-')}<br><small style="color:#64748b;">${esc(r.paket !== '-' ? r.paket : '-')}</small></td>
       <td><small>Chat: ${esc(r.tanggal_chat || '-')}</small><br><small>Sesi: ${esc(r.jadwal || '-')}</small>${hari}</td>
       <td>${rpC(r.total)}<br><span class="fu-badge ${bs}">${esc(r.status)}</span></td>
       <td>${fuHtml}</td>
-      <td style="white-space:nowrap;">
-        <button class="row-btn" style="background:#f59e0b;" title="Edit" onclick="bukaModal('${esc(r.kode_leads)}')">✏️</button>
-        <button class="row-btn" style="background:#0ea5e9;" title="Riwayat chat & analisis" onclick="bukaChat('${esc(r.no_hp)}','${esc((r.nama || '').replace(/'/g, ''))}')">💬</button>
-        <a class="row-btn" style="background:#25d366;" title="Buka WhatsApp" target="_blank" href="https://wa.me/${h}">📲</a>
-        <a class="row-btn" style="background:#4f46e5;" title="Lihat AI Analysis & Follow-up" href="followup.html?cari=${h}">🤖</a>
-        <button class="row-btn" style="background:#8b5cf6;" title="Kirim ulang CAPI" onclick="kirimUlangCapi('${esc(r.kode_leads)}')">📡</button>
+      <td style="white-space:nowrap; position:relative;">
+        <button class="row-btn" style="background:#f59e0b;" title="Edit" onclick="bukaModal('${esc(r.kode_leads)}')">✏️ Edit</button>
+        <button class="row-btn" style="background:#0ea5e9;" title="Riwayat chat & analisis" onclick="bukaChat('${esc(r.no_hp)}','${esc((r.nama || '').replace(/'/g, ''))}')">💬 Chat</button>
+        <button class="row-btn" style="background:#64748b;" title="Aksi lainnya" onclick="toggleAksiMenu(event,'${esc(r.kode_leads)}')">⋮</button>
+        <div class="aksi-menu" id="aksiMenu_${esc(r.kode_leads)}" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.18); z-index:50; min-width:210px; padding:6px; text-align:left;">
+          <a href="https://wa.me/${h}" target="_blank" style="display:block; padding:7px 10px; font-size:12.5px; color:#166534; text-decoration:none; border-radius:6px;">📲 Buka WhatsApp</a>
+          <a href="followup.html?cari=${h}" style="display:block; padding:7px 10px; font-size:12.5px; color:#4338ca; text-decoration:none; border-radius:6px;">🤖 AI Analysis & Follow-up</a>
+          <button type="button" onclick="kirimUlangCapi('${esc(r.kode_leads)}')" style="display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px; color:#7c3aed; background:none; border:none; cursor:pointer; border-radius:6px;">📡 Kirim Ulang CAPI</button>
+          <hr style="margin:4px 0; border:none; border-top:1px solid var(--border);">
+          <button type="button" onclick="hapusLead('${esc(r.kode_leads)}')" style="display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px; color:#dc2626; background:none; border:none; cursor:pointer; border-radius:6px;">🗑️ Hapus Lead</button>
+        </div>
       </td></tr>`;
   }).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8;">Tidak ada data.</td></tr>';
 }
+
+function toggleAksiMenu(ev, kode) {
+  ev.stopPropagation();
+  document.querySelectorAll('.aksi-menu').forEach(m => { if (m.id !== 'aksiMenu_' + kode) m.style.display = 'none'; });
+  const el = document.getElementById('aksiMenu_' + kode);
+  if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+}
+document.addEventListener('click', () => document.querySelectorAll('.aksi-menu').forEach(m => m.style.display = 'none'));
+
 function bukaModal(kode) {
   const r = dataCrm.find(x => x.kode_leads === kode);
   if (!r) return;
@@ -194,14 +208,17 @@ function resetFilterCrm() {
   document.getElementById('fSort').value = 'chat_desc';
   renderCrm();
 }
+
 function gantiTabCrm(t) {
   tabCrm = t;
-  ['master', 'produk', 'kohort'].forEach(k => {
+  ['master', 'produk', 'kohort', 'evaluasi'].forEach(k => {
     document.getElementById('panel_' + k).style.display = (k === t) ? 'block' : 'none';
     document.getElementById('tabBtn_' + k).className = (k === t) ? 'btn-co-primary' : 'btn-co-secondary';
   });
   if (t !== 'master') renderAnalitik();
 }
+
+
 
 // ================= PRODUK, KEUANGAN, KOHORT (lazy: hanya saat tab dibuka) =================
 const dayDiff = (a, b) => Math.floor((new Date(b) - new Date(a)) / 864e5);
@@ -210,7 +227,11 @@ const pc = (p, t) => t ? (p / t * 100).toFixed(1) + '%' : '0%';
 const tglAnak = r => { const m = String(r.data_anak || '').match(/\d{4}-\d{2}-\d{2}/); return m ? m[0] : ''; };
 function gambar(id, cfg) { if (charts[id]) charts[id].destroy(); if (typeof Chart !== 'undefined') charts[id] = new Chart(document.getElementById(id), cfg); }
 
-function renderAnalitik() { tabCrm === 'produk' ? renderProdukKeuangan() : renderKohort(); }
+function renderAnalitik() {
+  if (tabCrm === 'produk') renderProdukKeuangan();
+  else if (tabCrm === 'kohort') renderKohort();
+  else if (tabCrm === 'evaluasi') renderEvaluasi();
+}
 
 function renderProdukKeuangan() {
   const prod = {}, day = {};
@@ -264,6 +285,182 @@ function renderKohort() {
   ins.push(c[0] > c[1] ? '📌 <b>Fast Respon Penting:</b> klien cenderung closing di 0-3 hari pertama chat. Beri insentif untuk CS yang closing di hari yang sama.' : '📌 <b>Butuh Nurturing:</b> klien butuh 4-30 hari untuk memutuskan. Manfaatkan follow-up otomatis untuk menyelamatkan prospek.');
   if (l[0] > (l[1] + l[2] + l[3])) ins.push('📌 <b>Fokus Akuisisi Baru:</b> penjualan bertumpu pada leads bulan berjalan (M0). Pantau CPL/CAC agar ROI iklan tetap sehat.');
   document.getElementById('insightList').innerHTML = ins.map(i => `<li>${i}</li>`).join('');
+}
+
+function renderEvaluasi() {
+  const list = listAktif;
+  const total = list.length;
+
+  // --- 1. Funnel stage follow-up ---
+  const funnelCount = {};
+  list.forEach(r => {
+    const st = stageByHp[hpNorm(r.no_hp)];
+    const key = st ? (LABEL_STAGE[st.stage] || 'Stage ' + st.stage) : 'Belum ada';
+    funnelCount[key] = (funnelCount[key] || 0) + 1;
+  });
+  const funnelLabels = Object.keys(funnelCount);
+  const funnelValues = funnelLabels.map(k => funnelCount[k]);
+  document.getElementById('bFunnel').innerHTML = funnelLabels.map((k, i) =>
+    `<tr><td>${esc(k)}</td><td>${funnelValues[i]}</td><td>${pc(funnelValues[i], total)}</td></tr>`
+  ).join('') || '<tr><td colspan="3">Belum ada data.</td></tr>';
+  gambar('cvFunnel', {
+    type: 'bar',
+    data: { labels: funnelLabels, datasets: [{ label: 'Jumlah Lead', data: funnelValues, backgroundColor: '#4f46e5' }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+  });
+
+  // --- 2. Kesehatan CAPI ---
+  let capiPurchase = 0, capiLeadOnly = 0, capiBelum = 0;
+  list.forEach(r => {
+    const c = capiByKode[r.kode_leads];
+    if (!c) capiBelum++; else if (c.sudah_kirim_purchase) capiPurchase++; else capiLeadOnly++;
+  });
+  const capiLabels = ['✅ Purchase Terkirim', '📨 Lead Saja', '⚠️ Belum Sync'];
+  const capiValues = [capiPurchase, capiLeadOnly, capiBelum];
+  document.getElementById('bCapi').innerHTML = capiLabels.map((k, i) =>
+    `<tr><td>${k}</td><td>${capiValues[i]}</td><td>${pc(capiValues[i], total)}</td></tr>`
+  ).join('');
+  gambar('cvCapi', {
+    type: 'doughnut',
+    data: { labels: capiLabels, datasets: [{ data: capiValues, backgroundColor: ['#10b981', '#f59e0b', '#ef4444'] }] },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // --- 3. Performa per Sumber ---
+  const sumberMap = {};
+  list.forEach(r => {
+    const src = r.sumber || 'Tidak diketahui';
+    sumberMap[src] = sumberMap[src] || { leads: 0, closing: 0, omzet: 0 };
+    sumberMap[src].leads++;
+    if (kategoriStatus_(r.status) !== 'pending') sumberMap[src].closing++;
+    sumberMap[src].omzet += r.total;
+  });
+  const sumberArr = Object.entries(sumberMap).sort((a, b) => b[1].leads - a[1].leads);
+  document.getElementById('bSumber').innerHTML = sumberArr.map(([src, v]) =>
+    `<tr><td>${esc(src)}</td><td>${v.leads}</td><td>${v.closing}</td><td>${pc(v.closing, v.leads)}</td><td>${rpC(v.omzet)}</td></tr>`
+  ).join('') || '<tr><td colspan="5">Belum ada data.</td></tr>';
+  gambar('cvSumber', {
+    type: 'bar',
+    data: {
+      labels: sumberArr.map(s => s[0]),
+      datasets: [
+        { label: 'Leads', data: sumberArr.map(s => s[1].leads), backgroundColor: '#0ea5e9' },
+        { label: 'Closing', data: sumberArr.map(s => s[1].closing), backgroundColor: '#10b981' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // --- 4. Distribusi Intent AI ---
+  const intentMap = {};
+  list.forEach(r => {
+    const ai = aiByHp[hpNorm(r.no_hp)];
+    if (!ai || !ai.intent) return;
+    intentMap[ai.intent] = intentMap[ai.intent] || { n: 0, booking: 0 };
+    intentMap[ai.intent].n++;
+    if (ai.booking) intentMap[ai.intent].booking++;
+  });
+  const intentArr = Object.entries(intentMap).sort((a, b) => b[1].n - a[1].n);
+  document.getElementById('bIntent').innerHTML = intentArr.map(([k, v]) =>
+    `<tr><td>${esc(k)}</td><td>${v.n}</td><td>${v.booking}</td></tr>`
+  ).join('') || '<tr><td colspan="3">Belum ada analisis AI.</td></tr>';
+  gambar('cvIntent', {
+    type: 'bar',
+    data: { labels: intentArr.map(i => i[0]), datasets: [{ label: 'Jumlah', data: intentArr.map(i => i[1].n), backgroundColor: '#f59e0b' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  // --- KPI cards ---
+  const closingTotal = sumberArr.reduce((a, s) => a + s[1].closing, 0);
+  const belumSyncPct = total ? Math.round(capiBelum / total * 100) : 0;
+  document.getElementById('evalKpi').innerHTML = `
+    <div class="fu-kpi-card fu-kpi-1"><div class="n">${total}</div><div class="l">Total Lead (Terfilter)</div></div>
+    <div class="fu-kpi-card fu-kpi-4"><div class="n">${pc(closingTotal, total)}</div><div class="l">Overall Close Rate</div></div>
+    <div class="fu-kpi-card fu-kpi-2"><div class="n">${capiPurchase}</div><div class="l">CAPI Purchase Terkirim</div></div>
+    <div class="fu-kpi-card fu-kpi-3"><div class="n">${belumSyncPct}%</div><div class="l">Lead Belum Sync CAPI</div></div>`;
+
+      // --- 5. Tren mingguan (Leads vs Closing) ---
+  const isoWeek = dstr => {
+    const d = new Date(dstr);
+    if (isNaN(d)) return null;
+    const target = new Date(d.valueOf());
+    const dayNr = (d.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = new Date(target.getFullYear(), 0, 4);
+    const weekNr = 1 + Math.round(((target - firstThursday) / 864e5 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7);
+    return target.getFullYear() + '-W' + String(weekNr).padStart(2, '0');
+  };
+  const trenMap = {};
+  list.forEach(r => {
+    if (!r.tanggal_chat) return;
+    const wk = isoWeek(r.tanggal_chat);
+    if (!wk) return;
+    trenMap[wk] = trenMap[wk] || { leads: 0, closing: 0, omzet: 0 };
+    trenMap[wk].leads++;
+    if (kategoriStatus_(r.status) !== 'pending') { trenMap[wk].closing++; trenMap[wk].omzet += r.total; }
+  });
+  const trenKeys = Object.keys(trenMap).sort();
+  document.getElementById('bTren').innerHTML = trenKeys.map(k => {
+    const v = trenMap[k];
+    return `<tr><td>${k}</td><td>${v.leads}</td><td>${v.closing}</td><td>${pc(v.closing, v.leads)}</td><td>${rpC(v.omzet)}</td></tr>`;
+  }).join('') || '<tr><td colspan="5">Belum ada data.</td></tr>';
+  gambar('cvTren', {
+    type: 'line',
+    data: {
+      labels: trenKeys,
+      datasets: [
+        { label: 'Leads Masuk', data: trenKeys.map(k => trenMap[k].leads), borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,.1)', fill: true, tension: .2 },
+        { label: 'Closing', data: trenKeys.map(k => trenMap[k].closing), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.1)', fill: true, tension: .2 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // --- 6. Performa per Paket / Varian ---
+  const paketMap = {};
+  list.forEach(r => {
+    const key = (r.minat || 'Lainnya') + '|' + (r.paket && r.paket !== '-' ? r.paket : 'Tanpa Paket') + '|' + (r.varian && r.varian !== '-' ? r.varian : '-');
+    paketMap[key] = paketMap[key] || { minat: r.minat || 'Lainnya', paket: r.paket !== '-' ? r.paket : 'Tanpa Paket', varian: r.varian !== '-' ? r.varian : '-', trx: 0, closing: 0, omzet: 0 };
+    paketMap[key].trx++;
+    if (kategoriStatus_(r.status) !== 'pending') { paketMap[key].closing++; paketMap[key].omzet += r.total; }
+  });
+  const paketArr = Object.values(paketMap).sort((a, b) => b.omzet - a.omzet);
+  document.getElementById('bPaketEval').innerHTML = paketArr.map(p =>
+    `<tr><td>${esc(p.minat)}</td><td>${esc(p.paket)}</td><td>${esc(p.varian)}</td><td>${p.trx}</td><td>${p.closing}</td><td>${pc(p.closing, p.trx)}</td><td>${rpC(p.omzet)}</td><td style="color:#64748b;">${rpC(p.omzet / (p.closing || 1))}</td></tr>`
+  ).join('') || '<tr><td colspan="8">Belum ada data.</td></tr>';
+  gambar('cvPaket', {
+    type: 'bar',
+    data: {
+      labels: paketArr.slice(0, 10).map(p => p.minat + ' - ' + p.paket),
+      datasets: [{ label: 'Omzet', data: paketArr.slice(0, 10).map(p => p.omzet), backgroundColor: '#7c3aed' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+  });
+
+  // --- Insight otomatis ---
+  const ins = [];
+  const stageBelum = funnelCount['Belum ada'] || 0;
+  if (total && stageBelum > total * 0.3) ins.push(`📌 <b>${pc(stageBelum, total)} lead belum masuk sistem follow-up otomatis.</b> Cek apakah follow-up otomatis aktif (menu Pengaturan) atau nomor-nomor ini memang belum pernah chat.`);
+  if (total && capiBelum > total * 0.2) ins.push(`📌 <b>${belumSyncPct}% lead belum tersinkron ke CAPI Meta.</b> Pertimbangkan jalankan sync ulang massal supaya data closing masuk ke optimasi iklan.`);
+  if (sumberArr.length) {
+    const terbaik = sumberArr.reduce((a, b) => (b[1].closing / (b[1].leads || 1)) > (a[1].closing / (a[1].leads || 1)) ? b : a);
+    if (terbaik[1].leads >= 3) ins.push(`📌 <b>Sumber "${esc(terbaik[0])}" punya close rate tertinggi</b> (${pc(terbaik[1].closing, terbaik[1].leads)}). Pertimbangkan alokasikan effort/budget lebih ke sumber ini.`);
+  }
+  const stageReview = funnelCount['Perlu Review CS'] || 0;
+  if (stageReview > 0) ins.push(`📌 <b>${stageReview} lead menunggu review CS manual</b> (kasus usia baby di zona abu-abu). Segera cek tab AI Chat & Follow-up.`);
+  
+    if (paketArr.length) {
+    const paketTerbaik = paketArr.reduce((a, b) => (b.closing / (b.trx || 1)) > (a.closing / (a.trx || 1)) ? b : a);
+    if (paketTerbaik.trx >= 3) ins.push(`📌 <b>${esc(paketTerbaik.minat)} - ${esc(paketTerbaik.paket)}</b> punya close rate terbaik (${pc(paketTerbaik.closing, paketTerbaik.trx)}) dari ${paketTerbaik.trx} transaksi.`);
+  }
+  if (trenKeys.length >= 2) {
+    const minggIni = trenMap[trenKeys[trenKeys.length - 1]], minggLalu = trenMap[trenKeys[trenKeys.length - 2]];
+    if (minggLalu.leads > 0) {
+      const perubahan = Math.round((minggIni.leads - minggLalu.leads) / minggLalu.leads * 100);
+      if (Math.abs(perubahan) >= 20) ins.push(`📌 <b>Leads minggu ini ${perubahan > 0 ? 'naik' : 'turun'} ${Math.abs(perubahan)}%</b> dibanding minggu sebelumnya (${minggLalu.leads} → ${minggIni.leads}).`);
+    }
+  }
+  document.getElementById('evalInsightList').innerHTML = ins.map(i => `<li>${i}</li>`).join('') || '<li>Belum ada insight signifikan untuk data yang sedang difilter.</li>';
 }
 
 // ================= WILAYAH: PROVINSI / KABUPATEN =================
@@ -370,4 +567,10 @@ async function importLeadsBaruSaja() {
   } catch (err) {
     alert('❌ Gagal import: ' + err.message);
   }
+}
+
+function printEvaluasi() {
+  document.body.classList.add('printing-evaluasi');
+  window.print();
+  setTimeout(() => document.body.classList.remove('printing-evaluasi'), 500);
 }
