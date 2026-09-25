@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Leads — SentuhanMomen3D</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .fu-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+  .fu-kpi-card { border-radius:12px; padding:16px 18px; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.10); }
+  .fu-kpi-card .n { font-size:20px; font-weight:900; }
+  .fu-kpi-card .l { font-size:11px; text-transform:uppercase; opacity:.9; margin-top:4px; font-weight:700; }
+  .fu-kpi-1 { background:linear-gradient(160deg,#4f46e5,#312e81); }
+  .fu-kpi-2 { background:linear-gradient(160deg,#0ea5e9,#075985); }
+  .fu-kpi-3 { background:linear-gradient(160deg,#f59e0b,#b45309); }
+  .fu-kpi-4 { background:linear-gradient(160deg,#10b981,#065f46); }
+  .fu-kpi-5 { background:linear-gradient(160deg,#ef4444,#7f1d1d); }
+  .fu-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; color:#fff; background:#94a3b8; }
+  .st-1 { background:#f59e0b; } .st-2 { background:#0ea5e9; } .st-3 { background:#ef4444; } .st-100 { background:#10b981; }
+  .b-green { background:#10b981; } .b-yellow { background:#f59e0b; } .b-red { background:#ef4444; }
+  .row-btn { border:none; border-radius:6px; padding:5px 8px; cursor:pointer; font-size:12px; text-decoration:none; color:#fff; display:inline-block; margin:2px 2px 2px 0; }
+  #modalCrm { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; padding:16px; }
+  #modalCrm .box { background:#fff; border-radius:14px; padding:20px; width:100%; max-width:560px; max-height:90vh; overflow:auto; }
+  .mg { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .mg .full { grid-column:1/-1; }
+  .mg label { display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:3px; }
+  .mg input, .mg select { width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:7px 9px; font-size:13px; }
+  .bub { max-width:78%; padding:8px 12px; border-radius:12px; font-size:13px; margin-bottom:6px; white-space:pre-wrap; word-break:break-word; }
+  .bub small { display:block; font-size:10px; opacity:.6; margin-top:3px; }
+  .bub-in { background:#f1f5f9; align-self:flex-start; }
+  .bub-out { background:#dcfce7; align-self:flex-end; }
+  .ai-card { border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:12.5px; }
+  .mg input[readonly] { background:#f1f5f9; color:#64748b; }
+  .aksi-menu a, .aksi-menu button { transition:background .12s; }
+  .aksi-menu a:hover, .aksi-menu button:hover { background:#f1f5f9; }
+  @media print {
+    body.printing-evaluasi .sidebar, body.printing-evaluasi .topbar,
+    body.printing-evaluasi .filter-panel, body.printing-evaluasi .fu-kpi-grid ~ div[style*="display:flex"],
+    body.printing-evaluasi #panel_master, body.printing-evaluasi #panel_produk, body.printing-evaluasi #panel_kohort,
+    body.printing-evaluasi > div.app-shell > div[style*="display:flex; gap:6px; margin-bottom:12px;"],
+    body.printing-evaluasi #bgRefreshBadge { display:none !important; }
+    body.printing-evaluasi #panel_evaluasi { display:block !important; }
+  }
+</style>
+</head>
+<body>
+<div id="bgRefreshBadge" style="position:fixed; top:14px; right:14px; z-index:9999; background:#0f172a; color:#fff; padding:6px 14px; border-radius:20px; font-size:11.5px; font-weight:700; display:none; box-shadow:0 4px 10px rgba(0,0,0,.2); pointer-events:none;">🔄 Menyegarkan data…</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">👥</div>
+      <div class="brand-text"><strong>CRM Leads</strong><span>SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a class="nav-item active" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> CRM Leads</a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> AI Chat & Follow-up</a>
+        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> Pengaturan</a>
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">CRM Leads</div>
+      <button type="button" onclick="tarikDataCrm()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
+      <button type="button" onclick="bukaImportMassal()" style="margin-left:8px; padding:8px 14px; background:#4f46e5; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">📥 Import Massal WA</button>
+    </div>
+    <div class="content-inner">
+
+      <div class="fu-kpi-grid" id="crmKpi"></div>
+
+      <div class="filter-panel">
+        <div class="filter-grid">
+          <div class="form-group"><label>Cari (Nama / No HP / Kode)</label><input type="text" id="fCari" oninput="renderCrm()" placeholder="ketik untuk mencari"></div>
+          <div class="form-group"><label>Minat</label><select id="fMinat" onchange="renderCrm()"><option value="">Semua</option></select></div>
+          <div class="form-group"><label>Status</label>
+            <select id="fStatus" onchange="renderCrm()">
+              <option value="">Semua</option><option value="pending">Pending</option><option value="dp">DP</option><option value="lunas">Lunas</option>
+            </select></div>
+          <div class="form-group"><label>Stage Follow-up</label>
+            <select id="fStage" onchange="renderCrm()">
+              <option value="">Semua</option><option value="0">Belum Qualifying</option><option value="1">Menunggu Jawaban</option>
+              <option value="2">PL Terkirim</option><option value="3">Perlu Review CS</option><option value="100">Repeat Customer</option>
+            </select></div>
+          <div class="form-group"><label>Urutkan</label>
+            <select id="fSort" onchange="renderCrm()">
+              <option value="chat_desc">Chat Terbaru</option><option value="chat_asc">Chat Terlama</option>
+              <option value="total_desc">Total Terbesar</option><option value="hutang_desc">Sisa Hutang Terbesar</option>
+              <option value="jadwal_asc">Jadwal Terdekat</option>
+            </select></div>
+        </div>
+        <div class="filter-grid" style="margin-top:10px;">
+          <div class="form-group"><label>Chat dari</label><input type="date" id="fChatS" onchange="renderCrm()"></div>
+          <div class="form-group"><label>Chat sampai</label><input type="date" id="fChatE" onchange="renderCrm()"></div>
+          <div class="form-group"><label>DP dari</label><input type="date" id="fDpS" onchange="renderCrm()"></div>
+          <div class="form-group"><label>DP sampai</label><input type="date" id="fDpE" onchange="renderCrm()"></div>
+          <div class="form-group"><label>Lunas dari</label><input type="date" id="fLnS" onchange="renderCrm()"></div>
+          <div class="form-group"><label>Lunas sampai</label><input type="date" id="fLnE" onchange="renderCrm()"></div>
+          <div class="form-group"><label>Sumber</label><select id="fSumber" onchange="renderCrm()"><option value="">Semua</option></select></div>
+          <div class="form-group"><label>Lokasi</label><select id="fLokasi" onchange="renderCrm()"><option value="">Semua</option></select></div>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+          <button type="button" class="btn-co-secondary" style="padding:5px 10px; font-size:12px;" onclick="presetChat('bulan')">Bulan Ini</button>
+          <button type="button" class="btn-co-secondary" style="padding:5px 10px; font-size:12px;" onclick="presetChat('30')">30 Hari</button>
+          <button type="button" class="btn-co-secondary" style="padding:5px 10px; font-size:12px;" onclick="presetChat('90')">90 Hari</button>
+          <button type="button" class="btn-co-secondary" style="padding:5px 10px; font-size:12px;" onclick="resetFilterCrm()">↺ Reset Semua</button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+        <button type="button" class="btn-co-primary" id="tabBtn_master" onclick="gantiTabCrm('master')">📋 Master Data</button>
+        <button type="button" class="btn-co-secondary" id="tabBtn_produk" onclick="gantiTabCrm('produk')">💰 Produk & Keuangan</button>
+        <button type="button" class="btn-co-secondary" id="tabBtn_kohort" onclick="gantiTabCrm('kohort')">📊 Kohort</button>
+        <button type="button" class="btn-co-secondary" id="tabBtn_evaluasi" onclick="gantiTabCrm('evaluasi')">📈 Evaluasi</button>
+        <button type="button" class="btn-co-secondary" id="tabBtn_setupcapi" onclick="gantiTabCrm('setupcapi')">⚙️ Setup CAPI</button>
+      </div>
+
+      <div id="panel_produk" style="display:none;">
+        <div class="card" style="margin-bottom:14px;"><h4 style="margin:0 0 10px;">Penjualan per Produk</h4>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Minat</th><th>Paket</th><th>Trx</th><th>Omzet</th><th>Rata-rata</th></tr></thead><tbody id="bProduk"></tbody></table></div></div>
+        <div class="card" style="margin-bottom:14px;"><h4 style="margin:0 0 10px;">Cash Masuk Harian</h4>
+          <div style="height:220px;"><canvas id="cvFin"></canvas></div>
+          <div class="table-responsive" style="margin-top:10px;"><table><thead><tr style="background:#f1f5f9;"><th>Tanggal</th><th>Trx</th><th>Omzet</th><th>DP</th><th>Lunas</th><th>Cash Masuk</th></tr></thead><tbody id="bKeu"></tbody></table></div></div>
+      </div>
+
+      <div id="panel_kohort" style="display:none;">
+        <div class="card" style="margin-bottom:14px;"><h4 style="margin:0 0 8px;">💡 Insight Otomatis</h4><ul id="insightList" style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;"></ul></div>
+        <div class="card" style="margin-bottom:14px;"><h4 style="margin:0 0 4px;">Kohort Booking — DP vs Tanggal Lahir/HPL Anak</h4><small style="color:#64748b;">Dikelompokkan per bulan sesi foto</small>
+          <div style="height:200px; margin:8px 0;"><canvas id="cvB"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Bulan Sesi</th><th>Total</th><th>Ideal (&gt;30h)</th><th>%</th><th>Standard (0-30h)</th><th>%</th><th>Bahaya (&lt;0)</th><th>%</th></tr></thead><tbody id="bBooking"></tbody></table></div></div>
+        <div class="card" style="margin-bottom:14px;"><h4 style="margin:0 0 4px;">Kohort Closing — Chat → DP</h4><small style="color:#64748b;">Dikelompokkan per bulan sesi foto</small>
+          <div style="height:200px; margin:8px 0;"><canvas id="cvC"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Bulan Sesi</th><th>Total</th><th>Gercep (0-3h)</th><th>%</th><th>Normal (4-30h)</th><th>%</th><th>Lama (&gt;30h)</th><th>%</th></tr></thead><tbody id="bClosing"></tbody></table></div></div>
+        <div class="card"><h4 style="margin:0 0 4px;">Kohort Leads — Bulan Chat vs Bulan DP</h4><small style="color:#64748b;">Dikelompokkan per bulan DP</small>
+          <div style="height:200px; margin:8px 0;"><canvas id="cvL"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Bulan DP</th><th>Total</th><th>M0</th><th>%</th><th>M-1</th><th>%</th><th>M-2</th><th>%</th><th>M-3+</th><th>%</th></tr></thead><tbody id="bLeads"></tbody></table></div></div>
+      </div>
+
+      <div id="panel_evaluasi" style="display:none;">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+          <button type="button" class="btn-co-secondary" onclick="printEvaluasi()">🖨️ Export PDF</button>
+        </div>
+
+        <div class="fu-kpi-grid" id="evalKpi"></div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 8px;">💡 Insight Evaluasi</h4>
+          <ul id="evalInsightList" style="margin:0; padding-left:18px; font-size:13px; line-height:1.6;"></ul>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 4px;">Funnel Follow-up (berdasarkan filter aktif)</h4>
+          <div style="height:220px; margin:8px 0;"><canvas id="cvFunnel"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Stage</th><th>Jumlah Lead</th><th>%</th></tr></thead><tbody id="bFunnel"></tbody></table></div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 4px;">Kesehatan Sinkronisasi CAPI (Meta)</h4>
+          <div style="height:200px; margin:8px 0;"><canvas id="cvCapi"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Status CAPI</th><th>Jumlah</th><th>%</th></tr></thead><tbody id="bCapi"></tbody></table></div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 4px;">Performa per Sumber Leads</h4>
+          <div style="height:220px; margin:8px 0;"><canvas id="cvSumber"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Sumber</th><th>Leads</th><th>Closing</th><th>Close Rate</th><th>Omzet</th></tr></thead><tbody id="bSumber"></tbody></table></div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 4px;">Distribusi Intent AI</h4>
+          <div style="height:200px; margin:8px 0;"><canvas id="cvIntent"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Intent</th><th>Jumlah</th><th>Siap Booking 🔥</th></tr></thead><tbody id="bIntent"></tbody></table></div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 4px;">Tren Mingguan — Leads vs Closing</h4>
+          <small style="color:#64748b;">Dikelompokkan per minggu berdasarkan tanggal chat masuk, mengikuti filter aktif</small>
+          <div style="height:220px; margin:8px 0;"><canvas id="cvTren"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Minggu</th><th>Leads Masuk</th><th>Closing</th><th>Close Rate</th><th>Omzet</th></tr></thead><tbody id="bTren"></tbody></table></div>
+        </div>
+
+        <div class="card">
+          <h4 style="margin:0 0 4px;">Performa per Paket / Varian</h4>
+          <div style="height:220px; margin:8px 0;"><canvas id="cvPaket"></canvas></div>
+          <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Minat</th><th>Paket</th><th>Varian</th><th>Trx</th><th>Closing</th><th>Close Rate</th><th>Omzet</th><th>Rata-rata</th></tr></thead><tbody id="bPaketEval"></tbody></table></div>
+        </div>
+      </div>
+
+      <div id="panel_setupcapi" style="display:none;">
+        <div class="card" style="margin-bottom:14px;">
+          <h4 style="margin:0 0 8px;">⚙️ Pengaturan Umum Meta CAPI</h4>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label style="font-size:12px; font-weight:600;">Access Token (System User)</label>
+              <input type="password" id="scAccessToken" placeholder="Kosongkan kalau tidak mau ganti" style="width:100%;">
+              <small id="scTokenHint" style="color:#64748b;"></small>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600;">API Version</label>
+              <input type="text" id="scApiVersion" placeholder="v21.0" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600;">Test Event Code (opsional, saat testing)</label>
+              <input type="text" id="scTestEventCode" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600;">Default Pixel ID (untuk sumber tak terdaftar)</label>
+              <input type="text" id="scDefaultPixel" style="width:100%;">
+            </div>
+          </div>
+          <label style="display:flex; align-items:center; gap:6px; margin-top:10px; font-size:13px;">
+            <input type="checkbox" id="scHanyaMetaAds" style="width:auto;">
+            Hanya lead dari sumber terdaftar di bawah yang masuk Custom Audience
+          </label>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-co-primary" onclick="simpanSetupSettingsCapi()">💾 Simpan Pengaturan</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h4 style="margin:0;">🏢 Akun Iklan & Pixel (Multi-Akun)</h4>
+            <button type="button" class="btn-co-secondary" onclick="tambahBarisAkunCapi()">➕ Tambah Akun</button>
+          </div>
+          <small style="color:#64748b;">Tiap <b>group_id</b> wajib punya tepat 1 baris <b>UTAMA</b> (pemilik Custom Audience). Baris <b>LAIN</b> = akun sewa/whitelist yang menerima share audience.</small>
+          <div class="table-responsive" style="margin-top:10px;">
+            <table>
+              <thead><tr style="background:#f1f5f9;">
+                <th>Sumber (harus sama persis dgn dropdown CRM)</th><th>Account ID</th><th>Pixel ID</th><th>Role</th><th>Group ID</th><th>Aktif</th><th></th>
+              </tr></thead>
+              <tbody id="bAkunCapi"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-co-primary" onclick="simpanAkunCapi()">💾 Simpan Daftar Akun</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 style="margin:0 0 8px;">🏷️ Daftar Minat / Kategori Produk (untuk segmentasi Audience)</h4>
+          <small style="color:#64748b;">Satu baris per minat. Ini dipakai untuk membuat Custom Audience per Grup x Minat x Kategori.</small>
+          <textarea id="scMinatList" rows="8" style="width:100%; margin-top:8px; font-family:monospace; font-size:13px;" placeholder="Newborn&#10;Handcasting 3D&#10;Sitter Session"></textarea>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-co-primary" onclick="simpanMinatCapi()">💾 Simpan Daftar Minat</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="panel_master">
+        <div id="crmCount" style="font-size:12px; color:#64748b; margin-bottom:8px;"></div>
+        <div class="table-responsive table-compact-wrap">
+          <table>
+            <thead><tr style="background:#f1f5f9;">
+              <th>Kode</th><th>Klien</th><th>Minat / Paket</th><th>Tanggal</th><th>Total / Status</th><th>Follow-up & AI</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="crmBody"><tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">Memuat...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL RIWAYAT CHAT -->
+<div id="modalChat" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#fff; border-radius:14px; width:100%; max-width:720px; max-height:92vh; display:flex; flex-direction:column;">
+    <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="cJudul" style="margin:0; font-size:15px;">Riwayat Chat</h3>
+      <div style="display:flex; gap:6px;"><button type="button" class="btn-co-secondary" id="btnAnalisisUlang" onclick="analisisUlang()">🧠 Analisis Ulang</button><button type="button" class="btn-co-secondary" onclick="refreshChat()">🔄 Refresh</button><button type="button" class="btn-co-secondary" onclick="tutupChat()">✖ Tutup</button></div>
+    </div>
+    <div id="cBody" style="padding:16px; overflow:auto;"></div>
+  </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div id="modalCrm">
+  <div class="box">
+    <h3 id="mJudul" style="margin:0 0 12px 0;">Edit Lead</h3>
+    <div class="mg">
+      <div><label>No HP (terkunci)</label><input id="mHp" readonly></div>
+      <div><label>Tanggal Chat (terkunci)</label><input id="mTglChat" readonly></div>
+      <div><label>Minat (terkunci)</label><input id="mMinat" readonly></div>
+      <div><label>Nama</label><input id="mNama"></div>
+      <div class="full"><label>Alamat</label><input id="mAlamat"></div>
+      <div><label>Provinsi</label><select id="mProvinsi" onchange="isiDropdownKabupaten(this.value,'mKabupaten')"></select></div>
+      <div><label>Kabupaten/Kota</label><select id="mKabupaten"></select></div>
+      <div><label>Data Anak (cth: Lahir: 2026-09-01)</label><input id="mDataAnak"></div>
+      <div><label>Jadwal Sesi</label><input type="date" id="mJadwal"></div>
+      <div><label>Status</label>
+        <select id="mStatus">
+          <option>Follow-up / Pending</option><option>DP Masuk</option><option>Lunas</option><option>Batal</option>
+        </select></div>
+      <div><label>Paket</label><input id="mPaket"></div>
+      <div><label>Total (Rp)</label><input type="number" id="mTotal" oninput="hitungSisa()"></div>
+      <div><label>Transport (Rp)</label><input type="number" id="mTransport"></div>
+      <div><label>Tgl Bayar 1 (DP)</label><input type="date" id="mTgl1"></div>
+      <div><label>Jumlah Bayar 1</label><input type="number" id="mJml1" oninput="hitungSisa()"></div>
+      <div><label>Tgl Bayar 2 (Lunas)</label><input type="date" id="mTgl2"></div>
+      <div><label>Jumlah Bayar 2</label><input type="number" id="mJml2" oninput="hitungSisa()"></div>
+      <div class="full" id="mSisa" style="font-weight:800; color:#b45309;"></div>
+    </div>
+    <p style="font-size:11px; color:#94a3b8; margin:10px 0 0;">Catatan: perubahan pembayaran di sini TIDAK otomatis membuat jurnal. Untuk auto-jurnal, tetap gunakan menu di aplikasi utama.</p>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+      <button type="button" class="btn-co-secondary" onclick="tutupModal()">Batal</button>
+      <button type="button" class="btn-co-primary" id="mSimpan" onclick="simpanLead()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT MASSAL WA -->
+<div id="modalImport" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#fff; border-radius:14px; width:100%; max-width:720px; max-height:92vh; display:flex; flex-direction:column;">
+    <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0; font-size:15px;">📥 Import Massal dari Scrape Chat WA</h3>
+      <button type="button" class="btn-co-secondary" onclick="tutupImportMassal()">✖ Tutup</button>
+    </div>
+    <div style="padding:16px; overflow:auto;">
+      <p style="font-size:12px; color:#64748b; margin-top:0;">Tempel teks mentah (1 kontak per baris, berisi nama + nomor HP). Sistem otomatis mendeteksi nomor HP dan memisahkan nama, lalu cek duplikat terhadap data yang sudah ada.</p>
+      <textarea id="rawImportMassal" rows="8" style="width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:10px; font-size:13px; font-family:monospace;" placeholder="Contoh:&#10;Ibu Sari 0812xxxxxxx&#10;Bunda Ani - 0813xxxxxxx"></textarea>
+      <div class="mg" style="margin-top:10px;">
+        <div><label>Sumber (untuk semua kontak baru)</label><select id="import_sumber"></select></div>
+        <div><label>Minat (opsional)</label><select id="import_minat"><option value="">- Tidak diisi -</option></select></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button type="button" class="btn-co-secondary" onclick="cekDuplikatImportMassal()">🔍 Cek Duplikat Dulu</button>
+        <button type="button" class="btn-co-primary" onclick="importLeadsBaruSaja()">✅ Import yang Berstatus Baru</button>
+      </div>
+      <div id="hasilCekImportMassal" style="display:none; margin-top:14px;">
+        <p style="font-size:12.5px;">🆕 Baru: <b id="cntBaru">0</b> · ⚠️ Sudah ada: <b id="cntAda">0</b> · 🔁 Duplikat dalam list: <b id="cntDupBatch">0</b></p>
+        <div class="table-responsive" style="max-height:280px; overflow-y:auto;">
+          <table><thead><tr style="background:#f1f5f9;"><th>Nama</th><th>No HP</th><th>Status</th></tr></thead><tbody id="tabelPreviewImport"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+  let dataCrm = [], stageByHp = {}, aiByHp = {}, chatStat = {}, capiByKode = {};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="ui-crm.js"></script>
+<script src="api-crm.js"></script>
+</body>
+</html>
