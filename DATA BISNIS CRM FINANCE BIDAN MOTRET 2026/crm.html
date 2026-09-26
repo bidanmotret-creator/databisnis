@@ -251,6 +251,7 @@
         </div>
       </div>
 
+      <span id="bgRefreshBadge" style="display:none; font-size:11px; padding:3px 8px; border-radius:12px; color:#fff; margin-bottom:8px;"></span>
       <div class="card" id="panel_master">
         <div id="crmCount" style="font-size:12px; color:#64748b; margin-bottom:8px;"></div>
         <div class="table-responsive table-compact-wrap">
@@ -269,12 +270,50 @@
 
 <!-- MODAL RIWAYAT CHAT -->
 <div id="modalChat" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; padding:16px;">
-  <div style="background:#fff; border-radius:14px; width:100%; max-width:720px; max-height:92vh; display:flex; flex-direction:column;">
+  <div style="background:#fff; border-radius:14px; width:100%; max-width:760px; max-height:92vh; display:flex; flex-direction:column;">
     <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
       <h3 id="cJudul" style="margin:0; font-size:15px;">Riwayat Chat</h3>
-      <div style="display:flex; gap:6px;"><button type="button" class="btn-co-secondary" id="btnAnalisisUlang" onclick="analisisUlang()">🧠 Analisis Ulang</button><button type="button" class="btn-co-secondary" onclick="refreshChat()">🔄 Refresh</button><button type="button" class="btn-co-secondary" onclick="tutupChat()">✖ Tutup</button></div>
+      <div style="display:flex; gap:6px;">
+        <button type="button" class="btn-co-secondary" id="btnAnalisisUlang" onclick="analisisUlang()">🧠 Analisis Ulang</button>
+        <button type="button" class="btn-co-secondary" onclick="refreshChat()">🔄 Muat ulang chat</button>
+        <button type="button" class="btn-co-secondary" onclick="tutupChat()">✖ Tutup</button>
+      </div>
     </div>
     <div id="cBody" style="padding:16px; overflow:auto;"></div>
+
+    <!-- SUSUN FOLLOW-UP -->
+    <div style="border-top:1px solid var(--border); padding:14px 18px; background:#fafafa;">
+      <div style="font-weight:800; font-size:13px; margin-bottom:8px;">⚡ Susun Follow-up</div>
+      <select id="fuJenisTemplate" style="width:100%; margin-bottom:8px;" onchange="gantiJenisTemplateFu()">
+        <option value="template_qualifying">Qualifying (tanya usia & domisili)</option>
+        <option value="template_aman_lanjutan">Aman - Lanjutkan Booking</option>
+        <option value="template_abuabu">Zona Abu-abu</option>
+        <option value="template_tolak">Di Luar Window (Tolak Halus)</option>
+        <option value="template_reminder_h4">Reminder (H+4 jam)</option>
+        <option value="template_reminder_h20">Reminder (H+20 jam)</option>
+        <option value="template_repeat_customer">Repeat Customer</option>
+      </select>
+      <textarea id="fuPesanDraft" rows="4" style="width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:8px; font-size:13px;" oninput="updateCharCountFu()"></textarea>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+        <small id="fuCharCount" style="color:#94a3b8;">0 karakter</small>
+        <button type="button" class="btn-co-secondary" id="btnImprovisasiAI" onclick="generateImprovisasiAI()">✨ Improvisasi dengan AI</button>
+      </div>
+
+      <!-- PREVIEW HASIL AI -->
+      <div id="fuPreviewBox" style="display:none; margin-top:10px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:10px;">
+        <div style="font-weight:700; font-size:12px; color:#4338ca; margin-bottom:6px;">✨ Saran AI</div>
+        <div id="fuPreviewTeks" style="font-size:13px; white-space:pre-wrap; color:#1e293b;"></div>
+        <div style="display:flex; gap:6px; margin-top:10px;">
+          <button type="button" class="btn-co-primary" style="padding:5px 10px; font-size:12px;" onclick="pakaiHasilImprovisasi()">✅ Pakai</button>
+          <button type="button" class="btn-co-secondary" style="padding:5px 10px; font-size:12px;" onclick="generateImprovisasiAI()">🔁 Coba Lagi</button>
+          <button type="button" class="btn-co-secondary" style="padding:5px 10px; font-size:12px;" onclick="simpanSebagaiFewShot()">💾 Simpan sbg Contoh AI</button>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+        <button type="button" class="btn-co-primary" onclick="kirimWhatsappPanel()">📤 Kirim WhatsApp</button>
+      </div>
+    </div>
   </div>
 </div>
 

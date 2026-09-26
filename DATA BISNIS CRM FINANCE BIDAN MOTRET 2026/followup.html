@@ -119,11 +119,6 @@ textarea{width:100%;min-height:110px;resize:vertical}
 #modalEditJudul{font-size:14.5px}
 
 .view-toggle{display:flex;gap:6px}
-
-#fuToastWrap{position:fixed;bottom:16px;right:16px;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:340px}
-.fu-toast{background:#0f172a;color:#fff;padding:10px 14px;border-radius:8px;font-size:12.5px;box-shadow:0 6px 18px rgba(0,0,0,.18);animation:fu-toast-in .18s ease-out}
-.fu-toast.err{background:#7f1d1d}
-@keyframes fu-toast-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -134,9 +129,8 @@ textarea{width:100%;min-height:110px;resize:vertical}
   <h1>🤖 Follow-up & Analisis Chat</h1>
   <a href="crm.html" class="sm" style="font-weight:700">👥 CRM Leads</a>
   <a href="index.html" class="sm" style="font-weight:700">💰 Keuangan</a>
-  <button class="btn" style="margin-left:auto" onclick="segarkanSemua()">🔄 Refresh Semua</button>
+  <button class="btn" style="margin-left:auto" onclick="muat();tarikDataFollowUp()">🔄 Refresh Semua</button>
 </header>
-<div id="fuToastWrap"></div>
 
 <main>
   <div class="tabs">
@@ -320,17 +314,6 @@ async function fetchJsonAman(url, opts) {
   }
 }
 
-// Notifikasi kecil non-blocking (dipakai untuk refresh latar belakang,
-// supaya kegagalan tidak mengganggu tampilan/scroll seperti alert()).
-function tampilkanToast(pesan, jenis){
-  const wrap=$('fuToastWrap');if(!wrap)return alert(pesan);
-  const el=document.createElement('div');
-  el.className='fu-toast'+(jenis==='err'?' err':'');
-  el.textContent=pesan;
-  wrap.appendChild(el);
-  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},4000);
-}
-
 // Format tanggal "YYYY-MM-DD HH:mm:ss" (atau ISO) jadi "24 Sep 2026, 14:05"
 function formatTanggalManusia(waktu) {
   if (!waktu) return '-';
@@ -360,28 +343,15 @@ const TPL=[['template_qualifying','Qualifying (tanya usia & domisili)'],['templa
 const ORG='Organik / Tanpa Iklan';
 let D={},rows=[],cur=null;
 
-async function muat(diam){
-  const overlay=$('globalLoadingOverlay');
-  if(diam){ if(overlay) overlay.style.display='block'; } else { $('load').style.display='flex'; }
+async function muat(){
+  $('load').style.display='flex';
   try{
-    const [a,b]=await Promise.all([fetchJsonAman(scriptURL+'?action=getFollowUpData'),fetchJsonAman(scriptURL+'?action=getFollowUpMonitor').catch(()=>({}))]);
+    const [a,b]=await Promise.all([fetch(scriptURL+'?action=getFollowUpData').then(r=>r.json()),fetch(scriptURL+'?action=getFollowUpMonitor').then(r=>r.json()).catch(()=>({}))]);
     D={ai:a.aiAnalysis||[],st:a.followUpState||[],drip:a.dripTracking||[],nama:a.namaKodeByHp||{},tpl:a.pengaturanFollowUpPerProduk||[],chat:b.chatStat||{},ctwa:b.ctwaByHp||{}};
-    if(!b.chatStat) tampilkanToast('⚠️ Endpoint getFollowUpMonitor belum aktif — kolom Sumber & Pesan Terakhir kosong.','err');
+    if(!b.chatStat)alert('⚠️ Endpoint getFollowUpMonitor belum aktif di Apps Script — kolom Sumber & Pesan Terakhir kosong. Tempel followup_backend_tambahan.gs lalu deploy New version.');
     bangun();render();renderSumber();
-    if(diam) tampilkanToast('✅ Data Monitor Nomor diperbarui.');
-  }catch(e){
-    const pesan='❌ Gagal memuat Monitor Nomor: '+e.message;
-    diam ? tampilkanToast(pesan,'err') : alert(pesan);
-  }
-  if(diam){ if(overlay){overlay.style.opacity='0';setTimeout(()=>{overlay.style.display='none';overlay.style.opacity='1';},250);} }
-  else { $('load').style.display='none'; }
-}
-
-// Dipakai tombol "Refresh Semua" di header — refresh diam-diam di latar
-// belakang (progress bar tipis di atas), TANPA reload halaman / blok layar.
-function segarkanSemua(){
-  muat(true);
-  tarikDataFollowUp();
+  }catch(e){alert('❌ Gagal memuat: '+e)}
+  $('load').style.display='none';
 }
 function bangun(){
   const st={},ai={},nm={};
@@ -1212,7 +1182,7 @@ async function tarikDataFollowUp() {
     if (typeof renderPengaturanSistem === 'function') renderPengaturanSistem();
   } catch (err) {
     console.error('Gagal memuat data Follow-up:', err);
-    tampilkanToast('❌ Gagal memuat data AI/Pengaturan: ' + err.message, 'err');
+    alert('❌ Gagal memuat data dari server. Cek koneksi atau scriptURL.\n\n' + err);
   } finally {
     if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; overlay.style.opacity = '1'; }, 250); }
   }

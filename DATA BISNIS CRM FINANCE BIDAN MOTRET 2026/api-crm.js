@@ -106,6 +106,22 @@ async function bukaChat(hp, nama) {
   try {
     const data = await fetchJsonAman(scriptURL + '?action=getChatHistory&hp=' + encodeURIComponent(hp));
     renderChat(data, body);
+    await muatSusunFollowUp(hp);
+
+    // Auto refresh analisis SILENT kalau belum ada / sudah > 60 menit
+    const analisisTerakhir = (data.analisis || []).slice(-1)[0];
+    const basi = !analisisTerakhir || (Date.now() - new Date(analisisTerakhir.waktu).getTime()) > 60 * 60 * 1000;
+    if (basi) {
+      try {
+        const p = new URLSearchParams();
+        p.append('action', 'analisisUlangNomor');
+        p.append('noHp', hp);
+        await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+        const dataBaru = await fetchJsonAman(scriptURL + '?action=getChatHistory&hp=' + encodeURIComponent(hp));
+        renderChat(dataBaru, body);
+        tarikDataCrm();
+      } catch (eSilent) { /* diamkan, biar tidak ganggu CS kalau gagal */ }
+    }
   } catch (err) {
     body.innerHTML = '<p style="color:#ef4444;">❌ Gagal memuat: ' + esc(err.message) + '</p>';
   }
@@ -168,6 +184,123 @@ async function hapusLead(kode, paksa) {
       await tarikDataCrm();
     } else if (r.result === 'perlu_konfirmasi') {
       if (confirm(r.message + '\n\nTetap hapus paksa?')) await hapusLead(kode, true);
+    } else {
+      alert('❌ Gagal: ' + (r.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
+}
+
+// =========================================================================
+// REFRESH BACKGROUND (silent, tanpa overlay penuh layar)
+// =========================================================================
+setInterval(() => { if (!document.hidden) tarikDataCrm(); }, 45000);
+
+// =========================================================================
+// SUSUN FOLLOW-UP (Improvisasi AI)
+// =========================================================================
+let cfgTemplateAktif = null;
+let waktuAnalisisTerakhir = null;
+
+async function muatSusunFollowUp(hp) {
+  const st = stageByHp[hpNorm(hp)];
+  const minat = (st && st.produk) || 'Unknown';
+  try {
+    const r = await fetchJsonAman(scriptURL + '?action=getTemplateFollowUpUntukMinat&minat=' + encodeURIComponent(minat));
+    cfgTemplateAktif = r.cfg || {};
+  } catch (err) {
+    cfgTemplateAktif = {};
+  }
+  gantiJenisTemplateFu();
+  document.getElementById('fuPreviewBox').style.display = 'none';
+}
+
+function gantiJenisTemplateFu() {
+  const jenis = document.getElementById('fuJenisTemplate').value;
+  const raw = (cfgTemplateAktif && cfgTemplateAktif[jenis]) || '';
+  const nama = (chatAktif.nama || 'Kak');
+  document.getElementById('fuPesanDraft').value = raw
+    .split('[NAMA]').join(nama)
+    .split('[USIA_HARI]').join('-')
+    .split('[BATAS_AMAN]').join(cfgTemplateAktif.batas_hari_aman || 15)
+    .split('[LOKASI_NOTE]').join('');
+  updateCharCountFu();
+}
+
+function updateCharCountFu() {
+  document.getElementById('fuCharCount').textContent = document.getElementById('fuPesanDraft').value.length + ' karakter';
+}
+
+async function generateImprovisasiAI() {
+  if (!chatAktif.hp) return;
+  const draft = document.getElementById('fuPesanDraft').value.trim();
+  if (!draft) { alert('⚠️ Isi dulu draft pesannya (atau pilih jenis template).'); return; }
+
+  const btn = document.getElementById('btnImprovisasiAI');
+  btn.disabled = true; btn.textContent = '⏳ Menyusun...';
+  try {
+    const st = stageByHp[hpNorm(chatAktif.hp)];
+    const p = new URLSearchParams();
+    p.append('action', 'generateImprovisasiFollowUp');
+    p.append('noHp', chatAktif.hp);
+    p.append('draftDasar', draft);
+    p.append('labelStage', st ? (LABEL_STAGE[st.stage] || '') : '');
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') {
+      document.getElementById('fuPreviewTeks').textContent = r.pesan;
+      document.getElementById('fuPreviewBox').style.display = 'block';
+    } else {
+      alert('❌ Gagal: ' + (r.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '✨ Improvisasi dengan AI';
+  }
+}
+
+function pakaiHasilImprovisasi() {
+  document.getElementById('fuPesanDraft').value = document.getElementById('fuPreviewTeks').textContent;
+  document.getElementById('fuPreviewBox').style.display = 'none';
+  updateCharCountFu();
+}
+
+async function simpanSebagaiFewShot() {
+  const teks = document.getElementById('fuPreviewTeks').textContent;
+  const catatan = prompt('Catatan singkat untuk contoh ini (opsional):', 'Hasil improvisasi AI - ' + (chatAktif.nama || chatAktif.hp));
+  if (catatan === null) return;
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'tambahFewShot');
+    p.append('dataJson', JSON.stringify({
+      jenis_prompt: 'chat_analysis',
+      pesan_contoh: '(Contoh gaya follow-up) ' + document.getElementById('fuPesanDraft').value.substring(0, 200),
+      output_ideal: teks,
+      catatan: catatan || '',
+      aktif: false
+    }));
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') alert('✅ Tersimpan sebagai contoh (nonaktif). Aktifkan lewat halaman AI Learning kalau sudah dicek.');
+    else alert('❌ Gagal: ' + (r.message || 'unknown'));
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
+}
+
+async function kirimWhatsappPanel() {
+  const pesan = document.getElementById('fuPesanDraft').value.trim();
+  if (!pesan) { alert('⚠️ Pesan kosong.'); return; }
+  if (!confirm('Kirim pesan ini ke ' + (chatAktif.nama || chatAktif.hp) + ' sekarang?')) return;
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'kirimPesanManualNomor');
+    p.append('noHp', chatAktif.hp);
+    p.append('pesan', pesan);
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') {
+      alert('✅ Pesan terkirim.');
+      await refreshChat();
     } else {
       alert('❌ Gagal: ' + (r.message || 'unknown'));
     }
