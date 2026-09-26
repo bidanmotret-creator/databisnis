@@ -328,6 +328,35 @@ async function kirimWhatsappPanel() {
     alert('❌ Gagal koneksi: ' + err.message);
   }
 }
+
+// Kirim PDF Price List manual, memakai produk yang dipilih di dropdown
+// "Pilih Produk" (kalau kosong, fallback ke minat lead saat ini -- sama
+// seperti logic muatSusunFollowUp).
+async function kirimPdfPanel() {
+  if (!chatAktif.hp) return;
+  const produkDropdown = document.getElementById('fuPilihProduk')?.value || '';
+  const st = stageByHp[hpNorm(chatAktif.hp)];
+  const produk = produkDropdown || (st && st.produk) || 'Unknown';
+
+  if (!confirm('Kirim PDF Price List "' + produk + '" ke ' + (chatAktif.nama || chatAktif.hp) + ' sekarang?')) return;
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'kirimDokumenManualNomor');
+    p.append('noHp', chatAktif.hp);
+    p.append('produk', produk);
+    p.append('namaKontak', chatAktif.nama || '');
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') {
+      alert('✅ ' + (r.message || 'PDF terkirim.'));
+      await refreshChat();
+    } else {
+      alert('❌ Gagal: ' + (r.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
+}
+
 // =========================================================================
 // MONITOR STAGE (versi ringkas di CRM) — edit stage/produk/lokasi cepat
 // & kirim follow-up manual, tanpa pindah ke followup.html.
