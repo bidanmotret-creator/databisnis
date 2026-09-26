@@ -1169,17 +1169,24 @@ async function tarikDataFollowUp() {
     dataAnalisisEvaluasi = data.analisisEvaluasi || {};
     dataPengaturanSistem = data.pengaturanSistem || {};
 
-    if (typeof isiDropdownProdukAiChat === 'function') isiDropdownProdukAiChat();
-    if (typeof renderAiChatTable === 'function') renderAiChatTable();
-    if (typeof renderFollowUpTable === 'function') renderFollowUpTable();
-    if (typeof renderPengaturanAktif === 'function') renderPengaturanAktif();
-    if (typeof renderPengaturanProduk === 'function') renderPengaturanProduk();
-    if (typeof isiDropdownJenisPromptError_ === 'function') isiDropdownJenisPromptError_();
-    if (typeof renderErrorLogTable === 'function') renderErrorLogTable();
-    if (typeof isiDropdownJenisPromptFewShot_ === 'function') isiDropdownJenisPromptFewShot_();
-    if (typeof renderFewShotTable === 'function') renderFewShotTable();
-    if (typeof renderAnalisisEvaluasi === 'function') renderAnalisisEvaluasi();
-    if (typeof renderPengaturanSistem === 'function') renderPengaturanSistem();
+    // Setiap render dijalankan terisolasi -- kalau salah satu error, yang
+    // lain (termasuk renderPengaturanProduk) tetap jalan. Error tetap
+    // dicatat di Console supaya gampang dilacak akar masalahnya.
+    const jalankanAman_ = (fn, namaFn) => {
+      try { if (typeof fn === 'function') fn(); }
+      catch (err) { console.error('Render gagal: ' + namaFn, err); }
+    };
+    jalankanAman_(typeof isiDropdownProdukAiChat !== 'undefined' ? isiDropdownProdukAiChat : null, 'isiDropdownProdukAiChat');
+    jalankanAman_(typeof renderAiChatTable !== 'undefined' ? renderAiChatTable : null, 'renderAiChatTable');
+    jalankanAman_(typeof renderFollowUpTable !== 'undefined' ? renderFollowUpTable : null, 'renderFollowUpTable');
+    jalankanAman_(typeof renderPengaturanAktif !== 'undefined' ? renderPengaturanAktif : null, 'renderPengaturanAktif');
+    jalankanAman_(typeof renderPengaturanProduk !== 'undefined' ? renderPengaturanProduk : null, 'renderPengaturanProduk');
+    jalankanAman_(typeof isiDropdownJenisPromptError_ !== 'undefined' ? isiDropdownJenisPromptError_ : null, 'isiDropdownJenisPromptError_');
+    jalankanAman_(typeof renderErrorLogTable !== 'undefined' ? renderErrorLogTable : null, 'renderErrorLogTable');
+    jalankanAman_(typeof isiDropdownJenisPromptFewShot_ !== 'undefined' ? isiDropdownJenisPromptFewShot_ : null, 'isiDropdownJenisPromptFewShot_');
+    jalankanAman_(typeof renderFewShotTable !== 'undefined' ? renderFewShotTable : null, 'renderFewShotTable');
+    jalankanAman_(typeof renderAnalisisEvaluasi !== 'undefined' ? renderAnalisisEvaluasi : null, 'renderAnalisisEvaluasi');
+    jalankanAman_(typeof renderPengaturanSistem !== 'undefined' ? renderPengaturanSistem : null, 'renderPengaturanSistem');
   } catch (err) {
     console.error('Gagal memuat data Follow-up:', err);
     alert('❌ Gagal memuat data dari server. Cek koneksi atau scriptURL.\n\n' + err);

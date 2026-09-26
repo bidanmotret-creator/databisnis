@@ -284,6 +284,9 @@
     <!-- SUSUN FOLLOW-UP -->
     <div style="border-top:1px solid var(--border); padding:14px 18px; background:#fafafa;">
       <div style="font-weight:800; font-size:13px; margin-bottom:8px;">⚡ Susun Follow-up</div>
+      <select id="fuPilihProduk" style="width:100%; margin-bottom:8px;" onchange="muatSusunFollowUp(chatAktif.hp, this.value)">
+        <option value="">(pakai minat lead saat ini)</option>
+      </select>
       <select id="fuJenisTemplate" style="width:100%; margin-bottom:8px;" onchange="gantiJenisTemplateFu()">
         <option value="template_qualifying">Qualifying (tanya usia & domisili)</option>
         <option value="template_aman_lanjutan">Aman - Lanjutkan Booking</option>

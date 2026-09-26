@@ -108,6 +108,7 @@ async function bukaChat(hp, nama) {
   try {
     const data = await fetchJsonAman(scriptURL + '?action=getChatHistory&hp=' + encodeURIComponent(hp));
     renderChat(data, body);
+    isiDropdownProdukFu_();
     await muatSusunFollowUp(hp);
 
     // Auto refresh analisis SILENT kalau belum ada / sudah > 60 menit
@@ -205,9 +206,26 @@ setInterval(() => { if (!document.hidden) tarikDataCrm(); }, 45000);
 let cfgTemplateAktif = null;
 let waktuAnalisisTerakhir = null;
 
-async function muatSusunFollowUp(hp) {
+// Isi dropdown "Pilih Produk" di panel Susun Follow-up dari daftar minat
+// yang ada di sheet Pengaturan Follow-up per Produk (__GLOBAL__ disembunyikan,
+// karena itu cuma fallback, bukan pilihan produk).
+function isiDropdownProdukFu_(produkTerpilih) {
+  const sel = document.getElementById('fuPilihProduk');
+  if (!sel) return;
+  const daftarProduk = [...new Set((dataPengaturanFollowUpProduk || [])
+    .map(p => p.minat)
+    .filter(m => m && m !== '__GLOBAL__'))].sort();
+  const escAman = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  sel.innerHTML = '<option value="">(pakai minat lead saat ini)</option>' +
+    daftarProduk.map(p => `<option value="${escAman(p)}">${escAman(p)}</option>`).join('');
+  sel.value = produkTerpilih || '';
+}
+
+// produkOverride: kalau CS pilih manual dari dropdown "Pilih Produk", pakai itu.
+// Kalau kosong (default), pakai minat yang tercatat otomatis di data lead.
+async function muatSusunFollowUp(hp, produkOverride) {
   const st = stageByHp[hpNorm(hp)];
-  const minat = (st && st.produk) || 'Unknown';
+  const minat = produkOverride || (st && st.produk) || 'Unknown';
   try {
     const r = await fetchJsonAman(scriptURL + '?action=getTemplateFollowUpUntukMinat&minat=' + encodeURIComponent(minat));
     cfgTemplateAktif = r.cfg || {};
