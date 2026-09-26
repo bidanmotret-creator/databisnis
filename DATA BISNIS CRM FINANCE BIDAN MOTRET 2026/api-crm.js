@@ -36,6 +36,8 @@ async function tarikDataCrm() {
     aiByHp = data.aiByHp || {};
     chatStat = data.chatStat || {};
     capiByKode = data.capiByKode || {};
+    dripByHp = data.dripByHp || {};
+    dataPengaturanFollowUpProduk = data.pengaturanFollowUpPerProduk || [];
     dataWilayahOptions = data.wilayahOptions || { provinsi: [], kabupatenByProvinsi: {} };
     isiDropdownMinat_();
 
@@ -308,3 +310,98 @@ async function kirimWhatsappPanel() {
     alert('❌ Gagal koneksi: ' + err.message);
   }
 }
+// =========================================================================
+// MONITOR STAGE (versi ringkas di CRM) — edit stage/produk/lokasi cepat
+// & kirim follow-up manual, tanpa pindah ke followup.html.
+// =========================================================================
+async function kirimFollowUpManual(noHp, nama) {
+  if (!confirm('Kirim follow-up manual ke ' + nama + ' (' + noHp + ') sekarang juga?')) return;
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'kirimFollowUpManual');
+    p.append('noHp', noHp);
+    p.append('namaKontak', nama);
+    const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+    if (r.result === 'success') {
+      alert('✅ ' + (r.message || 'Follow-up terkirim.'));
+      await tarikDataCrm();
+    } else {
+      alert('❌ Gagal: ' + (r.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err.message);
+  }
+}
+
+let stageModalHpNorm = '', stageModalNoHp = '', stageModalNama = '';
+
+function bukaModalEditStageCrm(hpN, noHp, nama) {
+  stageModalHpNorm = hpN; stageModalNoHp = noHp; stageModalNama = nama;
+  const st = stageByHp[hpN] || { stage: 0, produk: '' };
+  const info = dataCrm.find(r => hpNorm(r.no_hp) === hpN) || {};
+
+  document.getElementById('scJudul').textContent = 'Edit Stage: ' + nama + ' (' + noHp + ')';
+  document.getElementById('scStage').value = st.stage;
+  document.getElementById('scProduk').value = st.produk || info.minat || '';
+  document.getElementById('scLokasi').value = info.alamat || '';
+
+  const match = (info.data_anak || '').match(/(Lahir|HPL):\s*(\d{4}-\d{2}-\d{2})/);
+  document.getElementById('scStatusAnak').value = match ? (match[1] === 'Lahir' ? 'sudah_lahir' : 'belum_lahir') : 'belum_lahir';
+  document.getElementById('scTglLahir').value = match ? match[2] : '';
+
+  updateInfoWindowStageCrm();
+  document.getElementById('modalEditStageCrm').style.display = 'flex';
+}
+
+function tutupModalEditStageCrm() {
+  document.getElementById('modalEditStageCrm').style.display = 'none';
+}
+
+function updateInfoWindowStageCrm() {
+  const tgl = document.getElementById('scTglLahir').value;
+  const status = document.getElementById('scStatusAnak').value;
+  const produk = document.getElementById('scProduk').value;
+  const el = document.getElementById('scInfoWindow');
+  if (!tgl) { el.textContent = 'Isi tanggal untuk lihat perhitungan window.'; return; }
+  const prefix = status === 'sudah_lahir' ? 'Lahir' : 'HPL';
+  const info = hitungInfoWindowCrm_(prefix + ': ' + tgl, produk);
+  el.textContent = info.teks;
+}
+
+async function simpanEditStageCrm() {
+  const stageBaru = document.getElementById('scStage').value;
+  const produkBaru = document.getElementById('scProduk').value.trim();
+  const statusAnak = document.getElementById('scStatusAnak').value;
+  const tglLahir = document.getElementById('scTglLahir').value;
+  const lokasi = document.getElementById('scLokasi').value.trim();
+
+  try {
+    const p1 = new URLSearchParams();
+    p1.append('action', 'updateFollowUpManual');
+    p1.append('noHp', stageModalNoHp);
+    p1.append('stageBaru', stageBaru);
+    p1.append('produkBaru', produkBaru);
+    p1.append('namaKontak', stageModalNama);
+    await fetch(scriptURL, { method: 'POST', body: p1 });
+
+    if (tglLahir || lokasi) {
+      const p2 = new URLSearchParams();
+      p2.append('action', 'updateDataAnakManual');
+      p2.append('noHp', stageModalNoHp);
+      p2.append('statusBaru', statusAnak);
+      p2.append('tglLahirBaru', tglLahir);
+      p2.append('lokasiBaru', lokasi);
+      await fetch(scriptURL, { method: 'POST', body: p2 });
+    }
+
+    alert('✅ Stage & data anak berhasil diperbarui.');
+    tutupModalEditStageCrm();
+    await tarikDataCrm();
+  } catch (err) {
+    alert('❌ Gagal menyimpan: ' + err.message);
+  }
+}
+
+document.addEventListener('change', (e) => {
+  if (['scTglLahir', 'scStatusAnak', 'scProduk'].includes(e.target.id)) updateInfoWindowStageCrm();
+});

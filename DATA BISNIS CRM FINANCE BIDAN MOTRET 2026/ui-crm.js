@@ -14,6 +14,39 @@ function hpNorm(phone) {
 }
 const LABEL_STAGE = { 0: 'Belum Qualifying', 1: 'Menunggu Jawaban', 2: 'PL Terkirim', 3: 'Perlu Review CS', 100: 'Repeat Customer' };
 
+// Format ringkas "yyyy-MM-dd HH:mm:ss" -> "dd/MM HH:mm" untuk badge drip/waktu update
+function formatTanggalManusiaCrm_(v) {
+  if (!v) return '-';
+  const s = String(v);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return s;
+  return `${m[3]}/${m[2]} ${m[4]}:${m[5]}`;
+}
+
+// Sama seperti hitungInfoWindow_ di ui-followup.js, dipakai supaya CRM juga
+// bisa menampilkan berapa hari lagi/sudah lewat window pemotretan newborn.
+function hitungInfoWindowCrm_(dataAnakText, produk) {
+  if (!dataAnakText) return { teks: '-', kelas: '' };
+  const match = dataAnakText.match(/(Lahir|HPL):\s*(\d{4}-\d{2}-\d{2})/);
+  if (!match) return { teks: '-', kelas: '' };
+
+  const statusAnak = match[1] === 'Lahir' ? 'sudah_lahir' : 'belum_lahir';
+  const tglAnak = new Date(match[2]);
+  const now = new Date();
+  const usiaHari = Math.floor((now - tglAnak) / 86400000);
+
+  const cfgProduk = (dataPengaturanFollowUpProduk || []).find(p => p.minat === produk) || {};
+  const batasAman = Number(cfgProduk.batas_hari_aman) || 15;
+  const batasAbuabu = Number(cfgProduk.batas_hari_abuabu) || 30;
+  const butuhCek = cfgProduk.butuh_cek_usia_bayi === true || cfgProduk.butuh_cek_usia_bayi === 'TRUE';
+
+  if (statusAnak === 'belum_lahir') return { teks: `HPL dalam ${Math.abs(usiaHari)} hari`, kelas: 'ok' };
+  if (!butuhCek) return { teks: `Usia ${usiaHari} hari (tanpa batas window)`, kelas: 'ok' };
+  if (usiaHari <= batasAman) return { teks: `${usiaHari} hari — masih ${batasAman - usiaHari} hari lagi aman`, kelas: 'aman' };
+  if (usiaHari <= batasAbuabu) return { teks: `${usiaHari} hari — lewat ${usiaHari - batasAman} hari (abu-abu)`, kelas: 'abuabu' };
+  return { teks: `${usiaHari} hari — lewat ${usiaHari - batasAbuabu} hari (di luar window)`, kelas: 'tolak' };
+}
+
 function isiDropdownMinat_() {
   [['fSumber', 'sumber'], ['fLokasi', 'lokasi']].forEach(([id, f]) => {
     const s = document.getElementById(id), cur = s.value;
@@ -97,10 +130,18 @@ function renderCrm() {
     const capiHtml = capi
       ? `<br><span class="fu-badge ${capi.sudah_kirim_purchase ? 'b-green' : 'b-yellow'}">${capi.sudah_kirim_purchase ? '✅ CAPI: Purchase ' + rpC(r.total) : '📨 CAPI: Lead'}</span> <small style="color:#94a3b8;">${esc(capi.last_synced || '')}</small>`
       : '<br><small style="color:#94a3b8;">CAPI: belum sync</small>';
+    const drip = dripByHp[h];
+    const dripHtml = (drip && drip.jumlah_reminder_terkirim > 0)
+      ? `<br><span class="fu-badge b-yellow">⏰ Drip ke-${drip.jumlah_reminder_terkirim}</span> <small style="color:#94a3b8;">${esc(formatTanggalManusiaCrm_(drip.waktu_reminder_terakhir))}</small>`
+      : '';
+    const windowInfo = hitungInfoWindowCrm_(r.data_anak, r.minat);
+    const windowHtml = windowInfo.teks !== '-'
+      ? `<br><small style="color:${windowInfo.kelas === 'tolak' ? '#ef4444' : windowInfo.kelas === 'abuabu' ? '#f59e0b' : '#64748b'};">🗓️ ${esc(windowInfo.teks)}</small>`
+      : '';
     const fuHtml = (st ? `<span class="fu-badge st-${st.stage}">${esc(LABEL_STAGE[st.stage] || 'Stage ' + st.stage)}</span>` : '<small style="color:#94a3b8;">Belum ada</small>')
       + (chatStat[h] ? `<br><small>💬 ${chatStat[h].n} pesan · ${esc((chatStat[h].last || '').substring(0, 16))}</small><br><small style="color:#334155; display:inline-block; max-width:220px; white-space:normal;">“${esc(chatStat[h].teks || '')}”</small>` : '')
       + (ai ? `<br><small>Intent: <b>${esc(ai.intent || '-')}</b>${ai.booking ? ' · 🔥 siap booking' : ''}</small><br><small style="color:#64748b; display:inline-block; max-width:220px; white-space:normal;">${esc((ai.summary || '').substring(0, 90))}</small>` : '')
-      + capiHtml;
+      + windowHtml + dripHtml + capiHtml;
         return `<tr>
       <td><strong>${esc(r.kode_leads || '-')}</strong></td>
       <td><strong>${esc(r.nama || '-')}</strong><br><small style="color:#64748b;">${esc(r.no_hp)}</small></td>
@@ -114,7 +155,9 @@ function renderCrm() {
         <button class="row-btn" style="background:#64748b;" title="Aksi lainnya" onclick="toggleAksiMenu(event,'${esc(r.kode_leads)}')">⋮</button>
         <div class="aksi-menu" id="aksiMenu_${esc(r.kode_leads)}" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.18); z-index:50; min-width:210px; padding:6px; text-align:left;">
           <a href="https://wa.me/${h}" target="_blank" style="display:block; padding:7px 10px; font-size:12.5px; color:#166534; text-decoration:none; border-radius:6px;">📲 Buka WhatsApp</a>
-          <a href="followup.html?cari=${h}" style="display:block; padding:7px 10px; font-size:12.5px; color:#4338ca; text-decoration:none; border-radius:6px;">🤖 AI Analysis & Follow-up</a>
+          <button type="button" onclick="bukaModalEditStageCrm('${h}','${esc(r.no_hp)}','${esc((r.nama || '').replace(/'/g, ''))}')" style="display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px; color:#0f172a; background:none; border:none; cursor:pointer; border-radius:6px;">✏️ Edit Stage / Window</button>
+          <button type="button" onclick="kirimFollowUpManual('${esc(r.no_hp)}','${esc((r.nama || '').replace(/'/g, ''))}')" style="display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px; color:#0f172a; background:none; border:none; cursor:pointer; border-radius:6px;">🔔 Follow-up Manual Sekarang</button>
+          <a href="followup.html?cari=${h}" style="display:block; padding:7px 10px; font-size:12.5px; color:#4338ca; text-decoration:none; border-radius:6px;">🤖 Buka di AI Analysis (detail)</a>
           <button type="button" onclick="kirimUlangCapi('${esc(r.kode_leads)}')" style="display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px; color:#7c3aed; background:none; border:none; cursor:pointer; border-radius:6px;">📡 Kirim Ulang CAPI</button>
           <hr style="margin:4px 0; border:none; border-top:1px solid var(--border);">
           <button type="button" onclick="hapusLead('${esc(r.kode_leads)}')" style="display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px; color:#dc2626; background:none; border:none; cursor:pointer; border-radius:6px;">🗑️ Hapus Lead</button>
