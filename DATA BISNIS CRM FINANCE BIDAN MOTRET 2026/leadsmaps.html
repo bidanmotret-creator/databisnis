@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LeadOS</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f7f7f8; color: #111; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  .sub { color: #666; margin-top: 0; }
+  .row { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+  input { flex: 1; min-width: 180px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  button { padding: 10px 18px; background: #111; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  button.small { padding: 4px 10px; font-size: 12px; border: 1px solid #ccc; background: #fff; color: #111; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+  th, td { padding: 8px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+  thead th { border-bottom: 2px solid #eee; }
+  a { color: #111; }
+  #message { color: #333; }
+  .config-warning { background: #fff3cd; border: 1px solid #ffe69c; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>LeadOS</h1>
+  <p class="sub">Find the right businesses. Understand the opportunity.</p>
+
+  <div id="configWarning" class="config-warning" style="display:none;">
+    Isi <code>APPS_SCRIPT_URL</code> dan <code>APPS_SCRIPT_API_KEY</code> di bagian atas
+    file <code>index.html</code> ini (cari tag <code>&lt;script&gt;</code> di bawah)
+    sebelum dipakai.
+  </div>
+
+  <div class="row">
+    <input id="keyword" placeholder="Keyword, mis. klinik kecantikan" value="klinik kecantikan" />
+    <input id="location" placeholder="Lokasi, mis. Bandar Lampung" value="Bandar Lampung" />
+    <button id="searchBtn">Search</button>
+  </div>
+
+  <p id="message"></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Business</th>
+        <th>Category</th>
+        <th>Rating</th>
+        <th>Reviews</th>
+        <th>Website</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="leadsBody"></tbody>
+  </table>
+</main>
+
+<script>
+  // ===== ISI DUA NILAI INI SEBELUM DIPAKAI =====
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydc9Gno98Z_nFIEoyS3ewwKEDa08KK1WXCQ17ylYWFzZ4NjP4o2UJzPcOSPr_MFebQPQ/exec'; // dari Deploy > Web app
+  const APPS_SCRIPT_API_KEY = 'change-me-to-a-random-secret'; // harus sama dengan Script Property API_KEY
+  // ==============================================
+
+  const els = {
+    keyword: document.getElementById('keyword'),
+    location: document.getElementById('location'),
+    searchBtn: document.getElementById('searchBtn'),
+    message: document.getElementById('message'),
+    leadsBody: document.getElementById('leadsBody'),
+    configWarning: document.getElementById('configWarning'),
+  };
+
+  if (APPS_SCRIPT_URL.includes('XXXXXXXX') || APPS_SCRIPT_API_KEY.includes('change-me')) {
+    els.configWarning.style.display = 'block';
+  }
+
+  // Not setting a Content-Type header keeps this a "simple request" (avoids a
+  // CORS preflight, which Apps Script Web Apps don't handle). Code.gs parses
+  // JSON.parse(e.postData.contents) regardless of the declared content type.
+  async function callScript(action, extra) {
+    const body = Object.assign({ action, api_key: APPS_SCRIPT_API_KEY }, extra || {});
+    const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
+    return res.json();
+  }
+
+  async function listLeads() {
+    const url = `${APPS_SCRIPT_URL}?action=list&api_key=${encodeURIComponent(APPS_SCRIPT_API_KEY)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.ok) renderLeads(data.leads);
+  }
+
+  function renderLeads(leads) {
+    els.leadsBody.innerHTML = '';
+    leads.forEach((l) => {
+      const tr = document.createElement('tr');
+
+      const canEnrich = l.source === 'Google Places' && !l.rating;
+      tr.innerHTML = `
+        <td><a href="${l.maps_url || '#'}" target="_blank" rel="noreferrer">${escapeHtml(l.business_name)}</a></td>
+        <td>${escapeHtml(l.category || '')}</td>
+        <td>${l.rating || '—'}</td>
+        <td>${l.review_count || '—'}</td>
+        <td>${l.website ? 'Ada' : '—'}</td>
+        <td>${escapeHtml(l.status || '')}</td>
+        <td>${canEnrich ? `<button class="small" data-lead-id="${l.lead_id}" data-place-id="${l.place_id}">Enrich</button>` : ''}</td>
+      `;
+      els.leadsBody.appendChild(tr);
+    });
+
+    els.leadsBody.querySelectorAll('button[data-lead-id]').forEach((btn) => {
+      btn.addEventListener('click', () => enrichLead(btn.dataset.leadId, btn.dataset.placeId));
+    });
+  }
+
+  async function enrichLead(leadId, placeId) {
+    const data = await callScript('enrich', { lead_id: leadId, place_id: placeId });
+    if (data.ok) {
+      await listLeads();
+    } else {
+      els.message.textContent = 'Error: ' + data.error;
+    }
+  }
+
+  async function handleSearch() {
+    els.searchBtn.disabled = true;
+    els.searchBtn.textContent = 'Mencari...';
+    els.message.textContent = '';
+    try {
+      const searchData = await callScript('search', {
+        keyword: els.keyword.value,
+        location: els.location.value,
+        limit: 20
+      });
+      if (!searchData.ok) {
+        els.message.textContent = 'Error: ' + searchData.error;
+      } else {
+        const saveData = await callScript('save', { leads: searchData.leads });
+        els.message.textContent = `Ditemukan ${searchData.count} bisnis, ${saveData.saved} baru disimpan.`;
+        await listLeads();
+      }
+    } catch (e) {
+      els.message.textContent = 'Error: ' + e.message;
+    }
+    els.searchBtn.disabled = false;
+    els.searchBtn.textContent = 'Search';
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  els.searchBtn.addEventListener('click', handleSearch);
+  listLeads();
+</script>
+</body>
+</html>
