@@ -131,15 +131,32 @@ function hitungPesanTerkirim_(ss, mulai, sampai) {
   return n;
 }
 
+// Closing = baris Leads yang punya pembayaran tercatat (jml_bayar1 + jml_bayar2 > 0),
+// dihitung pada tanggal transaksi TERAKHIRNYA (tgl_bayar2, fallback tgl_bayar1, fallback
+// tanggal_chat). Definisi ini SENGAJA disamakan persis dengan kumpulkanKandidatBackfill_()
+// di doPostCRM_ (dipakai untuk backfill jurnal) -- BUKAN dari SHEET_JOURNEY_HISTORY, karena
+// updateJourneyStage_ (satu-satunya fungsi yang menulis ke sheet itu) ternyata tidak pernah
+// dipanggil dari action "insert"/"update" saat pembayaran dicatat. Journey History karena itu
+// tidak bisa diandalkan sebagai sumber Closing sampai ada yang memanggilnya di alur pembayaran.
 function hitungClosing_(ss, mulai, sampai) {
-  var sheet = ss.getSheetByName(SHEET_JOURNEY_HISTORY);
+  var sheet = ss.getSheetByName(SHEET_LEADS);
   if (!sheet || sheet.getLastRow() < 2) return 0;
   var data = sheet.getDataRange().getValues();
   var setKode = {};
+
   for (var i = 1; i < data.length; i++) {
-    var tahapBaru = String(data[i][3] || "");
-    if (tahapBaru !== "Purchase") continue;
-    if (_dalamRentang_(data[i][5], mulai, sampai)) setKode[data[i][0]] = true;
+    var jml1 = Number(data[i][17]) || 0; // kolom R = jml_bayar1
+    var jml2 = Number(data[i][19]) || 0; // kolom T = jml_bayar2
+    if (jml1 + jml2 <= 0) continue;
+
+    var kodeLeadsRow = String(data[i][23] || ""); // kolom X = kode_leads
+    if (!kodeLeadsRow) continue;
+
+    var tglRaw = data[i][18] || data[i][16] || data[i][0]; // tgl_bayar2 || tgl_bayar1 || tanggal_chat
+    var tgl = (tglRaw instanceof Date) ? tglRaw : new Date(String(tglRaw).replace(" ", "T"));
+    if (isNaN(tgl.getTime())) continue;
+
+    if (tgl >= mulai && tgl < sampai) setKode[kodeLeadsRow] = true;
   }
   return Object.keys(setKode).length;
 }
@@ -299,27 +316,20 @@ function hitungNomorDuplikat_(ss) {
     }
   }
 
-  // Kumpulkan semua baris per nomor HP
+  // Kumpulkan semua baris per nomor HP (sekalian catat apakah baris itu
+  // punya pembayaran tercatat, dari kolom jml_bayar1/jml_bayar2 -- BUKAN
+  // dari SHEET_JOURNEY_HISTORY, dengan alasan sama seperti di hitungClosing_
+  // di atas: updateJourneyStage_ tidak pernah dipanggil saat pembayaran
+  // dicatat lewat action "insert"/"update", jadi Journey History tidak
+  // bisa diandalkan sebagai penanda "sudah beli".
   var barisByHp = {};
   for (var i = 1; i < data.length; i++) {
     var noHp = normalizeTelepon_(data[i][2]); // kolom C = no HP
     if (!noHp) continue;
+    var jml1Dup = Number(data[i][17]) || 0;
+    var jml2Dup = Number(data[i][19]) || 0;
     if (!barisByHp[noHp]) barisByHp[noHp] = [];
-    barisByHp[noHp].push({ rowIndex: i + 1, nama: data[i][1] || "", tahap: data[i][39] || "" });
-  }
-
-  // Nomor yang PERNAH closing (Purchase), dicek dari Journey History supaya
-  // tidak bergantung sepenuhnya pada kolom tahap_journey di Leads (yang
-  // hanya simpan status TERAKHIR per baris).
-  var pernahPurchase = {};
-  var sheetJH = ss.getSheetByName(SHEET_JOURNEY_HISTORY);
-  if (sheetJH && sheetJH.getLastRow() > 1) {
-    var dataJH = sheetJH.getDataRange().getValues();
-    for (var j = 1; j < dataJH.length; j++) {
-      if (String(dataJH[j][3] || "") === "Purchase") {
-        pernahPurchase[normalizeTelepon_(dataJH[j][1])] = true;
-      }
-    }
+    barisByHp[noHp].push({ rowIndex: i + 1, nama: data[i][1] || "", sudahBayar: (jml1Dup + jml2Dup) > 0 });
   }
 
   var duplikatSudahBeli = [];
@@ -332,8 +342,7 @@ function hitungNomorDuplikat_(ss) {
     if (baris.length <= 1) return; // bukan duplikat
     if (dikecualikan[noHp]) return; // sudah ditandai CS sebagai repeat order yang sah
 
-    var sudahBeli = pernahPurchase[noHp] ||
-      baris.some(function (b) { return String(b.tahap) === "Purchase" || String(b.tahap) === "Completed"; });
+    var sudahBeli = baris.some(function (b) { return b.sudahBayar; });
 
     var entry = {
       no_hp: noHp,
