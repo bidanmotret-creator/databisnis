@@ -139,6 +139,7 @@ textarea{width:100%;min-height:110px;resize:vertical}
     <button class="btn" id="tabbtn-aichat" onclick="gantiTabUtama('aichat')">🧠 AI Chat Analysis</button>
     <button class="btn" id="tabbtn-stage" onclick="gantiTabUtama('stage')">🔄 Monitor Stage &amp; Drip</button>
     <button class="btn" id="tabbtn-template" onclick="gantiTabUtama('template')">⚙️ Pengaturan Template</button>
+    <button class="btn" id="tabbtn-edukasi" onclick="gantiTabUtama('edukasi')">🎓 Edukasi Awal</button>
     <button class="btn" id="tabbtn-error" onclick="gantiTabUtama('error')">❗ Log Error AI</button>
     <button class="btn" id="tabbtn-fewshot" onclick="gantiTabUtama('fewshot')">🎯 Few-Shot Manager</button>
   </div>
@@ -215,6 +216,23 @@ textarea{width:100%;min-height:110px;resize:vertical}
       </span>
     </div>
     <div id="fuPengaturanContainer"></div>
+  </div>
+
+  <!-- ============ TAB: EDUKASI AWAL (24 JAM PERTAMA) ============ -->
+  <div id="tab-edukasi" style="display:none">
+    <p style="color:#64748b; font-size:12.5px; margin-top:0;">
+      Rangkaian materi edukasi (teks/gambar/link video) yang dikirim OTOMATIS bertahap
+      dalam jam-jam pertama sejak customer PERTAMA KALI chat — terpisah dari alur qualifying/PL.
+      Berlaku untuk SEMUA lead baru (belum bisa dibedakan per produk).
+    </p>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <b>Materi Edukasi</b>
+      <span>
+        <button type="button" class="btn-co-secondary" onclick="tambahBarisEdukasi()">➕ Tambah Materi</button>
+        <button type="button" class="btn-co-primary" onclick="simpanEdukasiSequence()">💾 Simpan Semua Materi</button>
+      </span>
+    </div>
+    <div id="fuEdukasiContainer"></div>
   </div>
 
   <!-- ============ TAB: LOG ERROR AI ============ -->
@@ -325,7 +343,7 @@ function formatTanggalManusia(waktu) {
 /* =========================================================================
    NAVIGASI TAB UTAMA
    ========================================================================= */
-const TAB_IDS_=['monitor','sumber','aichat','stage','template','error','fewshot'];
+const TAB_IDS_=['monitor','sumber','aichat','stage','template','edukasi','error','fewshot'];
 function gantiTabUtama(nama){
   TAB_IDS_.forEach(t=>{
     $('tab-'+t).style.display = t===nama ? 'block' : 'none';
@@ -762,6 +780,129 @@ function hapusBarisProduk(idx) {
 }
 
 // =========================================================================
+// EDUKASI OTOMATIS PER PRODUK (teks/gambar/link video, terjadwal per jam
+// sejak chat pertama). dataEdukasiSequence: flat array item { id, minat,
+// jam_setelah_chat, jenis, teks_pesan, url_media, aktif }, dikelompokkan
+// jadi kartu per produk untuk ditampilkan (mirip pola Pengaturan Template).
+// =========================================================================
+
+const JENIS_EDUKASI_LABEL_ = { teks: '💬 Teks', gambar: '🖼️ Gambar', video_link: '🎥 Link Video' };
+
+function _idBaru_() { return 'mat_' + Date.now() + '_' + Math.floor(Math.random() * 1000); }
+
+function renderEdukasiSequence() {
+  const container = document.getElementById('fuEdukasiContainer');
+  if (!container) return;
+
+  if (!dataEdukasiSequence) dataEdukasiSequence = [];
+
+  // Daftar produk = sama seperti dropdown Minat di Pengaturan Template,
+  // supaya nama produknya konsisten dengan sistem lain (menu WA, PL, dst).
+  const daftarMinat = ['__GLOBAL__', ...new Set((dataPengaturanFollowUpProduk || [])
+    .map(p => p.minat).filter(m => m && m !== '__GLOBAL__'))];
+
+  // Pastikan __GLOBAL__ selalu punya kartu (meski masih kosong)
+  daftarMinat.forEach(minat => {
+    if (!dataEdukasiSequence.some(it => it.minat === minat)) {
+      // kartu kosong direpresentasikan sbg belum ada baris -- tidak perlu push placeholder
+    }
+  });
+
+  container.innerHTML = daftarMinat.map(minat => {
+    const isGlobal = minat === '__GLOBAL__';
+    const judul = isGlobal ? '🌐 __GLOBAL__ (dipakai kalau produk belum punya rangkaian sendiri)' : ('📦 ' + minat);
+    const materiProduk = dataEdukasiSequence
+      .map((item, idxAsli) => ({ item, idxAsli }))
+      .filter(x => (x.item.minat || '__GLOBAL__') === minat)
+      .sort((a, b) => (Number(a.item.jam_setelah_chat) || 0) - (Number(b.item.jam_setelah_chat) || 0));
+
+    return `
+      <div class="fu-prod-card">
+        <h4>
+          <span>${judul}</span>
+          <button type="button" class="btn-fu-hapus" style="background:#eef2ff;color:#4338ca;border-color:#c7d2fe" onclick="tambahMateriEdukasi('${minat}')">➕ Tambah Materi</button>
+        </h4>
+        ${materiProduk.length === 0 ? '<p style="color:#94a3b8;font-size:12.5px;margin:6px 0 0">Belum ada materi untuk produk ini.</p>' : ''}
+        ${materiProduk.map(({ item, idxAsli }) => `
+          <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;background:#fafafa">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px">
+              <div>
+                <label style="font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:3px">Kirim setelah (jam)</label>
+                <input type="number" min="0" step="0.5" style="width:90px" value="${item.jam_setelah_chat}"
+                  onchange="updateFieldEdukasi(${idxAsli}, 'jam_setelah_chat', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:3px">Jenis</label>
+                <select onchange="updateFieldEdukasi(${idxAsli}, 'jenis', this.value)">
+                  ${Object.keys(JENIS_EDUKASI_LABEL_).map(j => `<option value="${j}" ${item.jenis === j ? 'selected' : ''}>${JENIS_EDUKASI_LABEL_[j]}</option>`).join('')}
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px">
+                <input type="checkbox" id="ed_aktif_${idxAsli}" ${item.aktif ? 'checked' : ''} onchange="updateFieldEdukasi(${idxAsli}, 'aktif', this.checked)">
+                <label for="ed_aktif_${idxAsli}" style="font-size:12px;font-weight:700;color:#166534">Aktif</label>
+              </div>
+              <button type="button" class="btn-fu-hapus" style="margin-left:auto" onclick="hapusMateriEdukasi(${idxAsli})">🗑️</button>
+            </div>
+            ${item.jenis !== 'teks' ? `
+              <label style="font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:3px">${item.jenis === 'gambar' ? 'URL Gambar' : 'URL Video (YouTube/link lain)'}</label>
+              <input type="text" style="width:100%;margin-bottom:8px" value="${item.url_media || ''}"
+                placeholder="${item.jenis === 'gambar' ? 'https://drive.google.com/uc?export=download&id=...' : 'https://youtu.be/...'}"
+                onchange="updateFieldEdukasi(${idxAsli}, 'url_media', this.value)">
+            ` : ''}
+            <label style="font-size:11px;font-weight:700;color:#475569;display:block;margin-bottom:3px">${item.jenis === 'gambar' ? 'Caption gambar' : (item.jenis === 'video_link' ? 'Teks pengantar (sebelum link)' : 'Isi pesan teks')}</label>
+            <textarea rows="2" style="width:100%;box-sizing:border-box" onchange="updateFieldEdukasi(${idxAsli}, 'teks_pesan', this.value)">${item.teks_pesan || ''}</textarea>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function updateFieldEdukasi(idx, field, value) {
+  if (!dataEdukasiSequence[idx]) return;
+  dataEdukasiSequence[idx][field] = value;
+  if (field === 'jenis' || field === 'jam_setelah_chat') renderEdukasiSequence();
+}
+
+function tambahMateriEdukasi(minat) {
+  dataEdukasiSequence.push({
+    id: _idBaru_(), minat: minat, jam_setelah_chat: 1, jenis: 'teks',
+    teks_pesan: '', url_media: '', aktif: true
+  });
+  renderEdukasiSequence();
+}
+
+function hapusMateriEdukasi(idx) {
+  if (!confirm('Hapus materi ini? Perubahan baru tersimpan permanen setelah klik "Simpan Semua Materi".')) return;
+  dataEdukasiSequence.splice(idx, 1);
+  renderEdukasiSequence();
+}
+
+function tambahBarisEdukasi() {
+  const namaProduk = prompt('Nama produk baru (persis sama seperti di dropdown Minat), atau kosongkan untuk batal:');
+  if (!namaProduk || !namaProduk.trim()) return;
+  tambahMateriEdukasi(namaProduk.trim());
+}
+
+async function simpanEdukasiSequence() {
+  if (!confirm('Simpan semua perubahan rangkaian edukasi sekarang?')) return;
+  const params = new URLSearchParams();
+  params.append('action', 'simpanPengaturanEdukasi');
+  params.append('dataJson', JSON.stringify(dataEdukasiSequence));
+  try {
+    const result = await fetchJsonAman(scriptURL, { method: 'POST', body: params });
+    if (result.result === 'success') {
+      alert('✅ Rangkaian edukasi berhasil disimpan.');
+      await tarikDataFollowUp();
+    } else {
+      alert('❌ Gagal: ' + (result.message || 'unknown'));
+    }
+  } catch (err) {
+    alert('❌ Gagal koneksi: ' + err);
+  }
+}
+
+// =========================================================================
 // TOGGLE TAMPILAN: TABEL vs KELOMPOK PER STAGE
 // =========================================================================
 let tampilanMonitorSaatIni = 'tabel';
@@ -1147,7 +1288,7 @@ async function tambahFewShotManual() {
    ========================================================================= */
 
 let dataAiAnalysis = [], dataFollowUpState = [], dataDripTracking = [], dataNamaKodeByHp = {};
-let dataPengaturanFollowUp = { aktif: true }, dataPengaturanFollowUpProduk = [], dataKolomFupProduk = [];
+let dataPengaturanFollowUp = { aktif: true }, dataPengaturanFollowUpProduk = [], dataKolomFupProduk = [], dataEdukasiSequence = [];
 let dataAiErrorLog = [], dataFewShotList = [], dataAnalisisEvaluasi = {}, dataPengaturanSistem = {};
 
 async function tarikDataFollowUp() {
@@ -1163,6 +1304,7 @@ async function tarikDataFollowUp() {
     dataNamaKodeByHp = data.namaKodeByHp || {};
     dataPengaturanFollowUp = data.pengaturanFollowUp || { aktif: true };
     dataPengaturanFollowUpProduk = data.pengaturanFollowUpPerProduk || [];
+    dataEdukasiSequence = data.edukasiSequence || [];
     dataKolomFupProduk = data.kolomFupProduk || [];
     dataAiErrorLog = data.aiErrorLog || [];
     dataFewShotList = data.fewShotList || [];
@@ -1181,6 +1323,7 @@ async function tarikDataFollowUp() {
     jalankanAman_(typeof renderFollowUpTable !== 'undefined' ? renderFollowUpTable : null, 'renderFollowUpTable');
     jalankanAman_(typeof renderPengaturanAktif !== 'undefined' ? renderPengaturanAktif : null, 'renderPengaturanAktif');
     jalankanAman_(typeof renderPengaturanProduk !== 'undefined' ? renderPengaturanProduk : null, 'renderPengaturanProduk');
+    jalankanAman_(typeof renderEdukasiSequence !== 'undefined' ? renderEdukasiSequence : null, 'renderEdukasiSequence');
     jalankanAman_(typeof isiDropdownJenisPromptError_ !== 'undefined' ? isiDropdownJenisPromptError_ : null, 'isiDropdownJenisPromptError_');
     jalankanAman_(typeof renderErrorLogTable !== 'undefined' ? renderErrorLogTable : null, 'renderErrorLogTable');
     jalankanAman_(typeof isiDropdownJenisPromptFewShot_ !== 'undefined' ? isiDropdownJenisPromptFewShot_ : null, 'isiDropdownJenisPromptFewShot_');
