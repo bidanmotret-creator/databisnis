@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kamus Istilah — Pengaturan Bahasa Sistem</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .kamus-group { background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; }
+  .kamus-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:center; padding:8px 0; border-bottom:1px solid #f1f5f9; }
+  .kamus-row label { font-size:12.5px; color:#475569; }
+  .kamus-row .default-hint { font-size:10.5px; color:#94a3b8; }
+  .kamus-row input { width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-size:13px; }
+  .kamus-row input.berubah { border-color:#4f46e5; background:#eef2ff; }
+  .btn-kamus { border:none; border-radius:8px; padding:9px 16px; font-weight:700; cursor:pointer; font-size:12.5px; }
+  .btn-kamus-primary { background:#4f46e5; color:#fff; }
+  .btn-kamus-secondary { background:#f1f5f9; color:#334155; }
+</style>
+</head>
+<body>
+
+<div id="bgRefreshBadge" style="position:fixed; top:14px; right:14px; z-index:9999; background:#0f172a; color:#fff; padding:6px 14px; border-radius:20px; font-size:11.5px; font-weight:700; display:none;">🔄 Memuat…</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🗂️</div>
+      <div class="brand-text"><strong>Kamus Istilah</strong><span data-kamus="nama_bisnis">SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> <span data-kamus="menu_crm">CRM Leads</span></a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> <span data-kamus="menu_followup">AI Chat & Follow-up</span></a>
+        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> <span data-kamus="menu_pengaturan">Pengaturan</span></a>
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> <span data-kamus="menu_keuangan">Laporan Keuangan</span></a>
+        <a class="nav-item" href="eos.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🎯</span> <span data-kamus="menu_eos">EOS Dashboard</span></a>
+        <a class="nav-item active" href="kamus.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🗂️</span> Kamus Istilah</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Ganti bahasa sistem tanpa sentuh kode</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">🗂️ Kamus Istilah — Sesuaikan Bahasa Sistem</div>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="btn-kamus btn-kamus-secondary" onclick="resetSemuaKeDefault()">↩️ Kembalikan Semua ke Default</button>
+        <button class="btn-kamus btn-kamus-primary" onclick="simpanKamus()">💾 Simpan Kamus</button>
+      </div>
+    </div>
+    <div class="content-inner">
+
+      <div class="kamus-group">
+        <p style="color:#64748b; font-size:12.5px; margin-top:0;">
+          Ganti kata-kata di sini kalau istilah bawaan sistem (dibuat untuk jasa fotografi) terasa kurang cocok
+          untuk industri kamu. Kolom yang <span style="color:#4f46e5; font-weight:700;">disorot ungu</span> berarti
+          sudah diubah dari bawaan. Kosongkan kolom untuk kembali ke kata bawaan.
+        </p>
+      </div>
+
+      <div id="kamusGroupsContainer"></div>
+
+    </div>
+  </main>
+</div>
+
+<script>const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';</script>
+<script src="kamus.js"></script>
+<script>
+  async function fetchJsonAman(url, options) {
+    let res;
+    try { res = await fetch(url, options); }
+    catch (err) { throw new Error('Gagal terhubung ke server: ' + err.message); }
+    let text;
+    try { text = await res.text(); }
+    catch (err) { throw new Error('Gagal membaca respons server.'); }
+    let json;
+    try { json = JSON.parse(text); }
+    catch (err) { throw new Error('Server tidak mengembalikan JSON valid. Cuplikan: ' + text.substring(0, 200)); }
+    if (json && json.result === 'error') throw new Error(json.message || 'Terjadi error di server.');
+    return json;
+  }
+
+  const KELOMPOK_KAMUS = [
+    { judul: '🏢 Identitas Bisnis', keys: ['nama_bisnis', 'nama_sistem'] },
+    { judul: '👤 Entitas Inti', keys: ['istilah_lead', 'istilah_lead_jamak', 'istilah_customer', 'istilah_produk', 'istilah_produk_jamak', 'istilah_minat'] },
+    { judul: '📶 Tahapan Alur (Stage 0-4)', keys: ['stage_0_label', 'stage_1_label', 'stage_2_label', 'stage_3_label', 'stage_4_label'] },
+    { judul: '💬 Proses Follow-up', keys: ['istilah_follow_up', 'istilah_qualifying', 'istilah_menu_layanan', 'istilah_pl', 'istilah_pl_singkatan', 'istilah_closing', 'istilah_repeat_customer'] },
+    { judul: '🧑‍💼 Tim', keys: ['istilah_cs', 'istilah_cs_lengkap', 'istilah_owner'] },
+    { judul: '🎯 EOS Dashboard', keys: ['istilah_dashboard_eos', 'istilah_scorecard', 'istilah_rocks', 'istilah_l10'] },
+    { judul: '🧭 Menu Navigasi', keys: ['menu_crm', 'menu_followup', 'menu_pengaturan', 'menu_keuangan', 'menu_eos'] }
+  ];
+
+  let dataDefault = {}, dataKamusAktif = {};
+
+  async function muatHalamanKamus() {
+    const badge = document.getElementById('bgRefreshBadge');
+    if (badge) badge.style.display = 'inline-block';
+    try {
+      const r = await fetchJsonAman(scriptURL + '?action=getKamusIstilah');
+      dataDefault = r.default || {};
+      dataKamusAktif = r.kamus || {};
+      renderKamusGroups();
+    } catch (err) {
+      alert('❌ Gagal memuat Kamus Istilah: ' + err.message);
+    } finally {
+      if (badge) badge.style.display = 'none';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', muatHalamanKamus);
+
+  function renderKamusGroups() {
+    const container = document.getElementById('kamusGroupsContainer');
+    container.innerHTML = KELOMPOK_KAMUS.map(grup => `
+      <div class="kamus-group">
+        <h3 style="margin-top:0;">${grup.judul}</h3>
+        ${grup.keys.map(key => {
+          const nilaiSekarang = dataKamusAktif[key] || '';
+          const nilaiDefault = dataDefault[key] || '';
+          const sudahBerubah = nilaiSekarang && nilaiSekarang !== nilaiDefault;
+          return `
+            <div class="kamus-row">
+              <div>
+                <label>${key}</label><br>
+                <span class="default-hint">Bawaan: "${nilaiDefault}"</span>
+              </div>
+              <input type="text" id="kamus_${key}" value="${sudahBerubah ? nilaiSekarang : ''}"
+                placeholder="${nilaiDefault}" class="${sudahBerubah ? 'berubah' : ''}"
+                oninput="this.classList.toggle('berubah', this.value.trim() !== '')">
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `).join('');
+  }
+
+  async function simpanKamus() {
+    const override = {};
+    KELOMPOK_KAMUS.forEach(grup => {
+      grup.keys.forEach(key => {
+        const val = document.getElementById('kamus_' + key).value.trim();
+        if (val) override[key] = val;
+      });
+    });
+
+    const p = new URLSearchParams();
+    p.append('action', 'simpanKamusIstilah');
+    p.append('dataJson', JSON.stringify(override));
+    try {
+      const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      if (r.result === 'success') {
+        alert('✅ Kamus istilah tersimpan (' + r.tersimpan + ' kata diubah dari bawaan). Refresh halaman lain untuk melihat perubahan.');
+        await muatHalamanKamus();
+      } else {
+        alert('❌ Gagal: ' + (r.message || 'unknown'));
+      }
+    } catch (err) {
+      alert('❌ Gagal koneksi: ' + err.message);
+    }
+  }
+
+  function resetSemuaKeDefault() {
+    if (!confirm('Kembalikan SEMUA istilah ke bahasa bawaan sistem? Ini akan menghapus semua kustomisasi yang sudah disimpan.')) return;
+    document.querySelectorAll('.kamus-row input').forEach(inp => { inp.value = ''; inp.classList.remove('berubah'); });
+  }
+</script>
+</body>
+</html>

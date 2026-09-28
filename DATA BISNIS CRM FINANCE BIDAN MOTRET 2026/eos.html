@@ -6,9 +6,14 @@
 <title>EOS Dashboard — SentuhanMomen3D</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-  .eos-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; }
+  .eos-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; position:relative; }
+  .eos-card-tools { position:absolute; top:14px; right:14px; display:flex; gap:6px; }
+  .btn-eos-icon { border:1px solid var(--border); background:#fff; border-radius:6px; padding:5px 9px; font-size:12px; cursor:pointer; }
   table.eos-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.eos-table.ringkas th, table.eos-table.ringkas td { padding:5px 8px; font-size:12px; }
+  table.eos-table.ringkas .kolom-target { display:none; }
   table.eos-table th { text-align:left; padding:9px 10px; background:#f8fafc; border-bottom:2px solid var(--border); font-size:11.5px; text-transform:uppercase; color:#475569; }
   table.eos-table td { padding:10px; border-bottom:1px solid #f1f5f9; }
   .st-dot { display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:6px; vertical-align:middle; }
@@ -39,15 +44,15 @@
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-icon">🎯</div>
-      <div class="brand-text"><strong>EOS Dashboard</strong><span>SentuhanMomen3D</span></div>
+      <div class="brand-text"><strong data-kamus="istilah_dashboard_eos">EOS Dashboard</strong><span data-kamus="nama_bisnis">SentuhanMomen3D</span></div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-group">
-        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> CRM Leads</a>
-        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> AI Chat & Follow-up</a>
-        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> Pengaturan</a>
-        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
-        <a class="nav-item active" href="eos.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🎯</span> EOS Dashboard</a>
+        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> <span data-kamus="menu_crm">CRM Leads</span></a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> <span data-kamus="menu_followup">AI Chat & Follow-up</span></a>
+        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> <span data-kamus="menu_pengaturan">Pengaturan</span></a>
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> <span data-kamus="menu_keuangan">Laporan Keuangan</span></a>
+        <a class="nav-item active" href="eos.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🎯</span> <span data-kamus="istilah_dashboard_eos">EOS Dashboard</span></a>
       </div>
     </nav>
     <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
@@ -56,7 +61,7 @@
   <main class="main-content">
     <div class="topbar">
       <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
-      <div class="topbar-title">🎯 EOS — Level 10 Meeting Prep</div>
+      <div class="topbar-title">🎯 <span data-kamus="istilah_dashboard_eos">EOS Dashboard</span> — <span data-kamus="istilah_l10">Level 10 Meeting</span> Prep</div>
       <div style="margin-left:auto; display:flex; gap:8px;">
         <button id="btnRefreshEos" class="btn-eos btn-eos-secondary" onclick="muatEOSDashboard()">🔄 Refresh</button>
         <button id="btnPrintEos" class="btn-eos btn-eos-primary" onclick="window.print()">🖨️ Print / Simpan PDF</button>
@@ -65,11 +70,15 @@
     <div class="content-inner">
 
       <!-- ===================== WEEKLY SCORECARD ===================== -->
-      <div class="eos-card">
-        <h2 style="margin-top:0;">📊 Weekly Scorecard</h2>
+      <div class="eos-card" id="cardScorecard">
+        <div class="eos-card-tools">
+          <button class="btn-eos-icon" onclick="toggleRingkasScorecard()" id="btnToggleRingkas">📋 Ringkas</button>
+          <button class="btn-eos-icon" onclick="exportKartuSebagaiGambar('cardScorecard', 'weekly-scorecard')">📷 Export</button>
+        </div>
+        <h2 style="margin-top:0;">📊 <span data-kamus="istilah_scorecard">Weekly Scorecard</span></h2>
         <p id="eosPeriode" style="color:#64748b; font-size:12.5px; margin-top:-6px;"></p>
-        <table class="eos-table">
-          <thead><tr><th>Metrik</th><th>Target</th><th>Aktual</th><th>Status</th></tr></thead>
+        <table class="eos-table" id="tabelScorecard">
+          <thead><tr><th>Metrik</th><th class="kolom-target">Target</th><th>Aktual</th><th>Status</th></tr></thead>
           <tbody id="eosScorecardBody"></tbody>
         </table>
         <details style="margin-top:14px;">
@@ -80,16 +89,22 @@
       </div>
 
       <!-- ===================== TREN KUARTALAN ===================== -->
-      <div class="eos-card">
+      <div class="eos-card" id="cardTren">
+        <div class="eos-card-tools">
+          <button class="btn-eos-icon" onclick="exportKartuSebagaiGambar('cardTren', 'tren-konversi-13-minggu')">📷 Export</button>
+        </div>
         <h2 style="margin-top:0;">📈 Tren Konversi — 13 Minggu Terakhir (Kuartal)</h2>
         <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">Leads baru vs closing per minggu, dan tingkat konversinya. Dipakai untuk Quarterly Pulsing.</p>
         <canvas id="chartTrenEos" height="90"></canvas>
       </div>
 
       <!-- ===================== ROCKS KUARTALAN ===================== -->
-      <div class="eos-card">
+      <div class="eos-card" id="cardRocks">
+        <div class="eos-card-tools">
+          <button class="btn-eos-icon" onclick="exportKartuSebagaiGambar('cardRocks', 'rocks-kuartal')">📷 Export</button>
+        </div>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2 style="margin-top:0;">🪨 Rocks Kuartal Ini</h2>
+          <h2 style="margin-top:0;">🪨 <span data-kamus="istilah_rocks">Rocks Kuartal Ini</span></h2>
           <span>
             <button class="btn-eos btn-eos-secondary" onclick="tambahRock()">➕ Tambah Rock</button>
             <button class="btn-eos btn-eos-primary" onclick="simpanRocks()">💾 Simpan Semua Rocks</button>
@@ -100,7 +115,10 @@
       </div>
 
       <!-- ===================== KUALITAS DATA: NOMOR DUPLIKAT ===================== -->
-      <div class="eos-card">
+      <div class="eos-card" id="cardKualitasData">
+        <div class="eos-card-tools">
+          <button class="btn-eos-icon" onclick="exportKartuSebagaiGambar('cardKualitasData', 'kualitas-data-duplikat')">📷 Export</button>
+        </div>
         <h2 style="margin-top:0;">🔎 Kualitas Data — Nomor Duplikat</h2>
         <p style="color:#64748b; font-size:12.5px; margin-top:-6px;">
           Nomor HP yang muncul lebih dari 1 baris di DB_Leads, dipisah: yang SUDAH pernah closing
@@ -125,6 +143,9 @@
 
 <script>
   const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+</script>
+<script src="kamus.js"></script>
+<script>
 
   async function fetchJsonAman(url, options) {
     let res;
@@ -142,7 +163,7 @@
 
   let dataEOS = null;
   let chartTren = null;
-  const LABEL_METRIK_ = {
+  let LABEL_METRIK_ = {
     leads_baru: 'Leads Baru',
     leads_masuk_followup: 'Leads Masuk Follow-Up',
     pl_terkirim: 'PL Terkirim',
@@ -152,7 +173,22 @@
     pesan_terkirim: 'Total Pesan WA Terkirim'
   };
 
+  function bangunLabelMetrikDariKamus_() {
+    const K = window.KAMUS || {};
+    LABEL_METRIK_ = {
+      leads_baru: `${K.istilah_lead_jamak || 'Leads'} Baru`,
+      leads_masuk_followup: `${K.istilah_lead_jamak || 'Leads'} Masuk ${K.istilah_follow_up || 'Follow-Up'}`,
+      pl_terkirim: `${K.istilah_pl_singkatan || 'PL'} Terkirim`,
+      closing: `${K.istilah_closing || 'Closing'} (Purchase)`,
+      tingkat_konversi_90hr: 'Tingkat Konversi (rolling 90 hari, %)',
+      ai_error_rate: 'AI Error Rate (%, makin kecil makin baik)',
+      pesan_terkirim: 'Total Pesan WA Terkirim'
+    };
+  }
+
   async function muatEOSDashboard() {
+    await window.kamusSiap;
+    bangunLabelMetrikDariKamus_();
     const badge = document.getElementById('bgRefreshBadge');
     if (badge) badge.style.display = 'inline-block';
     try {
@@ -170,13 +206,40 @@
   }
   document.addEventListener('DOMContentLoaded', muatEOSDashboard);
 
+  function toggleRingkasScorecard() {
+    const tabel = document.getElementById('tabelScorecard');
+    const btn = document.getElementById('btnToggleRingkas');
+    const jadiRingkas = !tabel.classList.contains('ringkas');
+    tabel.classList.toggle('ringkas', jadiRingkas);
+    btn.textContent = jadiRingkas ? '📋 Detail' : '📋 Ringkas';
+  }
+
+  // Export 1 kartu jadi file gambar PNG -- praktis untuk share cepat ke
+  // WA grup klien tanpa perlu screenshot manual/print seluruh halaman.
+  async function exportKartuSebagaiGambar(idKartu, namaFile) {
+    const elemen = document.getElementById(idKartu);
+    const tools = elemen.querySelector('.eos-card-tools');
+    if (tools) tools.style.visibility = 'hidden'; // sembunyikan tombol saat capture
+    try {
+      const canvas = await html2canvas(elemen, { backgroundColor: '#ffffff', scale: 2 });
+      const link = document.createElement('a');
+      link.download = namaFile + '-' + new Date().toISOString().slice(0, 10) + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      alert('❌ Gagal export gambar: ' + err.message);
+    } finally {
+      if (tools) tools.style.visibility = 'visible';
+    }
+  }
+
   function renderScorecard() {
     const rc = dataEOS.ringkasanMingguan;
     document.getElementById('eosPeriode').textContent = 'Periode: ' + rc.periode;
     document.getElementById('eosScorecardBody').innerHTML = rc.scorecard.map(row => `
       <tr>
         <td>${row.label}</td>
-        <td>${row.target}${row.satuan || ''}</td>
+        <td class="kolom-target">${row.target}${row.satuan || ''}</td>
         <td><b>${row.nilai}${row.satuan || ''}</b></td>
         <td><span class="st-dot st-${row.status}"></span>${row.status === 'hijau' ? 'Tercapai' : 'Belum'}</td>
       </tr>

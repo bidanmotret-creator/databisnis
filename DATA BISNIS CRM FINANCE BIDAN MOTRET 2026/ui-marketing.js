@@ -138,6 +138,22 @@ const TARGET_DEFAULT_FALLBACK = { closingMin: 5, omzetMin: 10000000, roasMin: 2,
 
 const NAMA_BULAN_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
+// Wrapper aman: pakai fungsi dari tenant-config.js (project marketing
+// standalone) kalau sudah dimuat, kalau belum fallback ke pola lama
+// supaya file ini tetap jalan sendiri tanpa tenant-config.js.
+function isClosingRow_(row) {
+    if (typeof isClosingRow === 'function' && typeof TENANT_CONFIG !== 'undefined') {
+        return isClosingRow(row);
+    }
+    return !!(row && row.status && (row.status.includes('DP') || row.status.includes('Lunas')));
+}
+function ambilThreshold_(key, fallbackVal) {
+    if (typeof ambilThreshold === 'function' && typeof TENANT_CONFIG !== 'undefined') {
+        return ambilThreshold(key, fallbackVal);
+    }
+    return fallbackVal;
+}
+
 function formatMinggu(tgl) {
     if (!tgl) return '';
     let s = formati(tgl);
@@ -162,7 +178,8 @@ function labelMinggu(seninStr) {
 }
 
 function ambilTargetAktif(selectedCampaigns) {
-    let global = (dataTargetMingguanMarketing && dataTargetMingguanMarketing.global) || TARGET_DEFAULT_FALLBACK;
+    let fallbackDefault = (typeof TENANT_CONFIG !== 'undefined' && TENANT_CONFIG.targetMingguanDefault) ? TENANT_CONFIG.targetMingguanDefault : TARGET_DEFAULT_FALLBACK;
+    let global = (dataTargetMingguanMarketing && dataTargetMingguanMarketing.global) || fallbackDefault;
 
     if (selectedCampaigns && selectedCampaigns.length === 1) {
         let namaProduk = selectedCampaigns[0];
@@ -256,7 +273,7 @@ function renderMarketingTab() {
         mktDataSummary[kS].leadsCRM.add(wa);
         tot.leadsCRM.add(wa);
 
-        if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) {
+        if (isClosingRow_(r)) {
             mktDataDaily[kD].dp++;
             mktDataSummary[kS].dp++;
             tot.dp++;
@@ -277,6 +294,9 @@ function renderMarketingTab() {
     });
 
     let fAds = dataMarketing;
+    if (typeof normalisasiMinat === 'function') {
+        fAds = fAds.map(m => ({ ...m, campaign: normalisasiMinat(m.campaign) }));
+    }
     if (selectedCampaigns.length > 0) fAds = fAds.filter(m => selectedCampaigns.includes(m.campaign));
     if (selectedNamaMeta.length > 0) fAds = fAds.filter(m => selectedNamaMeta.includes(m.nama_campaign_meta));
     if (fStart) fAds = fAds.filter(m => formati(m.tanggal) >= fStart);
@@ -459,24 +479,35 @@ function renderMarketingTab() {
     let fnlClosing = document.getElementById('fnlClosingBar');
     let fnlRevenue = document.getElementById('fnlRevenueBar');
 
+    function labelFunnel_(tahap, fallbackIcon) {
+        if (typeof ambilLabel === 'function') {
+            return { icon: ambilLabel(`funnel.${tahap}.icon`, fallbackIcon) };
+        }
+        return { icon: fallbackIcon };
+    }
+    let lblAware = labelFunnel_('awareness', '👁️');
+    let lblLeads = labelFunnel_('leads', '💬');
+    let lblClosing = labelFunnel_('closing', '🤝');
+    let lblRevenue = labelFunnel_('revenue', '💰');
+
     if (fnlAware) {
         fnlAware.style.width = wAware + '%';
         fnlAware.innerHTML = tot.adaDataAds
-            ? `<span style="font-size:15px; font-weight:900;">👁️ ${rp(tot.reach)} Orang Terjangkau</span><span style="font-size:11px; opacity:0.9;">${rp(tot.impressions)} Impresi · CTR ${globalCTRMeta}%</span>`
-            : `<span style="font-size:14px; font-weight:900;">👁️ Belum ada data Reach/Impresi</span><span style="font-size:11px; opacity:0.9;">Sinkronkan Data_Ads dari Meta dulu</span>`;
+            ? `<span style="font-size:15px; font-weight:900;">${lblAware.icon} ${rp(tot.reach)} Orang Terjangkau</span><span style="font-size:11px; opacity:0.9;">${rp(tot.impressions)} Impresi · CTR ${globalCTRMeta}%</span>`
+            : `<span style="font-size:14px; font-weight:900;">${lblAware.icon} Belum ada data Reach/Impresi</span><span style="font-size:11px; opacity:0.9;">Sinkronkan Data_Ads dari Meta dulu</span>`;
     }
     if (fnlLeads) {
         fnlLeads.style.width = wLeads + '%';
         let labelMeta = tot.adaDataAds ? ` (Meta: ${rp(tot.leadsMeta)})` : '';
-        fnlLeads.innerHTML = `<span style="font-size:15px; font-weight:900;">💬 ${totalLeadsCRM} Leads Nyata${labelMeta}</span><span style="font-size:11px; opacity:0.9;">CPL: Rp ${rp(globalCPL)}</span>`;
+        fnlLeads.innerHTML = `<span style="font-size:15px; font-weight:900;">${lblLeads.icon} ${totalLeadsCRM} Leads Nyata${labelMeta}</span><span style="font-size:11px; opacity:0.9;">CPL: Rp ${rp(globalCPL)}</span>`;
     }
     if (fnlClosing) {
         fnlClosing.style.width = wClosing + '%';
-        fnlClosing.innerHTML = `<span style="font-size:15px; font-weight:900;">🤝 ${tot.dp} Closing (${globalCR}%)</span><span style="font-size:11px; opacity:0.9;">CAC: Rp ${rp(globalCAC)}</span>`;
+        fnlClosing.innerHTML = `<span style="font-size:15px; font-weight:900;">${lblClosing.icon} ${tot.dp} Closing (${globalCR}%)</span><span style="font-size:11px; opacity:0.9;">CAC: Rp ${rp(globalCAC)}</span>`;
     }
     if (fnlRevenue) {
         fnlRevenue.style.width = wRevenue + '%';
-        fnlRevenue.innerHTML = `<span style="font-size:15px; font-weight:900;">💰 Omzet Rp ${rp(tot.omzet)}</span><span style="font-size:11px; opacity:0.9;">ROAS: ${globalROAS}x</span>`;
+        fnlRevenue.innerHTML = `<span style="font-size:15px; font-weight:900;">${lblRevenue.icon} Omzet Rp ${rp(tot.omzet)}</span><span style="font-size:11px; opacity:0.9;">ROAS: ${globalROAS}x</span>`;
     }
 
     let elCanvasChart = document.getElementById('chartMarketingHarian');
@@ -531,7 +562,7 @@ function renderMarketingTab() {
         if (!wa && !r.nama && !r.status) return;
         mktDataBulanan[bln].leadsCRM.add(wa);
 
-        if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) {
+        if (isClosingRow_(r)) {
             mktDataBulanan[bln].dp++;
             mktDataBulanan[bln].omzet += Number(r.total) || 0;
         }
@@ -620,7 +651,7 @@ function renderMarketingTab() {
         if (!wa && !r.nama && !r.status) return;
         mktDataMingguan[mgg].leadsCRM.add(wa);
 
-        if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) {
+        if (isClosingRow_(r)) {
             mktDataMingguan[mgg].dp++;
             mktDataMingguan[mgg].omzet += Number(r.total) || 0;
         }
@@ -963,8 +994,9 @@ function toggleGrupCampaign_(elArrow, idGrup) {
 // adset/iklan (angka harian sudah dijumlahkan sehingga ringkas).
 function MKT_bangunGrupHtml_(campaignUrut, cfg) {
     const bg = (cfg.warna && cfg.warna.bg) || '#e0e7ff', fg = (cfg.warna && cfg.warna.fg) || '#312e81';
+    const batasCplMahal_ = ambilThreshold_('cplMahalRp', 30000);
     const cplHtml = (spend, res) => res > 0
-        ? `<span style="color:${Math.round(spend / res) > 30000 ? '#b91c1c' : '#047857'}; font-weight:700;">Rp ${rp(Math.round(spend / res))}</span>`
+        ? `<span style="color:${Math.round(spend / res) > batasCplMahal_ ? '#b91c1c' : '#047857'}; font-weight:700;">Rp ${rp(Math.round(spend / res))}</span>`
         : '<span style="color:#6b7280;">-</span>';
     const kolomTipe = cfg.tipe ? '<td></td>' : '';
     return campaignUrut.map((g, gi) => {
@@ -1042,9 +1074,18 @@ function renderInsightRekomendasi_v2(tot, mktDataSummary, sS, mktDataBulanan, sB
     let insight = [];
     let todo = [];
 
+    let T_matchRateSehat = ambilThreshold_('matchRateSehatPersen', 50);
+    let T_roasTipisBawah = ambilThreshold_('roasTipisBawah', 1);
+    let T_roasSehat = ambilThreshold_('roasSehat', 2);
+    let T_crWaspada = ambilThreshold_('crWaspadaPersen', 10);
+    let T_cplMahal = ambilThreshold_('cplMahalRp', 50000);
+    let T_adsetBorosMinSpend = ambilThreshold_('adsetBorosMinSpendRp', 5000);
+    let T_ctrRendah = ambilThreshold_('ctrRendahPersen', 1);
+    let T_efisienFaktor = 1 - (ambilThreshold_('efisienDariRataRataPersen', 30) / 100);
+
     if (tot.adaDataAds && tot.leadsMeta > 0) {
-        if (g.globalMatchRate < 50) {
-            insight.push(`⚠️ <b>Match Rate ${g.globalMatchRate}%</b> (target: >70%) — ${g.totalLeadsCRM} leads CRM dari ${rp(tot.leadsMeta)} chat Meta.`);
+        if (g.globalMatchRate < T_matchRateSehat) {
+            insight.push(`⚠️ <b>Match Rate ${g.globalMatchRate}%</b> (target: >${T_matchRateSehat}%) — ${g.totalLeadsCRM} leads CRM dari ${rp(tot.leadsMeta)} chat Meta.`);
             todo.push(`🔴 <b>[TRACKING-01]</b> Audit input leads manual — ${Math.round((1 - g.globalMatchRate/100) * 100)}% chat Meta hilang. Kapan? Di WhatsApp? Lupa input database?`);
         } else {
             insight.push(`✅ Match Rate ${g.globalMatchRate}% — pencocokkan leads Meta → CRM sehat.`);
@@ -1054,23 +1095,23 @@ function renderInsightRekomendasi_v2(tot, mktDataSummary, sS, mktDataBulanan, sB
     if (tot.spend > 0) {
         let statusRoas = '';
         let drill = '';
-        if (g.globalROAS < 1) {
+        if (g.globalROAS < T_roasTipisBawah) {
             statusRoas = '🔴 Belum Untung';
-            drill = g.globalCR < 10
+            drill = g.globalCR < T_crWaspada
                 ? `(CR ${g.globalCR}% — banyak leads tapi jarang closing)`
                 : `(CPL Rp${rp(g.globalCPL)} — sedikit leads, mahal)`;
-        } else if (g.globalROAS < 2) {
+        } else if (g.globalROAS < T_roasSehat) {
             statusRoas = '🟡 Untung Tipis';
             drill = `(masih ruang optim: CR ${g.globalCR}%, CPL Rp${rp(g.globalCPL)})`;
         } else {
             statusRoas = '🟢 Sehat';
-            drill = `ROAS ${g.globalROAS}x — target: jaga di >2x`;
+            drill = `ROAS ${g.globalROAS}x — target: jaga di >${T_roasSehat}x`;
         }
         insight.push(`${statusRoas} ROAS ${g.globalROAS}x ${drill}`);
 
-        if (g.globalROAS < 1 && g.globalCR < 10) {
+        if (g.globalROAS < T_roasTipisBawah && g.globalCR < T_crWaspada) {
             todo.push(`🔴 <b>[ROAS-DR1]</b> <u>Root Cause: CR Rendah (${g.globalCR}%)</u> — campaign dapat leads tapi conversion buruk. Cek: apa messaging kamu clear? adakah follow-up? pricing terlalu tinggi?`);
-        } else if (g.globalROAS < 1 && g.globalCPL > 50000) {
+        } else if (g.globalROAS < T_roasTipisBawah && g.globalCPL > T_cplMahal) {
             todo.push(`🔴 <b>[ROAS-DR2]</b> <u>Root Cause: CPL Tinggi (Rp${rp(g.globalCPL)})</u> — targeting terlalu luas atau kreatif tidak menarik. Test: narrowing audience atau ganti creative.`);
         }
     }
@@ -1102,7 +1143,7 @@ function renderInsightRekomendasi_v2(tot, mktDataSummary, sS, mktDataBulanan, sB
         let t = kandidatAdset.terburuk;
         let spend = Number(t.spend) || 0;
         let results = Number(t.results) || 0;
-        if (spend > 5000 && results === 0) {
+        if (spend > T_adsetBorosMinSpend && results === 0) {
             insight.push(`🔴 Adset paling boros (0 hasil): <b>${t._label}</b> di campaign ${t._campaignName} — Rp${rp(spend)} tanpa leads.`);
             todo.push(`🔴 <b>[ADSET-BOROS]</b> <u>URGENT: Matikan adset</u> "<b>${t._label}</b>" (campaign: ${t._campaignName}) — sudah spend Rp${rp(spend)}, 0 hasil. Cek: audience terlalu sempit? kreatif tidak muncul? platform issue?`);
         }
@@ -1112,7 +1153,7 @@ function renderInsightRekomendasi_v2(tot, mktDataSummary, sS, mktDataBulanan, sB
         let t = kandidatContent.terburuk;
         let spend = Number(t.spend) || 0;
         let results = Number(t.results) || 0;
-        if (spend > 5000 && results === 0) {
+        if (spend > T_adsetBorosMinSpend && results === 0) {
             insight.push(`🔴 Creative paling boros (0 hasil): <b>${t._label}</b> (${t.creative_type || 'unknown'}) — Rp${rp(spend)} tanpa leads.`);
             todo.push(`🔴 <b>[CREATIVE-BOROS]</b> Ganti creative "<b>${t._label}</b>" — CTR ${t._ctr.toFixed(2)}%, Rp${rp(spend)} tanpa hasil. Test: video vs foto? copy lain? audience lain?`);
         }
@@ -1123,7 +1164,7 @@ function renderInsightRekomendasi_v2(tot, mktDataSummary, sS, mktDataBulanan, sB
         let spend = Number(b.spend) || 0;
         let results = Number(b.results) || 0;
         let cplB = results > 0 ? Math.round(spend / results) : 0;
-        if (cplB > 0 && cplB < (g.globalCPL * 0.7)) {
+        if (cplB > 0 && cplB < (g.globalCPL * T_efisienFaktor)) {
             insight.push(`🟢 Adset Efisien: <b>${b._label}</b> (CPL Rp${rp(cplB)}, ${Math.round((1 - cplB/g.globalCPL) * 100)}% lebih murah dari rata-rata).`);
             todo.push(`🟢 <b>[ADSET-SCALE]</b> <u>Naikkan budget</u> adset "<b>${b._label}</b>" — CPL-nya Rp${rp(cplB)}, ${Math.round((1 - cplB/g.globalCPL) * 100)}% lebih murah dari rata-rata (Rp${rp(g.globalCPL)}). Scale: +20-30% dulu, monitor 3 hari.`);
         }
@@ -1134,15 +1175,15 @@ function renderInsightRekomendasi_v2(tot, mktDataSummary, sS, mktDataBulanan, sB
         let spend = Number(b.spend) || 0;
         let results = Number(b.results) || 0;
         let cplB = results > 0 ? Math.round(spend / results) : 0;
-        if (cplB > 0 && cplB < (g.globalCPL * 0.7)) {
+        if (cplB > 0 && cplB < (g.globalCPL * T_efisienFaktor)) {
             insight.push(`🟢 Creative Efisien: <b>${b._label}</b> (tipe: ${b.creative_type}, CPL Rp${rp(cplB)}).`);
             todo.push(`🟢 <b>[CREATIVE-SCALE]</b> Duplikasi/scale creative "<b>${b._label}</b>" — CPL Rp${rp(cplB)} (terbaik di campaign). Buat 2-3 variasi, test di audience berbeda.`);
         }
     }
 
-    if (tot.adaDataAds && tot.impressions > 0 && g.globalCTRMeta < 1) {
+    if (tot.adaDataAds && tot.impressions > 0 && g.globalCTRMeta < T_ctrRendah) {
         insight.push(`🟡 CTR Rendah (${g.globalCTRMeta}%) — kreatif kurang menarik perhatian.`);
-        todo.push(`🟡 <b>[KREATIF-CTR]</b> Test creative baru untuk campaign dengan CTR <1% — focus: hook/thumbnail yang lebih attention-grabbing.`);
+        todo.push(`🟡 <b>[KREATIF-CTR]</b> Test creative baru untuk campaign dengan CTR <${T_ctrRendah}% — focus: hook/thumbnail yang lebih attention-grabbing.`);
     }
 
     if (tot.adaDataAds && tot.linkClicks > 0) {
@@ -1242,15 +1283,16 @@ function agregasiPerNamaLintasCampaign(dataFlat) {
         map[nama].campaignSet.add(row._campaignName);
     });
 
+    let T_polaBerulangMinSpend_ = ambilThreshold_('polaBerulangMinSpendRp', 15000);
     return Object.values(map).map(v => {
         let cpl = v.totalResults > 0 ? Math.round(v.totalSpend / v.totalResults) : null;
         let jumlahCampaign = v.campaignSet.size;
         let berulang = v.instanceCount >= 2;
 
         let status = { label: '-', warna: '#94a3b8', tipe: 'netral' };
-        if (berulang && v.totalResults === 0 && v.totalSpend > 15000) {
+        if (berulang && v.totalResults === 0 && v.totalSpend > T_polaBerulangMinSpend_) {
             status = { label: '🔴 Pola Boros Berulang', warna: '#ef4444', tipe: 'boros_berulang' };
-        } else if (!berulang && v.totalResults === 0 && v.totalSpend > 15000) {
+        } else if (!berulang && v.totalResults === 0 && v.totalSpend > T_polaBerulangMinSpend_) {
             status = { label: '🟠 Boros (1x)', warna: '#f97316', tipe: 'boros_sekali' };
         } else if (berulang && cpl !== null) {
             status = { label: '🟢 Pola Konsisten', warna: '#10b981', tipe: 'konsisten' };
@@ -1380,8 +1422,10 @@ function renderScorecardMingguan(mktDataMingguan, sMinggu, globalCPL, globalROAS
     let minggUntukTabel = sMinggu.slice(-10);
 
     function warnaROAS(roas) {
-        if (roas >= 2) return { warna: '#dcfce7', teks: '#166534' };
-        if (roas >= 1) return { warna: '#fef9c3', teks: '#854d0e' };
+        let sehat = ambilThreshold_('roasSehat', 2);
+        let tipisBawah = ambilThreshold_('roasTipisBawah', 1);
+        if (roas >= sehat) return { warna: '#dcfce7', teks: '#166534' };
+        if (roas >= tipisBawah) return { warna: '#fef9c3', teks: '#854d0e' };
         return { warna: '#fee2e2', teks: '#991b1b' };
     }
     function warnaCPL(cpl, cplGlobal) {
@@ -1391,8 +1435,10 @@ function renderScorecardMingguan(mktDataMingguan, sMinggu, globalCPL, globalROAS
         return { warna: '#fee2e2', teks: '#991b1b' };
     }
     function warnaCR(cr) {
-        if (cr >= 15) return { warna: '#dcfce7', teks: '#166534' };
-        if (cr >= 8) return { warna: '#fef9c3', teks: '#854d0e' };
+        let sehat = ambilThreshold_('crSehatPersen', 15);
+        let waspada = ambilThreshold_('crWaspadaPersen', 8);
+        if (cr >= sehat) return { warna: '#dcfce7', teks: '#166534' };
+        if (cr >= waspada) return { warna: '#fef9c3', teks: '#854d0e' };
         return { warna: '#fee2e2', teks: '#991b1b' };
     }
     function warnaCreativeBaru(jml) {
@@ -1402,8 +1448,10 @@ function renderScorecardMingguan(mktDataMingguan, sMinggu, globalCPL, globalROAS
     }
     function warnaClickToLead(rate) {
         if (rate === null) return { warna: '#f8fafc', teks: '#94a3b8' };
-        if (rate >= 15) return { warna: '#dcfce7', teks: '#166534' };
-        if (rate >= 5) return { warna: '#fef9c3', teks: '#854d0e' };
+        let sehat = ambilThreshold_('clickToLeadSehatPersen', 15);
+        let waspada = ambilThreshold_('clickToLeadWaspadaPersen', 5);
+        if (rate >= sehat) return { warna: '#dcfce7', teks: '#166534' };
+        if (rate >= waspada) return { warna: '#fef9c3', teks: '#854d0e' };
         return { warna: '#fee2e2', teks: '#991b1b' };
     }
 
@@ -1537,7 +1585,8 @@ function renderBannerTargetMingguan(mktDataMingguan, sMinggu, creativeBaruPerMin
     // --- Pengaman: pastikan target selalu object valid (mencegah error yang
     // bikin renderMarketingTab berhenti di tengah jalan kalau data target
     // dari server belum lengkap/berbentuk tak terduga) ---
-    target = target && typeof target === 'object' ? target : TARGET_DEFAULT_FALLBACK;
+    let fallbackDefault_ = (typeof TENANT_CONFIG !== 'undefined' && TENANT_CONFIG.targetMingguanDefault) ? TENANT_CONFIG.targetMingguanDefault : TARGET_DEFAULT_FALLBACK;
+    target = target && typeof target === 'object' ? target : fallbackDefault_;
     target = {
         closingMin: Number(target.closingMin) || 0,
         omzetMin: Number(target.omzetMin) || 0,
@@ -1648,7 +1697,7 @@ function ambilRingkasanMarketingUntukAI_(bagian) {
     let leadsCRM = new Set(), spend = 0, dp = 0, omzet = 0, leadsMeta = 0, impressions = 0, linkClicks = 0;
     fd.forEach(r => {
         if (r.no_hp) leadsCRM.add(r.no_hp);
-        if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) {
+        if (isClosingRow_(r)) {
             dp++;
             omzet += Number(r.total) || 0;
         }
@@ -1682,7 +1731,7 @@ function ambilRingkasanMarketingUntukAI_(bagian) {
             let c = r.minat || 'Lainnya';
             if (!mktDataSummary[c]) mktDataSummary[c] = { camp: c, spend: 0, leadsCRM: new Set(), dp: 0, omzet: 0 };
             if (r.no_hp) mktDataSummary[c].leadsCRM.add(r.no_hp);
-            if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) {
+            if (isClosingRow_(r)) {
                 mktDataSummary[c].dp++;
                 mktDataSummary[c].omzet += Number(r.total) || 0;
             }
@@ -1736,7 +1785,7 @@ function ambilRingkasanMarketingUntukAI_(bagian) {
             if (!bln || !bln.startsWith(String(tahun))) return;
             if (!perBulan[bln]) perBulan[bln] = { dp: 0, omzet: 0, leadsCRM: new Set() };
             if (r.no_hp) perBulan[bln].leadsCRM.add(r.no_hp);
-            if (r.status && (r.status.includes('DP') || r.status.includes('Lunas'))) { perBulan[bln].dp++; perBulan[bln].omzet += Number(r.total) || 0; }
+            if (isClosingRow_(r)) { perBulan[bln].dp++; perBulan[bln].omzet += Number(r.total) || 0; }
         });
         (dataMarketing || []).forEach(m => {
             const bln = formati(m.tanggal)?.substring(0, 7);
@@ -1755,7 +1804,8 @@ function ambilRingkasanMarketingUntukAI_(bagian) {
     return null;
 }
 function tmBukaPengaturan() {
-    let g = (dataTargetMingguanMarketing && dataTargetMingguanMarketing.global) || TARGET_DEFAULT_FALLBACK;
+    let fallbackDefault2_ = (typeof TENANT_CONFIG !== 'undefined' && TENANT_CONFIG.targetMingguanDefault) ? TENANT_CONFIG.targetMingguanDefault : TARGET_DEFAULT_FALLBACK;
+    let g = (dataTargetMingguanMarketing && dataTargetMingguanMarketing.global) || fallbackDefault2_;
     const elClosing = document.getElementById('tmGlobalClosing');
     const elOmzet = document.getElementById('tmGlobalOmzet');
     const elRoas = document.getElementById('tmGlobalRoas');

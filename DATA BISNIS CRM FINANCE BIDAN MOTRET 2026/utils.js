@@ -3,7 +3,14 @@
 // Apps Script Anda, supaya perilakunya identik di versi Vercel.
 // =========================================================================
 
-function rp(num) { return Math.round(Number(num) || 0).toLocaleString('id-ID'); }
+// rp() sekarang baca locale dari TENANT_CONFIG.meta.localeAngka kalau
+// tersedia (fallback 'id-ID' supaya file ini tetap jalan sendiri tanpa
+// tenant-config.js). File ini KHUSUS project index-marketing.html —
+// terpisah dari utils.js project index.html (gabungan finance+marketing).
+function rp(num) {
+    let locale = (typeof TENANT_CONFIG !== 'undefined' && TENANT_CONFIG?.meta?.localeAngka) || 'id-ID';
+    return Math.round(Number(num) || 0).toLocaleString(locale);
+}
 function prc(part, total) { return total == 0 ? "0%" : ((part / total) * 100).toFixed(1) + "%"; }
 function getTime(d) { return new Date(d).setHours(0, 0, 0, 0); }
 function monthDiff(start, end) { let d1 = new Date(start), d2 = new Date(end); return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth()); }

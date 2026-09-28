@@ -217,7 +217,8 @@ function renderAnalisisIklan() {
 
   const maxSpend = Math.max(...tampil.map(d => d.spend), 1);
   body.innerHTML = tampil.map((d, i) => {
-    const warna = d.cpl === null ? '#6b7280' : (d.cpl > 30000 ? '#b91c1c' : '#047857');
+    const batasCplMahal_ = (typeof ambilThreshold_ === 'function') ? ambilThreshold_('cplMahalRp', 30000) : 30000;
+    const warna = d.cpl === null ? '#6b7280' : (d.cpl > batasCplMahal_ ? '#b91c1c' : '#047857');
     return `<tr>
       <td>${i + 1}</td>
       <td style="max-width:320px; white-space:normal;">${mktEsc(d.nama)}</td>
