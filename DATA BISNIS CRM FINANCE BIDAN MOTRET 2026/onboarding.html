@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup Klien Baru — Profil Bisnis</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .ob-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; }
+  .ob-step { display:inline-block; background:#4f46e5; color:#fff; border-radius:50%; width:24px; height:24px; text-align:center; line-height:24px; font-size:12px; font-weight:800; margin-right:8px; }
+  .profil-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; }
+  .profil-opt { border:2px solid var(--border); border-radius:10px; padding:12px 14px; cursor:pointer; background:#fff; }
+  .profil-opt:hover { border-color:#a5b4fc; }
+  .profil-opt.aktif { border-color:#4f46e5; background:#eef2ff; }
+  .profil-opt h4 { margin:0 0 4px 0; font-size:14px; }
+  .profil-opt p { margin:0 0 8px 0; font-size:12px; color:#64748b; }
+  .chip { display:inline-block; background:#f1f5f9; color:#334155; border-radius:20px; padding:2px 9px; font-size:11px; margin:0 4px 4px 0; }
+  .ob-input { width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:13px; }
+  .mode-opt { display:flex; gap:10px; align-items:flex-start; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:8px; cursor:pointer; }
+  .mode-opt.aktif { border-color:#4f46e5; background:#eef2ff; }
+  .btn-ob { border:none; border-radius:8px; padding:10px 18px; font-weight:800; cursor:pointer; font-size:13px; }
+  .btn-ob-primary { background:#4f46e5; color:#fff; }
+  .btn-ob-secondary { background:#f1f5f9; color:#334155; }
+  .hasil-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:14px 16px; margin-top:14px; }
+  textarea.json-box { width:100%; box-sizing:border-box; height:160px; font-family:monospace; font-size:12px; border:1px solid var(--border); border-radius:6px; padding:8px; }
+</style>
+</head>
+<body>
+
+<div id="bgRefreshBadge" style="position:fixed; top:14px; right:14px; z-index:9999; background:#0f172a; color:#fff; padding:6px 14px; border-radius:20px; font-size:11.5px; font-weight:700; display:none;">🔄 Memuat…</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🚀</div>
+      <div class="brand-text"><strong>Setup Klien Baru</strong><span data-kamus="nama_bisnis">SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> <span data-kamus="menu_crm">CRM Leads</span></a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> <span data-kamus="menu_followup">AI Chat & Follow-up</span></a>
+        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> <span data-kamus="menu_pengaturan">Pengaturan</span></a>
+        <a class="nav-item" href="eos.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🎯</span> <span data-kamus="menu_eos">EOS Dashboard</span></a>
+        <a class="nav-item" href="kamus.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🗂️</span> Kamus Istilah</a>
+        <a class="nav-item active" href="onboarding.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🚀</span> Setup Klien Baru</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Pilih industri, sistem menyesuaikan diri</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">🚀 Setup Klien Baru — Profil Bisnis</div>
+    </div>
+    <div class="content-inner">
+
+      <div class="ob-card">
+        <h3 style="margin-top:0;"><span class="ob-step">1</span> Nama Bisnis Klien</h3>
+        <input type="text" id="obNamaBisnis" class="ob-input" placeholder="Contoh: Klinik Cantik Sejahtera">
+        <p style="font-size:11.5px; color:#94a3b8; margin:6px 0 0;">Tampil di judul semua halaman. Boleh dikosongkan kalau tidak ingin mengubahnya.</p>
+      </div>
+
+      <div class="ob-card">
+        <h3 style="margin-top:0;"><span class="ob-step">2</span> Pilih Industri</h3>
+        <div class="profil-grid" id="obProfilGrid"></div>
+      </div>
+
+      <div class="ob-card">
+        <h3 style="margin-top:0;"><span class="ob-step">3</span> Cara Menerapkan</h3>
+        <div class="mode-opt aktif" id="modeGabung" onclick="pilihMode('gabung')">
+          <input type="radio" name="obMode" checked>
+          <div><b>Gabungkan (aman, disarankan)</b><br>
+          <span style="font-size:12px; color:#64748b;">Menambahkan produk & template yang belum ada. Template produk yang sudah kamu isi TIDAK dihapus, dan istilah yang sudah kamu ubah manual tetap dipertahankan.</span></div>
+        </div>
+        <div class="mode-opt" id="modeTimpa" onclick="pilihMode('timpa')">
+          <input type="radio" name="obMode">
+          <div><b>Timpa semua (untuk klien yang benar-benar baru)</b><br>
+          <span style="font-size:12px; color:#64748b;">MENGGANTI seluruh template produk, istilah, dan target EOS dengan isi profil. Template produk lama akan hilang.</span></div>
+        </div>
+        <button class="btn-ob btn-ob-primary" style="margin-top:8px;" onclick="terapkanProfil()">✅ Terapkan Profil</button>
+        <div id="obHasil"></div>
+      </div>
+
+      <div class="ob-card">
+        <h3 style="margin-top:0;">📦 Bawa Konfigurasi ke Klien Lain</h3>
+        <p style="font-size:12.5px; color:#64748b; margin-top:-6px;">
+          Sudah selesai menyesuaikan satu klien? Ekspor konfigurasinya jadi JSON, lalu tempel di sistem klien lain untuk dipakai ulang — tanpa ubah kode.
+        </p>
+        <button class="btn-ob btn-ob-secondary" onclick="eksporProfil()">⬇️ Ekspor Konfigurasi Saat Ini</button>
+        <textarea class="json-box" id="obJsonBox" placeholder='Hasil ekspor muncul di sini. Untuk impor: tempel JSON profil di sini lalu klik "Impor & Terapkan".' style="margin-top:10px;"></textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="btn-ob btn-ob-secondary" onclick="unduhJson()">💾 Unduh .json</button>
+          <button class="btn-ob btn-ob-primary" onclick="imporProfil()">⬆️ Impor &amp; Terapkan (pakai cara di langkah 3)</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';</script>
+<script src="kamus.js"></script>
+<script>
+  async function fetchJsonAman(url, options) {
+    let res;
+    try { res = await fetch(url, options); }
+    catch (err) { throw new Error('Gagal terhubung ke server: ' + err.message); }
+    let text;
+    try { text = await res.text(); }
+    catch (err) { throw new Error('Gagal membaca respons server.'); }
+    let json;
+    try { json = JSON.parse(text); }
+    catch (err) { throw new Error('Server tidak mengembalikan JSON valid. Cuplikan: ' + text.substring(0, 200)); }
+    if (json && json.result === 'error') throw new Error(json.message || 'Terjadi error di server.');
+    return json;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  let daftarProfil = [], kodeTerpilih = '', modeTerpilih = 'gabung';
+
+  async function muatDaftarProfil() {
+    const badge = document.getElementById('bgRefreshBadge');
+    if (badge) badge.style.display = 'inline-block';
+    try {
+      const r = await fetchJsonAman(scriptURL + '?action=getProfilBisnis');
+      daftarProfil = r.profil || [];
+      renderProfilGrid();
+    } catch (err) {
+      alert('❌ Gagal memuat daftar profil: ' + err.message);
+    } finally {
+      if (badge) badge.style.display = 'none';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', muatDaftarProfil);
+
+  function renderProfilGrid() {
+    document.getElementById('obProfilGrid').innerHTML = daftarProfil.map(p => `
+      <div class="profil-opt ${p.kode === kodeTerpilih ? 'aktif' : ''}" onclick="pilihProfil('${esc(p.kode)}')">
+        <h4>${esc(p.nama)}</h4>
+        <p>${esc(p.deskripsi)}</p>
+        <div>${p.contoh_produk.map(n => `<span class="chip">${esc(n)}</span>`).join('') || '<span class="chip">Isi produk sendiri</span>'}</div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:4px;">
+          Istilah: ${esc(p.contoh_istilah.lead || '-')} → ${esc(p.contoh_istilah.produk || '-')} → ${esc(p.contoh_istilah.closing || '-')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function pilihProfil(kode) { kodeTerpilih = kode; renderProfilGrid(); }
+
+  function pilihMode(mode) {
+    modeTerpilih = mode;
+    document.getElementById('modeGabung').classList.toggle('aktif', mode === 'gabung');
+    document.getElementById('modeTimpa').classList.toggle('aktif', mode === 'timpa');
+    document.querySelectorAll('input[name=obMode]')[mode === 'gabung' ? 0 : 1].checked = true;
+  }
+
+  function tampilkanHasil(ringkasan) {
+    document.getElementById('obHasil').innerHTML = `
+      <div class="hasil-box">
+        <b>✅ Profil berhasil diterapkan</b> (mode: ${esc(ringkasan.mode)})
+        <ul style="margin:8px 0 0 18px; padding:0; font-size:13px;">
+          <li>${ringkasan.kamus_diterapkan} istilah kustom tersimpan</li>
+          <li>${ringkasan.produk_ditambah} produk/layanan ditambahkan (total ${ringkasan.produk_total})</li>
+          <li>Target EOS: ${ringkasan.target_diterapkan ? 'diterapkan' : 'tidak diubah (sudah pernah diatur)'}</li>
+        </ul>
+        <b style="display:block; margin-top:10px;">Langkah berikutnya:</b>
+        <ol style="margin:4px 0 0 18px; padding:0; font-size:13px;">
+          <li>Buka <a href="followup.html">Pengaturan Template</a>, isi <b>link file PDF/brosur</b> tiap produk (masih kosong).</li>
+          <li>Sesuaikan isi pesan tiap produk dengan gaya bahasa bisnis klien.</li>
+          <li>Cek <a href="kamus.html">Kamus Istilah</a> untuk memoles istilah yang masih kurang pas.</li>
+          <li>Cek target di <a href="eos.html">EOS Dashboard</a> sesuai skala bisnis klien.</li>
+        </ol>
+      </div>`;
+  }
+
+  async function terapkanProfil() {
+    if (!kodeTerpilih) { alert('Pilih salah satu industri dulu di langkah 2.'); return; }
+    const nama = daftarProfil.find(p => p.kode === kodeTerpilih).nama;
+    const peringatan = modeTerpilih === 'timpa'
+      ? '⚠️ MODE TIMPA: seluruh template produk lama akan DIHAPUS dan diganti profil "' + nama + '". Lanjutkan?'
+      : 'Terapkan profil "' + nama + '" dengan mode gabung (data existing tidak dihapus)?';
+    if (!confirm(peringatan)) return;
+
+    const p = new URLSearchParams();
+    p.append('action', 'terapkanProfilBisnis');
+    p.append('kode', kodeTerpilih);
+    p.append('mode', modeTerpilih);
+    p.append('namaBisnis', document.getElementById('obNamaBisnis').value.trim());
+    try {
+      const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      if (r.result === 'success') tampilkanHasil(r.ringkasan);
+      else alert('❌ Gagal: ' + (r.message || 'unknown'));
+    } catch (err) { alert('❌ Gagal koneksi: ' + err.message); }
+  }
+
+  async function eksporProfil() {
+    try {
+      const r = await fetchJsonAman(scriptURL + '?action=eksporProfilSaatIni');
+      document.getElementById('obJsonBox').value = JSON.stringify(r.profil, null, 2);
+    } catch (err) { alert('❌ Gagal ekspor: ' + err.message); }
+  }
+
+  function unduhJson() {
+    const isi = document.getElementById('obJsonBox').value.trim();
+    if (!isi) { alert('Belum ada isi untuk diunduh. Klik "Ekspor" dulu.'); return; }
+    const blob = new Blob([isi], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'profil-bisnis-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+  }
+
+  async function imporProfil() {
+    const isi = document.getElementById('obJsonBox').value.trim();
+    if (!isi) { alert('Tempel JSON profil di kotak dulu.'); return; }
+    try { JSON.parse(isi); } catch (e) { alert('❌ Format JSON tidak valid: ' + e.message); return; }
+    if (!confirm('Impor & terapkan profil dari JSON ini dengan mode "' + modeTerpilih + '"?')) return;
+
+    const p = new URLSearchParams();
+    p.append('action', 'terapkanProfilJson');
+    p.append('profilJson', isi);
+    p.append('mode', modeTerpilih);
+    p.append('namaBisnis', document.getElementById('obNamaBisnis').value.trim());
+    try {
+      const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      if (r.result === 'success') tampilkanHasil(r.ringkasan);
+      else alert('❌ Gagal: ' + (r.message || 'unknown'));
+    } catch (err) { alert('❌ Gagal koneksi: ' + err.message); }
+  }
+</script>
+</body>
+</html>

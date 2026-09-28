@@ -68,18 +68,10 @@ const TENANT_CONFIG = {
       avgTime: "Avg. Waktu Closing",
       omzet: "Total Omzet",
       roas: "ROAS"
-    },
-    menuKeuangan: {
-      jurnal: "Jurnal",
-      labaRugi: "Income Statement",
-      arusKas: "Cash Statement",
-      neraca: "Neraca",
-      dupont: "Analisis DuPont",
-      rosetta: "Rosetta Stone"
-      // dst — tinggal ditambah sesuai kebutuhan, tidak wajib lengkap
-      // dari awal karena kode lama tetap fallback ke teks aslinya kalau
-      // key belum ada (lihat fungsi ambilLabel() di bawah).
     }
+    // Catatan: project ini (index-marketing.html) khusus modul Marketing,
+    // jadi TIDAK ada bagian "menuKeuangan" di sini seperti di
+    // tenant-config.js milik project index.html (gabungan finance+marketing).
   },
 
   // -----------------------------------------------------------------------
@@ -102,12 +94,38 @@ const TENANT_CONFIG = {
   // "minat" yang konsisten. Kalau tidak ada pattern yang cocok, nilai
   // asli (mentah) dipakai sebagai fallback — lihat normalisasiMinat().
   // Urutan penting: pattern pertama yang cocok yang dipakai.
+  //
+  // CARA ISI UNTUK KLIEN BARU:
+  // 1. Lihat nama-nama campaign Meta Ads klien yang sebenarnya (dari
+  //    kolom "Nama Campaign (Meta Ads)" di filter Marketing, atau
+  //    langsung dari Ads Manager).
+  // 2. Kelompokkan nama-nama itu jadi kategori "minat"/produk yang
+  //    masuk akal untuk bisnis tsb.
+  // 3. Tulis satu pattern regex per kategori, urutkan dari paling
+  //    spesifik ke paling umum (karena match PERTAMA yang dipakai).
+  //
+  // CONTOH studio foto (aktifkan/uncomment kalau relevan):
+  //   { pattern: /newborn/i,          minat: "Newborn" },
+  //   { pattern: /maternity|hamil/i,  minat: "Maternity" },
+  //   { pattern: /family|keluarga/i,  minat: "Family" },
+  //
+  // CONTOH bidang lain (untuk klien baru, ganti seluruhnya):
+  //   Restoran:
+  //   { pattern: /catering|prasmanan/i, minat: "Catering" },
+  //   { pattern: /delivery|goride|grab/i, minat: "Delivery" },
+  //
+  //   Klinik kecantikan:
+  //   { pattern: /facial|perawatan wajah/i, minat: "Facial" },
+  //   { pattern: /laser|tattoo removal/i,   minat: "Laser" },
+  //
+  //   Properti:
+  //   { pattern: /rumah|residensial/i, minat: "Rumah" },
+  //   { pattern: /ruko|komersial/i,    minat: "Ruko" },
   // -----------------------------------------------------------------------
   minatKeywordMap: [
-    // Contoh untuk studio foto (default). Ganti/ isi ulang per klien.
-    // { pattern: /newborn/i,          minat: "Newborn" },
-    // { pattern: /maternity|hamil/i,  minat: "Maternity" },
-    // { pattern: /family|keluarga/i,  minat: "Family" },
+    // Kosong secara default — isi manual sesuai skema campaign klien.
+    // Mengisi dengan tebakan berisiko salah kelompokkan data yang sudah
+    // ada, jadi sengaja tidak diisi otomatis oleh sistem.
   ],
 
   // -----------------------------------------------------------------------

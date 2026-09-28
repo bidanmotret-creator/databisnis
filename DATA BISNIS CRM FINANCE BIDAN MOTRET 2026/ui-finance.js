@@ -156,44 +156,22 @@ async function simpanJurnal(btn) {
     }
 }
 
-// Batas jumlah baris yang dirender sekaligus di tabel Jurnal (data besar =
-// ribuan baris DOM = render lambat & scroll berat). User bisa klik
-// "Tampilkan Semua" kalau memang perlu lihat semuanya.
-const BATAS_BARIS_JURNAL_AWAL = 150;
-let jurnalTampilSemua_ = false;
-let jurnalDataTerakhirDirender_ = [];
-
-function toggleTampilSemuaJurnal() {
-    jurnalTampilSemua_ = !jurnalTampilSemua_;
-    renderJurnalTable(jurnalDataTerakhirDirender_);
-}
-
 function renderJurnalTable(data) {
     const tbody = document.getElementById('listPreviewJurnal');
     if (!tbody) return;
-    jurnalDataTerakhirDirender_ = Array.isArray(data) ? data : [];
     tbody.innerHTML = '';
 
     if (!Array.isArray(data) || data.length === 0) return;
 
-    // Total tetap dihitung dari SEMUA baris (bukan cuma yang ditampilkan)
     let totalDebit = 0;
     let totalKredit = 0;
-    data.forEach(row => {
-        totalDebit += Number(row.debit) || 0;
-        totalKredit += Number(row.kredit) || 0;
-    });
+    const dataDisplay = [...data].reverse();
 
-    const dataDisplayPenuh = [...data].reverse();
-    const perluDibatasi = !jurnalTampilSemua_ && dataDisplayPenuh.length > BATAS_BARIS_JURNAL_AWAL;
-    const dataDisplay = perluDibatasi ? dataDisplayPenuh.slice(0, BATAS_BARIS_JURNAL_AWAL) : dataDisplayPenuh;
-
-    // Bangun HTML sebagai string dulu (jauh lebih cepat dari appendChild
-    // satu-satu untuk ratusan/ribuan baris), baru di-set sekali ke DOM.
-    let htmlBaris = '';
     dataDisplay.forEach(row => {
         let deb = Number(row.debit) || 0;
         let kre = Number(row.kredit) || 0;
+        totalDebit += deb;
+        totalKredit += kre;
 
         let formattedDate = '-';
         if (row.tgl) {
@@ -203,26 +181,33 @@ function renderJurnalTable(data) {
                 : row.tgl;
         }
 
+            // Badge sumber entri
         let sumber = row.sumber_entri || 'Manual';
         let badgeSumber = sumber === 'Otomatis-Leads'
             ? `<span class="badge" style="background:#dbeafe; color:#1e40af; font-weight:700;">🔄 Auto (${row.ref_tahap_bayar || '-'})</span>`
             : `<span class="badge" style="background:#f1f5f9; color:#475569; font-weight:700;">✍️ Manual</span>`;
 
+        // --- BARU: tandai baris Pribadi dengan badge terpisah + baris agak transparan ---
         let baginiPribadi = isTransaksiPribadi_(row);
         let styleBarisPribadi = baginiPribadi ? 'opacity:0.75; background:#f8fafc;' : '';
 
+        // Badge status audit
         let statusAudit = row.status_audit || 'Belum Diaudit';
         let badgeAudit = statusAudit === 'Sudah Diaudit'
             ? `<span class="badge" style="background:#dcfce7; color:#166534; font-weight:700;" title="Oleh: ${row.diaudit_oleh || '-'} pada ${row.tgl_audit || '-'}">✅ ${row.diaudit_oleh || '-'}</span>`
             : `<button type="button" class="btn-verifikasi-jurnal" onclick="verifikasiJurnal('${row.id}')" style="padding:4px 10px; font-size:11px; border-radius:12px; border:1px solid #f59e0b; background:#fffbeb; color:#92400e; font-weight:700; cursor:pointer;">⏳ Verifikasi</button>`;
 
+        // Bukti nota
         let bukti = row.url_bukti
             ? `<a href="${row.url_bukti}" target="_blank" style="color:#2563eb; font-weight:700; text-decoration:none;">📎 Lihat</a>`
             : `<button type="button" onclick="pilihFileBuktiJurnal('${row.id}')" style="padding:4px 10px; font-size:11px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; color:#475569; cursor:pointer;">📤 Upload</button>`;
 
         let aksi = `<button type="button" title="Hapus baris ini" onclick="hapusBarisJurnal('${row.id}', this)" style="padding:4px 8px; font-size:11px; border-radius:6px; border:none; background:#fee2e2; color:#991b1b; font-weight:700; cursor:pointer;">🗑️</button>`;
 
-        htmlBaris += `<tr data-pribadi="${baginiPribadi ? '1' : '0'}" style="${styleBarisPribadi}">
+              let tr = document.createElement('tr');
+        tr.setAttribute('data-pribadi', baginiPribadi ? '1' : '0');
+        tr.style.cssText = styleBarisPribadi;
+        tr.innerHTML = `
             <td>${row.id || '-'}</td>
             <td>${formattedDate}</td>
             <td>${row.kode || '-'}</td>
@@ -239,32 +224,20 @@ function renderJurnalTable(data) {
             <td>${badgeAudit}</td>
             <td>${bukti}</td>
             <td>${aksi}</td>
-        </tr>`;
+        `;
+        tbody.appendChild(tr);
     });
 
-    if (perluDibatasi) {
-        const sisaBaris = dataDisplayPenuh.length - BATAS_BARIS_JURNAL_AWAL;
-        htmlBaris += `<tr style="background:#f8fafc;">
-            <td colspan="13" style="text-align:center; padding:12px; cursor:pointer; color:#4f46e5; font-weight:700; font-size:12.5px;" onclick="toggleTampilSemuaJurnal()">
-                ▼ Tampilkan ${sisaBaris} baris lainnya (menampilkan ${BATAS_BARIS_JURNAL_AWAL} baris terbaru dari total ${dataDisplayPenuh.length}) ▼
-            </td>
-        </tr>`;
-    } else if (jurnalTampilSemua_ && dataDisplayPenuh.length > BATAS_BARIS_JURNAL_AWAL) {
-        htmlBaris += `<tr style="background:#f8fafc;">
-            <td colspan="13" style="text-align:center; padding:12px; cursor:pointer; color:#4f46e5; font-weight:700; font-size:12.5px;" onclick="toggleTampilSemuaJurnal()">
-                ▲ Sembunyikan sebagian lagi (tampilkan ${BATAS_BARIS_JURNAL_AWAL} baris terbaru saja) ▲
-            </td>
-        </tr>`;
-    }
-
-    htmlBaris += `<tr style="font-weight:bold; background:#f1f5f9;">
-        <td colspan="7" style="text-align: right;">TOTAL${perluDibatasi ? ' (seluruh data, bukan cuma yang ditampilkan)' : ''}</td>
+    let trTotal = document.createElement('tr');
+    trTotal.style.fontWeight = "bold";
+    trTotal.style.background = "#f1f5f9";
+    trTotal.innerHTML = `
+        <td colspan="7" style="text-align: right;">TOTAL</td>
         <td>Rp ${totalDebit.toLocaleString('id-ID')}</td>
         <td>Rp ${totalKredit.toLocaleString('id-ID')}</td>
         <td colspan="4"></td>
-    </tr>`;
-
-    tbody.innerHTML = htmlBaris;
+    `;
+    tbody.appendChild(trTotal);
 }
 
 // --- VERIFIKASI / AUDIT JURNAL ---
@@ -1310,16 +1283,7 @@ async function simpanSignOffLaporan() {
 }
 
 // Deteksi transaksi Pribadi/Rumah Tangga
-function isTransaksiPribadi_(row) {    let kode = (row.kode || '').toString().trim();
-
-    // --- JEMBATAN RESMI "Kesatuan Usaha" ---
-    // Kode 350 (Prive: penarikan dari bisnis untuk kebutuhan pribadi) dan
-    // 310 (Modal Pribadi: setoran dari pribadi ke bisnis) BUKAN transaksi
-    // pribadi murni -- ini titik sambung resmi antara kas pribadi & bisnis,
-    // jadi HARUS tetap masuk hitungan Neraca/Ekuitas bisnis meskipun nama
-    // akunnya mengandung kata "Pribadi".
-    if (kode.startsWith('350') || kode.startsWith('310')) return false;
-
+function isTransaksiPribadi_(row) {
     let kategori = (row.kategori || '').toLowerCase();
     let nama = (row.nama || '').toLowerCase();
     return kategori.includes('pribadi') || nama.includes('pribadi');
@@ -1529,11 +1493,21 @@ function renderRosettaStone() {
 // =========================================================================
 // AUDIT SOP OTOMATIS
 // =========================================================================
-const KATA_KUNCI_ASET = ['kamera','kendaraan','motor','mobil','laptop','drone','lighting','lensa','tripod','komputer','printer','genset','ac ','studio background'];
-const KATA_KUNCI_BEBAN_RUTIN = ['bensin','konsumsi','sewa bulanan','jasa edit','listrik','internet','gaji','props','cetak','langganan'];
-const AMBANG_ASET_RP = 1000000;
-const AMBANG_BUKTI_RP = 1000000;
-const AMBANG_PIUTANG_HARI = 90;
+// Kata kunci & ambang sekarang diambil dari TENANT_CONFIG.auditSop (lihat
+// tenant-config.js) lewat ambilAuditSop(), dengan fallback ke nilai lama
+// (studio foto) kalau config belum dimuat. Wrapper _() dipakai supaya file
+// ini tetap bisa jalan sendiri tanpa tenant-config.js.
+function ambilAuditSop_(key, fallbackVal) {
+    if (typeof ambilAuditSop === 'function' && typeof TENANT_CONFIG !== 'undefined') {
+        return ambilAuditSop(key, fallbackVal);
+    }
+    return fallbackVal;
+}
+const KATA_KUNCI_ASET = ambilAuditSop_('kataKunciAset', ['kamera','kendaraan','motor','mobil','laptop','drone','lighting','lensa','tripod','komputer','printer','genset','ac ','studio background']);
+const KATA_KUNCI_BEBAN_RUTIN = ambilAuditSop_('kataKunciBebanRutin', ['bensin','konsumsi','sewa bulanan','jasa edit','listrik','internet','gaji','props','cetak','langganan']);
+const AMBANG_ASET_RP = ambilAuditSop_('ambangAsetRp', 1000000);
+const AMBANG_BUKTI_RP = ambilAuditSop_('ambangBuktiRp', 1000000);
+const AMBANG_PIUTANG_HARI = ambilAuditSop_('ambangPiutangHari', 90);
 
 function jalankanAuditSOP() {
   if (!Array.isArray(dataJurnalGlobal)) { alert('Data jurnal belum dimuat.'); return; }
@@ -1630,466 +1604,6 @@ function renderHasilAudit(temuan) {
     </div>
   `).join('');
 }
-
-// =========================================================================
-// SISTEM PENGENDALIAN INTERNAL (Internal Financial Control System)
-// 5 validasi otomatis + ceklis SOP harian/2-mingguan/bulanan (localStorage)
-// =========================================================================
-function jalankanValidasiInternalControl() {
-    if (!Array.isArray(dataJurnalGlobal)) { alert('Data jurnal belum dimuat.'); return; }
-    const temuan = [];
-
-    // --- 1. KESEIMBANGAN NERACA (PSAK) ---
-    let asetTotal = 0, liabEkuitas = 0;
-    dataJurnalGlobal.forEach(row => {
-        if (isTransaksiPribadi_(row)) return;
-        const deb = Number(row.debit) || 0, kre = Number(row.kredit) || 0;
-        const kode = (row.kode || '').toString().trim();
-        if (kode.startsWith('1')) asetTotal += (deb - kre);
-        if (kode.startsWith('2') || kode.startsWith('3')) liabEkuitas += (kre - deb);
-        if (kode.startsWith('4')) liabEkuitas += (kre - deb);
-        if (kode.startsWith('5')) liabEkuitas -= (deb - kre);
-    });
-    const selisihNeraca = Math.round(asetTotal - liabEkuitas);
-    if (Math.abs(selisihNeraca) >= 5) {
-        temuan.push({ level: 'kritis', judul: '⚖️ Neraca Tidak Seimbang!',
-            detail: `Total Aset (Rp ${rp(asetTotal)}) TIDAK SAMA dengan Total Liabilitas + Ekuitas + Laba Berjalan (Rp ${rp(liabEkuitas)}). Selisih: Rp ${rp(Math.abs(selisihNeraca))}. Cek jurnal yang baru diinput — kemungkinan ada baris Debit/Kredit yang tidak berpasangan dengan benar.` });
-    } else {
-        temuan.push({ level: 'info', judul: '✅ Neraca Seimbang', detail: 'Total Aset = Total Liabilitas + Ekuitas. Tidak ada selisih.' });
-    }
-
-    // --- 2. VALIDASI PELUNASAN DP (leads sudah Lunas tapi masih ada saldo "DP" belum dipindah) ---
-    if (Array.isArray(dataGlobal)) {
-        dataGlobal.forEach(client => {
-            if (!client.status || !client.status.toLowerCase().includes('lunas')) return;
-            const kodeLeads = client.kode_leads;
-            if (!kodeLeads) return;
-            // Cari baris jurnal DP (ref_tahap_bayar = 'DP') untuk klien ini yang belum ada baris Pelunasan penyeimbang
-            const adaDP = dataJurnalGlobal.some(r => r.ref_kode_leads === kodeLeads && r.ref_tahap_bayar === 'DP');
-            const adaPelunasan = dataJurnalGlobal.some(r => r.ref_kode_leads === kodeLeads && r.ref_tahap_bayar === 'Pelunasan');
-            if (adaDP && !adaPelunasan) {
-                temuan.push({ level: 'peringatan', judul: `💰 Sesi selesai tapi DP belum "dilunaskan" di jurnal — ${client.nama}`,
-                    detail: `Status klien "${client.nama}" (${kodeLeads}) sudah Lunas, tapi di jurnal cuma ada baris DP tanpa baris Pelunasan. Cek apakah sisa pembayaran sudah benar-benar diposting ke jurnal.` });
-            }
-        });
-    }
-
-    // --- 3. PEMISAHAN CICILAN & BUNGA ---
-    dataJurnalGlobal.forEach(row => {
-        const desc = (row.desc || '').toLowerCase();
-        const kode = (row.kode || '').toString().trim();
-        if ((kode.startsWith('21') || kode.startsWith('2')) && desc.includes('cicilan') && !desc.includes('bunga')) {
-            const pasangan = dataJurnalGlobal.filter(r => r.id === row.id);
-            const adaBebanBunga = pasangan.some(r => (r.nama || '').toLowerCase().includes('bunga'));
-            if (!adaBebanBunga) {
-                temuan.push({ level: 'peringatan', judul: `💳 Cicilan tanpa alokasi Beban Bunga — ${row.desc}`,
-                    detail: `Jurnal "${row.id}" (${row.tgl}) mengandung kata "cicilan" tapi tidak ada baris Beban Bunga terpisah. Kalau cicilan ini murni pokok (tanpa bunga), abaikan; kalau ada komponen bunga, pisahkan sebagai baris 5xx Beban Bunga tersendiri.` });
-            }
-        }
-    });
-
-    // --- 4. DISIPLIN PROFIT FIRST (saldo Kas Operasional/OPEX minus) ---
-    const mapSaldoKas = {};
-    dataJurnalGlobal.forEach(row => {
-        if (isTransaksiPribadi_(row)) return;
-        const nama = (row.nama || '').toLowerCase();
-        const kode = (row.kode || '').toString().trim();
-        if (!(kode.startsWith('1') && (nama.includes('kas') || nama.includes('bank')))) return;
-        const key = row.kode + '|' + row.nama;
-        mapSaldoKas[key] = (mapSaldoKas[key] || 0) + (Number(row.debit) || 0) - (Number(row.kredit) || 0);
-    });
-    Object.keys(mapSaldoKas).forEach(key => {
-        const nama = key.split('|')[1] || '';
-        const namaLower = nama.toLowerCase();
-        const isOpex = namaLower.includes('opex') || namaLower.includes('operasional');
-        if (isOpex && mapSaldoKas[key] < 0) {
-            temuan.push({ level: 'kritis', judul: `🚫 Saldo Rekening OPEX Minus — ${nama}`,
-                detail: `Saldo akun "${nama}" sudah minus Rp ${rp(Math.abs(mapSaldoKas[key]))}. Menurut disiplin Profit First, DILARANG menarik dari rekening Profit/Tax untuk menutup operasional — evaluasi struktur biaya atau alokasi persentase Profit First Anda.` });
-        }
-    });
-
-    // --- 5. PELANGGARAN KESATUAN USAHA (pengeluaran pribadi ditarik dari Kas Bisnis, bukan lewat Prive) ---
-    const byIdJurnal = {};
-    dataJurnalGlobal.forEach(r => { const k = r.id || ''; if (!byIdJurnal[k]) byIdJurnal[k] = []; byIdJurnal[k].push(r); });
-    Object.keys(byIdJurnal).forEach(idJurnal => {
-        const baris = byIdJurnal[idJurnal];
-        const adaPribadi = baris.some(r => isTransaksiPribadi_(r) && !(r.kode || '').toString().trim().startsWith('350'));
-        const adaKasBisnis = baris.some(r => {
-            const kd = (r.kode || '').toString().trim();
-            const nm = (r.nama || '').toLowerCase();
-            return kd.startsWith('1') && (nm.includes('kas') || nm.includes('bank')) && !nm.includes('pribadi');
-        });
-        if (adaPribadi && adaKasBisnis) {
-            const desc = baris[0]?.desc || idJurnal;
-            temuan.push({ level: 'kritis', judul: `🚧 Pelanggaran Kesatuan Usaha — ${desc}`,
-                detail: `Jurnal "${idJurnal}" mencampur akun Pribadi dengan Kas/Bank BISNIS secara langsung. Seharusnya pengeluaran pribadi ditarik lewat akun 350 (Prive) dulu, baru dari situ ke kas pribadi — supaya kas bisnis tidak tercampur pengeluaran rumah tangga.` });
-        }
-    });
-
-    renderHasilKontrolInternal_(temuan);
-}
-
-function renderHasilKontrolInternal_(temuan) {
-    const kritis = temuan.filter(t => t.level === 'kritis').length;
-    const peringatan = temuan.filter(t => t.level === 'peringatan').length;
-    const info = temuan.filter(t => t.level === 'info').length;
-
-    const summaryBox = document.getElementById('kontrolSummaryBox');
-    if (summaryBox) {
-        summaryBox.innerHTML = `
-            <div class="audit-kpi kritis"><div class="n">${kritis}</div><div class="l">🔴 Kritis</div></div>
-            <div class="audit-kpi peringatan"><div class="n">${peringatan}</div><div class="l">🟡 Peringatan</div></div>
-            <div class="audit-kpi info"><div class="n">${info}</div><div class="l">🔵 Info</div></div>
-            <div class="audit-kpi aman"><div class="n">${temuan.length}</div><div class="l">Total Hasil Cek</div></div>
-        `;
-    }
-
-    const listEl = document.getElementById('kontrolHasilList');
-    if (!listEl) return;
-    const urutan = { kritis: 0, peringatan: 1, info: 2 };
-    temuan.sort((a, b) => urutan[a.level] - urutan[b.level]);
-    const mapKelas = { kritis: 'merah', peringatan: 'kuning', info: 'hijau' };
-    listEl.innerHTML = temuan.map(t => `
-        <div class="kontrol-check-item ${mapKelas[t.level]}">
-            <span class="kontrol-badge ${mapKelas[t.level]}">${t.level === 'kritis' ? '🔴 ERROR' : t.level === 'peringatan' ? '🟡 WARNING' : '🟢 OK'}</span>
-            <strong>${t.judul}</strong>
-            <div style="margin-top:6px; font-size:12.5px; color:#475569;">${t.detail}</div>
-        </div>
-    `).join('');
-}
-
-// --- Ceklis SOP (localStorage, reset otomatis per periode) ---
-const CEKLIS_ITEM = {
-    harian: [
-        'Semua transferan DP klien sudah di-input ke jurnal (Kredit Pendapatan/DP, Debit Kas/Bank).',
-        'Setiap bukti transfer cetak foto/edit langsung di-input ke Beban Langsung.',
-        'Pengeluaran kas kecil studio (< Rp 100rb) tercatat lengkap dengan nota fisik/digital.'
-    ],
-    mingguan: [
-        'Hitung Total Pendapatan Masuk di Rekening Utama periode ini.',
-        'Transfer porsi Profit ke rekening/akun cadangan Profit.',
-        'Transfer porsi Owner\'s Compensation (gaji pemilik).',
-        'Transfer porsi Tax ke rekening/akun cadangan Pajak.',
-        'Sisa dana tetap di Rekening Operasional (OPEX).'
-    ],
-    bulanan: [
-        'Rekonsiliasi Bank: cocokkan saldo mutasi bank riil dengan saldo akun Kas/Bank di sistem (selisih harus Rp 0).',
-        'Eksekusi jurnal penyusutan bulanan untuk semua aset tetap (lihat sub-tab Aset Tetap & Penyusutan).',
-        'Stok Opname Persediaan: hitung fisik barang, cocokkan dengan akun Persediaan di sistem.',
-        'Review Piutang: cek apakah ada Piutang Usaha yang belum dilunasi klien > 30 hari.'
-    ]
-};
-
-function periodeKeyCeklis_(jenis) {
-    const now = new Date();
-    if (jenis === 'harian') return formatDateLocal_(now);
-    if (jenis === 'bulanan') return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    // mingguan: kunci berdasarkan periode tgl 1-10 / 11-25 / 26-akhir bulan (dipetakan ke "tgl 10 & 25")
-    const tgl = now.getDate();
-    const segmen = tgl <= 10 ? 'A' : (tgl <= 25 ? 'B' : 'C');
-    return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + segmen;
-}
-
-function ambilStatusCeklis_(jenis) {
-    const key = 'ceklis_sop_' + jenis;
-    const periodeAktif = periodeKeyCeklis_(jenis);
-    let data = {};
-    try { data = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { data = {}; }
-    if (data.periode !== periodeAktif) {
-        data = { periode: periodeAktif, checked: {} };
-        localStorage.setItem(key, JSON.stringify(data));
-    }
-    return data;
-}
-
-function toggleCeklisSOP(jenis, idx) {
-    const key = 'ceklis_sop_' + jenis;
-    const data = ambilStatusCeklis_(jenis);
-    data.checked[idx] = !data.checked[idx];
-    localStorage.setItem(key, JSON.stringify(data));
-    renderCeklisSOP_(jenis);
-}
-
-function resetCeklisSOP(jenis) {
-    if (!confirm('Reset semua centang ceklis ' + jenis + ' untuk periode ini?')) return;
-    const key = 'ceklis_sop_' + jenis;
-    const periodeAktif = periodeKeyCeklis_(jenis);
-    localStorage.setItem(key, JSON.stringify({ periode: periodeAktif, checked: {} }));
-    renderCeklisSOP_(jenis);
-}
-
-function renderCeklisSOP_(jenis) {
-    const mapBoxId = { harian: 'ceklisHarianBox', mingguan: 'ceklisMingguanBox', bulanan: 'ceklisBulananBox' };
-    const box = document.getElementById(mapBoxId[jenis]);
-    if (!box) return;
-    const data = ambilStatusCeklis_(jenis);
-    const items = CEKLIS_ITEM[jenis] || [];
-    box.innerHTML = items.map((teks, idx) => {
-        const dicentang = !!data.checked[idx];
-        return `<div class="ceklis-row ${dicentang ? 'done' : ''}">
-            <input type="checkbox" id="ceklis_${jenis}_${idx}" ${dicentang ? 'checked' : ''} onchange="toggleCeklisSOP('${jenis}', ${idx})">
-            <label for="ceklis_${jenis}_${idx}">${teks}</label>
-        </div>`;
-    }).join('');
-}
-
-function renderKontrolInternal() {
-    renderCeklisSOP_('harian');
-    renderCeklisSOP_('mingguan');
-    renderCeklisSOP_('bulanan');
-    jalankanValidasiInternalControl();
-}
-
-// =========================================================================
-// ASET TETAP & PENYUSUTAN — mengikuti skema "DAFTAR INVENTARIS" milik user:
-// Kode Aset, Kategori Pos Akun, Kategori Akun, Tanggal Perolehan, Nama
-// Barang, Qty In/Out, Kode Depresiasi, Debet (harga), Masa Pakai (Th/Bln),
-// Dep/Bln, Terdepresiasi, Nilai Akhir di Periode Berjalan, Terpakai (bln),
-// Sisa Masa Pakai (bln).
-//
-// PENTING: Terdepresiasi/Nilai Akhir/Terpakai/Sisa Masa Pakai DIHITUNG
-// OTOMATIS berbasis SELISIH WAKTU (tanggal perolehan -> hari ini), garis
-// lurus (straight-line) -- PERSIS seperti rumus di spreadsheet Anda, TIDAK
-// bergantung pada apakah jurnal penyusutan bulan itu sudah diposting atau
-// belum. Tombol "Posting Jurnal Penyusutan" tetap tersedia (opsional) untuk
-// benar-benar mencatatnya ke Buku Besar supaya ikut ke Income Statement.
-// =========================================================================
-
-// Selisih bulan penuh antara 2 tanggal (dibulatkan ke bawah), dipakai untuk
-// menghitung "Terpakai (bulan)" persis seperti kolom di spreadsheet Anda.
-function selisihBulanPenuh_(tglAwal, tglAkhir) {
-    const a = new Date(tglAwal);
-    const b = new Date(tglAkhir);
-    if (isNaN(a.getTime()) || isNaN(b.getTime())) return 0;
-    let bulan = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
-    if (b.getDate() < a.getDate()) bulan -= 1; // belum genap sebulan di bulan berjalan
-    return Math.max(0, bulan);
-}
-
-function hitungMetrikAset_(aset) {
-    const debet = Number(aset.debet) || 0;
-    const masaPakaiBulan = Number(aset.masaPakaiBulan) || (Number(aset.masaPakaiTahun) || 0) * 12;
-    const depPerBulan = masaPakaiBulan > 0 ? Math.round(debet / masaPakaiBulan) : 0;
-    const terpakai = selisihBulanPenuh_(aset.tglPerolehan, new Date());
-    const terpakaiDibatasi = Math.min(terpakai, masaPakaiBulan || terpakai);
-    const terdepresiasi = Math.min(depPerBulan * terpakaiDibatasi, debet);
-    const nilaiAkhir = debet - terdepresiasi;
-    const sisaMasaPakai = masaPakaiBulan - terpakai; // boleh negatif kalau sudah lewat umur ekonomis
-    const endQty = (Number(aset.qtyIn) || 0) - (Number(aset.qtyOut) || 0);
-    return { debet, masaPakaiBulan, depPerBulan, terpakai, terdepresiasi, nilaiAkhir, sisaMasaPakai, endQty };
-}
-
-function renderAsetTetap() {
-    const daftarAset = (dataFinance && dataFinance.inventaris) || [];
-    const tbody = document.getElementById('asetTetapTabelBody');
-    const kpiGrid = document.getElementById('asetKpiGrid');
-    if (!tbody) return;
-
-    if (daftarAset.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:20px; color:#94a3b8;">Belum ada aset tetap terdaftar. Klik "➕ Tambah Aset Baru" untuk mulai.</td></tr>';
-        if (kpiGrid) kpiGrid.innerHTML = '';
-        return;
-    }
-
-    let totalDebet = 0, totalTerdepresiasi = 0;
-    const baris = daftarAset.map(aset => {
-        const m = hitungMetrikAset_(aset);
-        totalDebet += m.debet;
-        totalTerdepresiasi += m.terdepresiasi;
-        const warnaSisa = m.sisaMasaPakai < 0 ? '#dc2626' : '#475569';
-        const persenTerpakai = m.masaPakaiBulan > 0 ? Math.min(100, Math.round((m.terpakai / m.masaPakaiBulan) * 100)) : 0;
-
-        return `<tr>
-            <td style="font-family:monospace; font-size:11px;">${aset.kodeAset || '-'}</td>
-            <td style="font-weight:700;">${aset.namaBarang || '-'}</td>
-            <td>${aset.kategoriAkunNama || aset.kategoriPosAkun || '-'}</td>
-            <td>${formatTanggalManusia(aset.tglPerolehan)}</td>
-            <td style="text-align:center;">${m.endQty}</td>
-            <td>Rp ${rp(m.debet)}</td>
-            <td style="text-align:center;">${(Number(aset.masaPakaiTahun) || (m.masaPakaiBulan / 12).toFixed(1))} th / ${m.masaPakaiBulan} bln</td>
-            <td>Rp ${rp(m.depPerBulan)}</td>
-            <td style="color:#dc2626;">Rp ${rp(m.terdepresiasi)}</td>
-            <td style="color:#059669; font-weight:700;">Rp ${rp(m.nilaiAkhir)}</td>
-            <td style="text-align:center;">${m.terpakai} bln
-                <div class="aset-progress-bar"><div class="aset-progress-fill" style="width:${persenTerpakai}%;"></div></div>
-            </td>
-            <td style="text-align:center; color:${warnaSisa}; font-weight:700;">${m.sisaMasaPakai}</td>
-            <td><button type="button" onclick="bukaModalPostingPenyusutan('${(aset.namaBarang || '').replace(/'/g, "\\'")}', ${m.depPerBulan})" style="padding:5px 10px; border-radius:6px; border:none; background:#eef2ff; color:#4338ca; font-weight:700; font-size:11px; cursor:pointer; white-space:nowrap;">📉 Posting ke Jurnal</button></td>
-        </tr>`;
-    }).join('');
-
-    tbody.innerHTML = baris;
-
-    if (kpiGrid) {
-        kpiGrid.innerHTML = `
-            <div class="fin-kpi-card fin-kpi-aktiva"><div class="fin-kpi-label">Total Debet (Harga Perolehan)</div><div class="fin-kpi-val">Rp ${rp(totalDebet)}</div></div>
-            <div class="fin-kpi-card fin-kpi-beban"><div class="fin-kpi-label">Total Terdepresiasi</div><div class="fin-kpi-val">Rp ${rp(totalTerdepresiasi)}</div></div>
-            <div class="fin-kpi-card fin-kpi-laba-untung"><div class="fin-kpi-label">Total Nilai Akhir (Buku)</div><div class="fin-kpi-val">Rp ${rp(totalDebet - totalTerdepresiasi)}</div></div>
-            <div class="fin-kpi-card fin-kpi-pasiva"><div class="fin-kpi-label">Jumlah Aset Terdaftar</div><div class="fin-kpi-val">${daftarAset.length}</div></div>
-        `;
-    }
-}
-
-function generateKodeAsetBerikutnya_() {
-    const daftarAset = (dataFinance && dataFinance.inventaris) || [];
-    let maxNum = 0;
-    daftarAset.forEach(a => {
-        const m = String(a.kodeAset || '').match(/EQ0*(\d+)/i);
-        if (m) maxNum = Math.max(maxNum, Number(m[1]));
-    });
-    return 'EQ' + String(maxNum + 1).padStart(3, '0');
-}
-
-function bukaFormTambahAset() {
-    document.getElementById('asetKodeBaru').value = generateKodeAsetBerikutnya_();
-    ['asetNamaBaru', 'asetHargaBaru', 'asetKategoriPosBaru', 'asetKategoriAkunBaru', 'asetAkunDebitBaru', 'asetAkunKreditBaru'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
-    });
-    document.getElementById('asetQtyInBaru').value = 1;
-    document.getElementById('asetQtyOutBaru').value = 0;
-    document.getElementById('asetMasaPakaiTahunBaru').value = 5;
-    document.getElementById('asetTglBaru').value = new Date().toISOString().split('T')[0];
-    document.getElementById('modalTambahAset').style.display = 'flex';
-}
-
-async function simpanAsetTetapBaru() {
-    const kodeAset = document.getElementById('asetKodeBaru').value.trim();
-    const kategoriPos = document.getElementById('asetKategoriPosBaru').value.trim();
-    const kategoriAkun = document.getElementById('asetKategoriAkunBaru').value.trim();
-    const nama = document.getElementById('asetNamaBaru').value.trim();
-    const harga = Number(document.getElementById('asetHargaBaru').value) || 0;
-    const qtyIn = Number(document.getElementById('asetQtyInBaru').value) || 0;
-    const qtyOut = Number(document.getElementById('asetQtyOutBaru').value) || 0;
-    const masaPakaiTahun = Number(document.getElementById('asetMasaPakaiTahunBaru').value) || 5;
-    const tgl = document.getElementById('asetTglBaru').value;
-    const akunDebitInput = document.getElementById('asetAkunDebitBaru').value.trim();
-    const akunKreditInput = document.getElementById('asetAkunKreditBaru').value.trim();
-
-    if (!kodeAset || !nama || harga <= 0 || !tgl || !akunDebitInput || !akunKreditInput) {
-        alert('Lengkapi semua field wajib dulu (Kode Aset, Nama, Harga, Tanggal, Akun Debit & Kredit).');
-        return;
-    }
-
-    const options = document.getElementById('listAkun').options;
-    const findOption = (val) => Array.from(options).find(o => o.value === val);
-    const optDebit = findOption(akunDebitInput);
-    const optKredit = findOption(akunKreditInput);
-    if (!optDebit || !optKredit) {
-        alert('Akun Debit/Kredit harus dipilih persis dari daftar saran (datalist), jangan diketik bebas.');
-        return;
-    }
-
-    const btn = document.getElementById('btnSimpanAsetBaru');
-    const teksAsli = btn.innerText;
-    btn.disabled = true; btn.innerText = '⏳ Menyimpan...';
-
-    const masaPakaiBulan = masaPakaiTahun * 12;
-    const depPerBulan = masaPakaiBulan > 0 ? Math.round(harga / masaPakaiBulan) : 0;
-    const kodeDepresiasi = 'DEP' + kodeAset.replace(/^EQ0*/i, '').padStart(3, '0');
-
-    try {
-        // 1. Daftarkan ke master Aset Tetap (DB_Inventaris)
-        const fdAset = new FormData();
-        fdAset.append('action', 'tambahAsetTetap');
-        fdAset.append('kodeAset', kodeAset);
-        fdAset.append('kategoriPosAkun', kategoriPos);
-        fdAset.append('kategoriAkunNama', kategoriAkun);
-        fdAset.append('tglPerolehan', tgl);
-        fdAset.append('namaBarang', nama);
-        fdAset.append('qtyIn', qtyIn);
-        fdAset.append('qtyOut', qtyOut);
-        fdAset.append('kodeDepresiasi', kodeDepresiasi);
-        fdAset.append('debet', harga);
-        fdAset.append('masaPakaiTahun', masaPakaiTahun);
-        fdAset.append('masaPakaiBulan', masaPakaiBulan);
-        fdAset.append('depPerBulan', depPerBulan);
-        const resAset = await fetch(scriptURL, { method: 'POST', body: fdAset });
-        const resultAset = await resAset.json();
-        if (resultAset.result !== 'success') throw new Error(resultAset.message || 'Gagal mendaftarkan aset ke master.');
-
-        // 2. Posting jurnal perolehan aset (Debit Aset / Kredit Sumber Dana)
-        const dataTransaksi = [
-            { tgl, desc: 'Perolehan aset ' + kodeAset + ': ' + nama, kode: optDebit.getAttribute('data-kode'), nama: optDebit.getAttribute('data-nama'), kategori: optDebit.getAttribute('data-kategori'), tipe: optDebit.getAttribute('data-tipe'), debit: harga, kredit: 0 },
-            { tgl, desc: 'Perolehan aset ' + kodeAset + ': ' + nama, kode: optKredit.getAttribute('data-kode'), nama: optKredit.getAttribute('data-nama'), kategori: optKredit.getAttribute('data-kategori'), tipe: optKredit.getAttribute('data-tipe'), debit: 0, kredit: harga }
-        ];
-        const fdJurnal = new FormData();
-        fdJurnal.append('action', 'saveDoubleJurnal');
-        fdJurnal.append('data', JSON.stringify(dataTransaksi));
-        const resJurnal = await fetch(scriptURL, { method: 'POST', body: fdJurnal });
-        const resultJurnal = await resJurnal.json();
-        if (resultJurnal.result !== 'success') throw new Error(resultJurnal.message || 'Aset terdaftar, tapi gagal posting jurnal perolehan.');
-
-        alert('✅ Aset "' + kodeAset + ' - ' + nama + '" berhasil ditambahkan & jurnal perolehan sudah diposting.\nPenyusutan/bulan otomatis: Rp ' + rp(depPerBulan) + ' (Masa Pakai: ' + masaPakaiTahun + ' th / ' + masaPakaiBulan + ' bln)');
-        document.getElementById('modalTambahAset').style.display = 'none';
-        await tarikDataKeuanganSaja();
-        renderAsetTetap();
-    } catch (err) {
-        alert('❌ ' + err.message);
-    } finally {
-        btn.disabled = false; btn.innerText = teksAsli;
-    }
-}
-
-function bukaModalPostingPenyusutan(namaAset, depPerBulan) {
-    document.getElementById('penyusutanAsetNamaAktif').value = namaAset;
-    document.getElementById('penyusutanNominalAktif').value = depPerBulan;
-    document.getElementById('penyusutanInfoAset').innerText = `Aset: ${namaAset} — Nominal penyusutan bulan ini: Rp ${rp(depPerBulan)} (mengikuti perhitungan otomatis di tabel; posting ini mencatatnya ke Buku Besar supaya masuk Income Statement bulan berjalan).`;
-    document.getElementById('penyusutanAkunBeban').value = '';
-    document.getElementById('penyusutanAkunAkumulasi').value = '';
-    document.getElementById('modalPostingPenyusutan').style.display = 'flex';
-}
-
-async function postingPenyusutanBulanIni() {
-    const namaAset = document.getElementById('penyusutanAsetNamaAktif').value;
-    const nominal = Number(document.getElementById('penyusutanNominalAktif').value) || 0;
-    const akunBebanInput = document.getElementById('penyusutanAkunBeban').value.trim();
-    const akunAkumulasiInput = document.getElementById('penyusutanAkunAkumulasi').value.trim();
-
-    if (nominal <= 0 || !akunBebanInput || !akunAkumulasiInput) {
-        alert('Lengkapi akun Beban Penyusutan dan Akumulasi Penyusutan dulu.');
-        return;
-    }
-
-    const options = document.getElementById('listAkun').options;
-    const findOption = (val) => Array.from(options).find(o => o.value === val);
-    const optBeban = findOption(akunBebanInput);
-    const optAkumulasi = findOption(akunAkumulasiInput);
-    if (!optBeban || !optAkumulasi) {
-        alert('Akun harus dipilih persis dari daftar saran (datalist).');
-        return;
-    }
-
-    const btn = document.getElementById('btnPostingPenyusutan');
-    const teksAsli = btn.innerText;
-    btn.disabled = true; btn.innerText = '⏳ Memposting...';
-
-    const tglHariIni = new Date().toISOString().split('T')[0];
-    const dataTransaksi = [
-        { tgl: tglHariIni, desc: 'Penyusutan bulan ini: ' + namaAset, kode: optBeban.getAttribute('data-kode'), nama: optBeban.getAttribute('data-nama'), kategori: optBeban.getAttribute('data-kategori'), tipe: optBeban.getAttribute('data-tipe'), debit: nominal, kredit: 0 },
-        { tgl: tglHariIni, desc: 'Penyusutan bulan ini: ' + namaAset, kode: optAkumulasi.getAttribute('data-kode'), nama: optAkumulasi.getAttribute('data-nama'), kategori: optAkumulasi.getAttribute('data-kategori'), tipe: optAkumulasi.getAttribute('data-tipe'), debit: 0, kredit: nominal }
-    ];
-
-    try {
-        const fd = new FormData();
-        fd.append('action', 'saveDoubleJurnal');
-        fd.append('data', JSON.stringify(dataTransaksi));
-        const res = await fetch(scriptURL, { method: 'POST', body: fd });
-        const result = await res.json();
-        if (result.result === 'success') {
-            alert('✅ Penyusutan "' + namaAset + '" bulan ini berhasil diposting.');
-            document.getElementById('modalPostingPenyusutan').style.display = 'none';
-            await tarikDataKeuanganSaja();
-            renderAsetTetap();
-        } else {
-            alert('❌ Gagal: ' + (result.message || ''));
-        }
-    } catch (err) {
-        alert('❌ Gagal koneksi: ' + err);
-    } finally {
-        btn.disabled = false; btn.innerText = teksAsli;
-    }
-}
-
 
 // =========================================================================
 // PENDAMPING SOP SAAT INPUT JURNAL (live suggestion + validasi sebelum posting)
@@ -2536,19 +2050,10 @@ function hitungIncomeStatementLengkap(dataJurnal) {
 
     let sales = 0, purchase = 0, expenses = 0;
     let beginningInv = 0, endingInv = 0; // dihitung dari saldo akun Persediaan sebelum & sesudah periode
-    let mapPendapatan = {}; // kode|nama -> { kode, nama, total, transaksi:[] }
-    let mapCogs = {};
-    let mapExpenses = {};
+    let rincianExpenses = [];
 
     const tglMulai = document.getElementById('filterTglMulai')?.value || '';
     const tglSelesai = document.getElementById('filterTglSelesai')?.value || '';
-
-    function tambahKeGrup_(map, row, nilai) {
-        const key = row.kode + '|' + row.nama;
-        if (!map[key]) map[key] = { kode: row.kode, nama: row.nama, total: 0, transaksi: [] };
-        map[key].total += nilai;
-        map[key].transaksi.push({ tgl: row.tgl, desc: row.desc, nilai });
-    }
 
     // Beginning Inventory = saldo akun Persediaan SEBELUM tglMulai (semua histori)
     // Ending Inventory = saldo akun Persediaan SAMPAI tglSelesai (semua histori s/d akhir periode)
@@ -2573,17 +2078,14 @@ function hitungIncomeStatementLengkap(dataJurnal) {
         const nama = (row.nama || '').toLowerCase();
 
         if (kode.startsWith('4') || kategori.includes('pendapatan')) {
-            const nilai = kre - deb;
-            sales += nilai;
-            tambahKeGrup_(mapPendapatan, row, nilai);
+            sales += (kre - deb);
         } else if (kode.startsWith('5') || kategori.includes('beban') || kategori.includes('biaya')) {
             const nilai = deb - kre;
             if (KATA_KUNCI_PEMBELIAN.some(k => kategori.includes(k) || nama.includes(k))) {
                 purchase += nilai;
-                tambahKeGrup_(mapCogs, row, nilai);
             } else {
                 expenses += nilai;
-                tambahKeGrup_(mapExpenses, row, nilai);
+                rincianExpenses.push({ nama: row.nama, kode, nilai });
             }
         }
     });
@@ -2610,10 +2112,15 @@ function hitungIncomeStatementLengkap(dataJurnal) {
     const elMargin = document.getElementById('is_grossmargin');
     if (elMargin) elMargin.innerText = sales > 0 ? (grossProfit / sales * 100).toFixed(1) + '%' : '-';
 
-    // --- Render 3 tabel rincian per-akun (bisa diklik untuk buka/tutup daftar transaksinya) ---
-    renderRincianAkunIS_('is_rincian_pendapatan', mapPendapatan, sales, '#059669');
-    renderRincianAkunIS_('is_rincian_cogs', mapCogs, sales, '#d97706');
-    renderRincianAkunIS_('is_rincian_expenses_grup', mapExpenses, sales, '#dc2626');
+    const tbodyExp = document.getElementById('is_rincian_expenses');
+    if (tbodyExp) {
+        tbodyExp.innerHTML = rincianExpenses.length > 0
+            ? rincianExpenses.sort((a, b) => b.nilai - a.nilai).map(r => {
+                let persenNilai = sales > 0 ? (r.nilai / sales * 100).toFixed(1) + '%' : '-';
+                return `<tr><td>${r.kode} - ${r.nama}</td><td style="text-align:right;">Rp ${r.nilai.toLocaleString('id-ID')}</td><td style="text-align:right; color:#64748b;">${persenNilai}</td></tr>`;
+            }).join('')
+            : '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Tidak ada beban operasional pada periode ini.</td></tr>';
+    }
 
     // Catatan SOP otomatis untuk Income Statement
     const elCatatan = document.getElementById('is_catatan_sop');
@@ -2627,39 +2134,6 @@ function hitungIncomeStatementLengkap(dataJurnal) {
     }
 }
 
-// Render tabel rincian per-akun (grouped), tiap baris akun bisa diklik untuk
-// membuka daftar transaksi individual yang menyusunnya. Dipakai di Income
-// Statement (Pendapatan/COGS/Beban) dan bisa dipakai ulang di tempat lain.
-function renderRincianAkunIS_(tbodyId, mapGrup, basisPersen, warnaAksen) {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-
-    const daftarAkun = Object.values(mapGrup).sort((a, b) => b.total - a.total);
-    if (daftarAkun.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:14px;">Tidak ada transaksi pada periode ini.</td></tr>';
-        return;
-    }
-
-    let html = '';
-    daftarAkun.forEach((akun, idx) => {
-        const idDetail = tbodyId + '_detail_' + idx;
-        const persen = basisPersen > 0 ? (akun.total / basisPersen * 100).toFixed(1) + '%' : '-';
-        html += `<tr style="cursor:pointer; background:#f8fafc;" onclick="toggleExpandBreakdown(document.getElementById('${idDetail}_btn'), '${idDetail}')">
-            <td style="font-weight:700; color:#1e293b;">▶ ${akun.kode} - ${akun.nama} <span style="font-weight:400; color:#94a3b8; font-size:11px;">(${akun.transaksi.length} transaksi)</span></td>
-            <td style="text-align:right; font-weight:700; color:${warnaAksen};">Rp ${rp(akun.total)}</td>
-            <td style="text-align:right; color:#64748b;">${persen}</td>
-            <td style="text-align:right;"><span id="${idDetail}_btn" style="color:#6366f1; font-size:11px; font-weight:700;">▼ Lihat Transaksi</span></td>
-        </tr>`;
-        const barisTransaksi = akun.transaksi
-            .sort((a, b) => new Date(b.tgl) - new Date(a.tgl))
-            .map(t => `<tr style="background:#fff;"><td colspan="2" style="padding-left:28px; font-size:12px; color:#475569;">${formatTanggalManusia(t.tgl)} — ${t.desc || '-'}</td><td colspan="2" style="text-align:right; font-size:12px; color:#475569;">Rp ${rp(t.nilai)}</td></tr>`)
-            .join('');
-        html += `<tbody id="${idDetail}" style="display:none;">${barisTransaksi}</tbody>`;
-    });
-
-    tbody.innerHTML = html;
-}
-
 // =========================================================================
 // CASH STATEMENT (format Rosetta Stone ala kampus: skedul Cash Flow bertahap)
 // =========================================================================
@@ -2667,16 +2141,6 @@ function hitungCashStatementLengkap(dataJurnal) {
     if (!Array.isArray(dataJurnal)) return;
     let ocf = 0, icf = 0, fcf = 0;
     let rincianOps = [], rincianInv = [], rincianDan = [];
-    let mapMasuk = {}, mapKeluar = {}; // key: label kategori (akun lawan) -> {label,total,transaksi:[]}
-
-    // Index baris per ID Jurnal supaya bisa cari "akun lawan" pasangan double-entry-nya
-    let byId = {};
-    dataJurnal.forEach(r => { const k = r.id || ''; if (!byId[k]) byId[k] = []; byId[k].push(r); });
-    function isKasBank_(r) {
-        const kd = (r.kode || '').toString().trim();
-        const nm = (r.nama || '').toLowerCase();
-        return kd.startsWith('1') && (nm.includes('kas') || nm.includes('bank'));
-    }
 
     dataJurnal.forEach(row => {
         if (isTransaksiPribadi_(row)) return;
@@ -2691,15 +2155,6 @@ function hitungCashStatementLengkap(dataJurnal) {
         if (tipe.includes('investasi')) { icf += pergerakan; rincianInv.push(item); }
         else if (tipe.includes('pendanaan')) { fcf += pergerakan; rincianDan.push(item); }
         else { ocf += pergerakan; rincianOps.push(item); }
-
-        // Cari akun lawan (baris lain dengan ID Jurnal sama, bukan kas/bank) untuk
-        // dipakai sebagai label kategori Masuk/Keluar yang lebih bermakna.
-        const pasangan = (byId[row.id] || []).find(r2 => r2 !== row && !isKasBank_(r2));
-        const labelKategori = pasangan ? (pasangan.kode + ' - ' + pasangan.nama) : (row.kode + ' - ' + row.nama);
-        const targetMap = pergerakan >= 0 ? mapMasuk : mapKeluar;
-        if (!targetMap[labelKategori]) targetMap[labelKategori] = { label: labelKategori, total: 0, transaksi: [] };
-        targetMap[labelKategori].total += Math.abs(pergerakan);
-        targetMap[labelKategori].transaksi.push({ tgl: row.tgl, desc: row.desc, nilai: Math.abs(pergerakan) });
     });
 
     const netCash = ocf + icf + fcf;
@@ -2723,48 +2178,12 @@ function hitungCashStatementLengkap(dataJurnal) {
     renderSkedul('cs_skedul_inv', rincianInv);
     renderSkedul('cs_skedul_dan', rincianDan);
 
-    const totalMasuk = Object.values(mapMasuk).reduce((a, v) => a + v.total, 0);
-    const totalKeluar = Object.values(mapKeluar).reduce((a, v) => a + v.total, 0);
-    renderRincianKasKategori_('cs_rincian_masuk', mapMasuk, totalMasuk, '#059669');
-    renderRincianKasKategori_('cs_rincian_keluar', mapKeluar, totalKeluar, '#dc2626');
-
     const elCatatan = document.getElementById('cs_catatan_sop');
     if (elCatatan) {
         elCatatan.innerHTML = '📘 <strong>Catatan SOP:</strong> ' + (ocf < 0
             ? 'OCF (Operating Cash Flow) negatif — kas dari operasional harian lebih kecil dari yang dikeluarkan. Ini "pesan darurat", bahkan kalau Income Statement masih untung, karena Income Statement bisa untung di atas kertas (akrual) sementara kasnya belum masuk (piutang).'
             : 'OCF positif — bisnis mencetak kas riil dari kegiatan hariannya, fondasi paling sehat untuk menjalankan Profit First secara konsisten.');
     }
-}
-
-// Render tabel rincian Masuk/Keluar kas per kategori (akun lawan), tiap
-// baris kategori bisa diklik untuk buka daftar transaksinya.
-function renderRincianKasKategori_(tbodyId, mapGrup, basisPersen, warnaAksen) {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-
-    const daftar = Object.values(mapGrup).sort((a, b) => b.total - a.total);
-    if (daftar.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:14px;">Tidak ada mutasi.</td></tr>';
-        return;
-    }
-
-    let html = '';
-    daftar.forEach((kat, idx) => {
-        const idDetail = tbodyId + '_detail_' + idx;
-        const persen = basisPersen > 0 ? (kat.total / basisPersen * 100).toFixed(1) + '%' : '-';
-        html += `<tr style="cursor:pointer; background:#f8fafc;" onclick="toggleExpandBreakdown(document.getElementById('${idDetail}_btn'), '${idDetail}')">
-            <td style="font-weight:700; color:#1e293b;">▶ ${kat.label} <span style="font-weight:400; color:#94a3b8; font-size:11px;">(${kat.transaksi.length} transaksi)</span></td>
-            <td style="text-align:right; font-weight:700; color:${warnaAksen};">Rp ${rp(kat.total)}</td>
-            <td style="text-align:right; color:#64748b;">${persen}</td>
-        </tr>`;
-        const barisTransaksi = kat.transaksi
-            .sort((a, b) => new Date(b.tgl) - new Date(a.tgl))
-            .map(t => `<tr style="background:#fff;"><td colspan="2" style="padding-left:28px; font-size:12px; color:#475569;">${formatTanggalManusia(t.tgl)} — ${t.desc || '-'}</td><td style="text-align:right; font-size:12px; color:#475569;">Rp ${rp(t.nilai)}</td></tr>`)
-            .join('');
-        html += `<tbody id="${idDetail}" style="display:none;">${barisTransaksi}</tbody>`;
-    });
-
-    tbody.innerHTML = html;
 }
 
 // =========================================================================

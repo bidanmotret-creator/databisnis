@@ -5,8 +5,14 @@
 
 // rp() sekarang baca locale dari TENANT_CONFIG.meta.localeAngka kalau
 // tersedia (fallback 'id-ID' supaya file ini tetap jalan sendiri tanpa
-// tenant-config.js). File ini KHUSUS project index-marketing.html —
-// terpisah dari utils.js project index.html (gabungan finance+marketing).
+// tenant-config.js). Ini titik LEVERAGE TERTINGGI: dipakai di ratusan
+// tempat di ui-finance.js & ui-marketing.js, jadi satu perubahan di sini
+// membenahi asumsi "selalu Rupiah/id-ID" di seluruh aplikasi sekaligus.
+// Catatan: fungsi ini TIDAK menambahkan simbol mata uang (dipanggil
+// sebagai "Rp " + rp(x) di banyak tempat) — simbolnya sendiri sebaiknya
+// diganti bertahap jadi (TENANT_CONFIG?.meta?.mataUang || 'Rp') di titik
+// pemanggilannya, atau pakai formatUang() dari tenant-config.js untuk
+// kasus baru.
 function rp(num) {
     let locale = (typeof TENANT_CONFIG !== 'undefined' && TENANT_CONFIG?.meta?.localeAngka) || 'id-ID';
     return Math.round(Number(num) || 0).toLocaleString(locale);
