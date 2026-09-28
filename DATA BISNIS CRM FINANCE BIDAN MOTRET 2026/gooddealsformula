@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Good Deals Formula</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--card2:#1e222b;--line:#2a2f3a;--text:#eef0f4;--sub:#9aa3b2;--accent:#ffb020;--accent2:#4fd1c5;--danger:#ff6b6b;--good:#4fd18c;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{padding:20px 14px 60px;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:1.4rem;margin:0 0 2px}
+.tag{color:var(--sub);font-size:.85rem;margin-bottom:14px}
+fieldset{border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 16px;background:var(--card)}
+legend{padding:0 8px;font-weight:600;color:var(--accent2)}
+label{display:block;font-size:.82rem;color:var(--sub);margin:10px 0 4px}
+input,textarea,select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:.92rem;font-family:inherit}
+textarea{min-height:44px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+button{background:var(--accent);color:#1a1400;border:none;padding:11px 20px;border-radius:9px;font-weight:700;font-size:.9rem;cursor:pointer}
+button.secondary{background:transparent;color:var(--text);border:1px solid var(--line);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+#report{display:none;border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--card);white-space:pre-wrap;font-size:.92rem}
+#report h1,#report h2,#report h3{color:var(--accent)}
+.loading{display:none;color:var(--sub);font-size:.9rem;margin:10px 0}
+.err{color:var(--danger);font-size:.85rem;display:none;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎯 AI Good Deals Formula</h1>
+  <div class="tag">Offer &amp; Deal Strategy Builder — dibuat oleh AI berdasarkan framework GOOD DEAL</div>
+
+  <form id="f">
+    <fieldset>
+      <legend>Bisnis</legend>
+      <div class="grid2">
+        <div><label>Nama bisnis</label><input name="bizname"></div>
+        <div><label>Industri</label><input name="industry" placeholder="mis. F&amp;B, Jasa, SaaS"></div>
+      </div>
+      <label>Produk / layanan</label><textarea name="product"></textarea>
+      <div class="grid2">
+        <div><label>Harga (Rp)</label><input name="price" type="number"></div>
+        <div><label>Cost (Rp)</label><input name="cost" type="number"></div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Customer</legend>
+      <label>Masalah utama</label><textarea name="problem"></textarea>
+      <label>Desired outcome</label><textarea name="outcome"></textarea>
+      <div class="grid2">
+        <div><label>Objection utama</label><input name="objection"></div>
+        <div><label>Alternatif yang ada</label><input name="alt"></div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Kapasitas &amp; Proof</legend>
+      <div class="grid2">
+        <div><label>Kapasitas</label><input name="capacity"></div>
+        <div><label>Guarantee</label><input name="guarantee"></div>
+      </div>
+      <label>Proof/testimoni</label><textarea name="proof"></textarea>
+      <label>Delivery method</label>
+      <select name="delivery"><option>DIY</option><option>DWY</option><option selected>DFY</option><option>Subscription</option><option>Membership</option><option>Consulting/Coaching</option><option>Hybrid</option></select>
+    </fieldset>
+    <fieldset>
+      <legend>Target</legend>
+      <div class="grid2">
+        <div><label>Target revenue</label><input name="trevenue"></div>
+        <div><label>Target sales</label><input name="tsales"></div>
+      </div>
+    </fieldset>
+    <div class="btnrow">
+      <button type="submit" id="gen">⚡ Generate dengan AI</button>
+      <button type="button" class="secondary" id="clr">Reset</button>
+    </div>
+    <div class="loading" id="loading">⏳ AI sedang menyusun strategi...</div>
+    <div class="err" id="err"></div>
+  </form>
+
+  <div id="report"></div>
+  <div class="btnrow" id="reportBtns" style="display:none">
+    <button type="button" class="secondary" id="dlBtn">⬇️ Unduh Hasil (.txt)</button>
+  </div>
+</div>
+
+<script>
+// GANTI dengan URL Web App Google Apps Script Anda setelah deploy (lihat apps-script/Code.gs)
+const BACKEND_URL = "https://script.google.com/macros/s/XXXXXXXXXXXXXXXX/exec";
+
+const $=s=>document.querySelector(s);
+$('#clr').onclick=()=>{$('#f').reset();$('#report').style.display='none';};
+
+$('#f').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  $('#err').style.display='none';
+  $('#loading').style.display='block';
+  $('#gen').disabled = true;
+  try{
+    const res = await fetch(BACKEND_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain'}, // text/plain avoids CORS preflight on Apps Script
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if(json.error) throw new Error(json.error);
+    $('#report').textContent = json.report || '(Tidak ada hasil)';
+    $('#report').style.display='block';
+    $('#reportBtns').style.display='flex';
+    $('#report').scrollIntoView({behavior:'smooth'});
+  }catch(err){
+    $('#err').textContent = 'Gagal menghasilkan strategi: ' + err.message + '. Pastikan BACKEND_URL sudah diisi dengan URL Web App Apps Script yang sudah di-deploy.';
+    $('#err').style.display='block';
+  }finally{
+    $('#loading').style.display='none';
+    $('#gen').disabled = false;
+  }
+});
+
+$('#dlBtn').onclick=()=>{
+  const blob = new Blob([$('#report').textContent], {type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='good-deal-strategy.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+</script>
+</body>
+</html>
