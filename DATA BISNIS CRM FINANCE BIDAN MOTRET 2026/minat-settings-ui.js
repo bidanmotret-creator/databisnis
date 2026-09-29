@@ -81,6 +81,10 @@
       <button type="button" class="ms-btn ms-btn-danger" onclick="msResetKeDefault()">↩️ Reset ke Default File</button>
     </div>
 
+    <label style="display:flex; align-items:center; gap:6px; margin-top:10px; font-size:12px; color:#334155; cursor:pointer;">
+      <input type="checkbox" id="msHanyaKosong" checked> Di sheet Data_Ads, <b>hanya isi baris yang kolom minatnya masih kosong</b> (jangan timpa yang sudah terisi)
+    </label>
+
     <div id="msKodeWrap" style="display:none; margin-top:12px;">
       <textarea id="msKodeOutput" readonly></textarea>
       <div style="margin-top:6px;"><button type="button" class="ms-btn ms-btn-ghost" onclick="msSalinKode()">Salin ke Clipboard</button></div>
@@ -354,6 +358,7 @@
 
       fd = new FormData();
       fd.append('action', 'backfillMinatDataAds');
+      fd.append('hanyaKosong', document.getElementById('msHanyaKosong')?.checked ? 'true' : 'false');
       res = await (await fetch(scriptURL, { method: 'POST', body: fd })).json();
       if (res.result !== 'success') throw new Error(res.message || 'gagal backfill');
       pesanServer = '\n\n🗂️ Data_Ads: ' + res.message + (res.tidakCocok ? ' (' + res.tidakCocok + ' baris tidak cocok aturan, dibiarkan)' : '');
