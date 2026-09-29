@@ -12,7 +12,6 @@ const MENU_APLIKASI = [
   { grup: 'Utama',      href: 'index.html',           ico: '🏠', teks: 'Menu Utama' },
   { grup: 'Utama',      href: 'crm.html',             ico: '👥', teks: 'CRM Leads',           kamus: 'menu_crm' },
   { grup: 'Utama',      href: 'followup.html',        ico: '🤖', teks: 'AI Chat & Follow-up', kamus: 'menu_followup' },
-  { grup: 'Utama',      href: 'rekap.html',           ico: '🧾', teks: 'Rekap Order' },
   { grup: 'Utama',      href: 'index-marketing.html', ico: '📈', teks: 'Analisis Marketing' },
   { grup: 'Utama',      href: 'index-keuangan.html',  ico: '💰', teks: 'Laporan Keuangan',    kamus: 'menu_keuangan' },
   { grup: 'Utama',      href: 'eos.html',             ico: '🎯', teks: 'EOS Dashboard',       kamus: 'menu_eos' },
