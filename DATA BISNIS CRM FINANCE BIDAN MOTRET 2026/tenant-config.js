@@ -224,16 +224,73 @@ function isClosingRow(row) {
   return rules.closingStatusValues.some(v => String(val).includes(v));
 }
 
-// Normalisasi nama campaign -> kategori minat, berdasarkan
-// TENANT_CONFIG.minatKeywordMap. Fallback ke nilai asli kalau tidak ada
-// pattern yang cocok (jadi aman dipakai walau map masih kosong).
+// =========================================================================
+// MAPPING MINAT — dengan override tersimpan di localStorage browser.
+// Override MENGGANTIKAN (bukan menambah) minatKeywordMap dari file ini.
+// Override bersifat per-browser; untuk permanen, pakai "Salin sebagai Kode".
+// =========================================================================
+const MINAT_OVERRIDE_KEY = 'tenant_minat_rules_override_v1';
+
+function bacaMinatOverride_() {
+  try {
+    const raw = localStorage.getItem(MINAT_OVERRIDE_KEY);
+    if (!raw) return null;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return null;
+    const rules = [];
+    arr.forEach(function (r) {
+      if (!r || !r.pattern || !r.minat) return;
+      try { rules.push({ pattern: new RegExp(r.pattern, 'i'), minat: String(r.minat).trim() }); } catch (e) { /* regex rusak, lewati */ }
+    });
+    return rules;
+  } catch (e) { return null; }
+}
+
+function sedangPakaiMinatOverride() {
+  try { return !!localStorage.getItem(MINAT_OVERRIDE_KEY); } catch (e) { return false; }
+}
+
+// Daftar aturan yang sedang aktif (RegExp asli) — override kalau ada, kalau tidak file config.
+function ambilMinatRulesAktif() {
+  const ov = bacaMinatOverride_();
+  if (ov !== null && sedangPakaiMinatOverride()) return ov;
+  return TENANT_CONFIG.minatKeywordMap || [];
+}
+
+// Versi teks (pattern string + minat) — untuk ditampilkan/diedit di UI.
+function ambilMinatRulesAktifSerializable() {
+  return ambilMinatRulesAktif().map(function (r) {
+    return { pattern: r.pattern instanceof RegExp ? r.pattern.source : String(r.pattern), minat: r.minat };
+  });
+}
+
+function simpanMinatRulesOverride(rules) {
+  const bersih = (rules || []).filter(function (r) { return r && String(r.pattern || '').trim() && String(r.minat || '').trim(); })
+    .map(function (r) { return { pattern: String(r.pattern).trim(), minat: String(r.minat).trim() }; });
+  localStorage.setItem(MINAT_OVERRIDE_KEY, JSON.stringify(bersih));
+  return bersih.length;
+}
+
+function hapusMinatRulesOverride() {
+  try { localStorage.removeItem(MINAT_OVERRIDE_KEY); } catch (e) {}
+}
+
+// Apakah nilai mentah sudah ketangkap salah satu aturan aktif.
+function apakahMinatSudahTermapping(nilaiMentah) {
+  const teks = String(nilaiMentah || '');
+  if (!teks) return false;
+  return ambilMinatRulesAktif().some(function (r) { return r.pattern.test(teks); });
+}
+
+// Normalisasi nama campaign -> kategori minat. Match PERTAMA yang dipakai.
+// Fallback ke nilai asli kalau tidak ada yang cocok (aman walau aturan kosong).
 function normalisasiMinat(namaCampaignAtauMinatAsli) {
-  const map = TENANT_CONFIG.minatKeywordMap || [];
   const teks = String(namaCampaignAtauMinatAsli || '');
-  for (const rule of map) {
+  const rules = ambilMinatRulesAktif();
+  for (const rule of rules) {
     if (rule.pattern.test(teks)) return rule.minat;
   }
-  return namaCampaignAtauMinatAsli; // fallback: pakai apa adanya
+  return namaCampaignAtauMinatAsli;
 }
 
 // Format Rupiah generik pakai mata uang & locale dari config (pengganti

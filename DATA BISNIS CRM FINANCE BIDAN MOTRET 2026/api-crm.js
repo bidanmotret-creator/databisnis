@@ -67,8 +67,14 @@ async function simpanLead() {
   const btn = document.getElementById('mSimpan');
   const v = id => document.getElementById(id).value;
   const asli = dataCrm.find(r => r.kode_leads === modalKode) || {};
+
+  // Field Kustom: validasi dulu, sebelum apa pun dikirim (aman kalau fieldkustom.js gagal dimuat)
+  const fk = (typeof fkAmbilNilai === 'function') ? fkAmbilNilai() : { ok: true, data: null };
+  if (!fk.ok) { alert('⚠️ ' + fk.pesan); return; }
+
   const p = new URLSearchParams();
   p.append('action', 'update');
+  p.append('kode_leads', modalKode || '');   // <-- BARU: edit tepat sasaran untuk nomor dengan beberapa baris
   p.append('no_hp', v('mHp')); p.append('tanggal_chat', v('mTglChat')); p.append('minat', v('mMinat'));
   p.append('nama', v('mNama')); p.append('alamat', v('mAlamat')); p.append('data_anak', v('mDataAnak'));
   p.append('jadwal', v('mJadwal')); p.append('status', v('mStatus')); p.append('paket', v('mPaket'));
@@ -78,17 +84,19 @@ async function simpanLead() {
   p.append('sumber', asli.sumber || ''); p.append('gender_anak', asli.gender_anak || '');
   p.append('varian', asli.varian || '-'); p.append('promo', asli.promo || '-');
   p.append('lokasi', asli.lokasi || '-'); p.append('hpp', asli.hpp || 0);
-    p.append('sumber', asli.sumber || ''); p.append('gender_anak', asli.gender_anak || '');
-  p.append('varian', asli.varian || '-'); p.append('promo', asli.promo || '-');
-  p.append('lokasi', asli.lokasi || '-'); p.append('hpp', asli.hpp || 0);
   p.append('provinsi', document.getElementById('mProvinsi').value || '');
   p.append('kabupaten_kota', document.getElementById('mKabupaten').value || '');
+  if (fk.data) p.append('fieldKustomJson', JSON.stringify(fk.data));   // <-- BARU
 
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
     const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
-    if (r.result === 'success') { tutupModal(); await tarikDataCrm(); }
-    else alert('❌ Gagal: ' + (r.message || 'unknown'));
+    if (r.result === 'success') {
+      const peringatanFk = (typeof fkPeringatan === 'function') ? fkPeringatan(r) : '';
+      tutupModal();
+      await tarikDataCrm();
+      if (peringatanFk) alert(peringatanFk);
+    } else alert('❌ Gagal: ' + (r.message || 'unknown'));
   } catch (err) {
     alert('❌ Gagal koneksi: ' + err.message);
   } finally {

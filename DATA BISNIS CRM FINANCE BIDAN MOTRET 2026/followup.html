@@ -120,6 +120,7 @@ textarea{width:100%;min-height:110px;resize:vertical}
 
 .view-toggle{display:flex;gap:6px}
 </style>
+<script src="nav.js"></script>
 </head>
 <body>
 <div id="load">Memuat data follow-up...</div>
@@ -465,7 +466,12 @@ async function kirim(){
   b.disabled=false;b.textContent='📤 Kirim WhatsApp';
 }
 
-document.addEventListener('DOMContentLoaded',()=>{ gantiTabUtama('monitor'); muat(); });
+document.addEventListener('DOMContentLoaded',()=>{
+  // ?tab=template dst: dipakai tautan dari halaman lain (mis. Alur Klasifikasi)
+  var tabAwal = new URLSearchParams(location.search).get('tab');
+  if (!tabAwal || !document.getElementById('tab-'+tabAwal)) tabAwal = 'monitor';
+  gantiTabUtama(tabAwal); muat();
+});
 </script>
 
 <script>

@@ -4,7 +4,7 @@
 // Muat SETELAH ui-marketing.js dan SEBELUM api-marketing.js.
 // =========================================================================
 
-const MKT_SUBS = ['funnel', 'produk', 'tren', 'adset', 'creative', 'iklan', 'sync', 'capi'];
+const MKT_SUBS = ['funnel', 'produk', 'tren', 'adset', 'creative', 'iklan', 'drill', 'sync', 'capi'];
 const $m = id => document.getElementById(id);
 
 // ------------------------------------------------------------ SUB-MENU
@@ -16,6 +16,7 @@ function mktBukaSub(id, push) {
   setTimeout(() => {
     try { if (window.Chart && Chart.instances) Object.values(Chart.instances).forEach(c => c.resize()); } catch (e) {}
     if (id === 'iklan') renderAnalisisIklan();
+    if (id === 'drill') renderDrilldownIklan();
     if (id === 'capi') renderCapiPerLead();
   }, 30);
   const chip = document.querySelector('.mkt-chip.active');
@@ -230,6 +231,8 @@ function renderAnalisisIklan() {
       <td class="num">${totalSpend ? (d.spend / totalSpend * 100).toFixed(1) + '%' : '-'}</td>
     </tr>`;
   }).join('');
+
+  mktKolomTerapkan('tblAnalisisIklan');
 }
 
 // render ulang tiap kali tab Marketing dirender (setelah data/filters berubah)
@@ -239,6 +242,7 @@ function renderAnalisisIklan() {
   window.renderMarketingTab = function () {
     const hasil = asli.apply(this, arguments);
     try { if ($m('mktSub_iklan') && $m('mktSub_iklan').classList.contains('active')) renderAnalisisIklan(); } catch (e) { console.error(e); }
+    try { if ($m('mktSub_drill') && $m('mktSub_drill').classList.contains('active')) renderDrilldownIklan(); } catch (e) { console.error(e); }
     try { if ($m('mktSub_capi') && $m('mktSub_capi').classList.contains('active')) renderCapiPerLead(); } catch (e) { console.error(e); }
     mktUpdateStamp();
     return hasil;
@@ -309,3 +313,287 @@ function renderCapiPerLead() {
   }).join('') || '<tr><td colspan="7" style="text-align:center; padding:16px; color:#4b5563;">Tidak ada lead yang cocok dengan filter.</td></tr>';
   $m('capiLeadCount').textContent = `Menampilkan ${Math.min(rows.length, BATAS)} dari ${rows.length} lead` + (rows.length > BATAS ? ' (persempit dengan pencarian/filter)' : '');
 }
+
+// =========================================================================
+// DRILL-DOWN IKLAN: Minat -> Campaign -> Adset -> Ad (headline + body)
+// Dibangun dari dataContent (Ad_Content_Performance), yang sejak update
+// MaieAdContentSync.gs sudah membawa campaign_name, adset_name, ad_name,
+// headline, dan body_lengkap langsung per baris - jadi tidak perlu join
+// tambahan lewat campaign_id/adset_id seperti di renderAnalisisIklan.
+//
+// "Minat" di level teratas didapat dari normalisasiMinat(campaign_name) -
+// aturan yang sama dipakai di seluruh dashboard (lihat tenant-config.js).
+// =========================================================================
+window.mktDrillExpanded = window.mktDrillExpanded || new Set();
+
+function mktDrillToggle(path) {
+  if (window.mktDrillExpanded.has(path)) window.mktDrillExpanded.delete(path);
+  else window.mktDrillExpanded.add(path);
+  renderDrilldownIklan();
+}
+
+function mktDrillBukaTutupSemua(buka) {
+  if (buka) {
+    // buka semua node yang ada di tree saat ini
+    const tree = mktDrillBangunTree_();
+    Object.keys(tree).forEach(minat => {
+      window.mktDrillExpanded.add('m|' + minat);
+      Object.keys(tree[minat].campaigns).forEach(camp => {
+        window.mktDrillExpanded.add('c|' + minat + '|' + camp);
+        Object.keys(tree[minat].campaigns[camp].adsets).forEach(adset => {
+          window.mktDrillExpanded.add('a|' + minat + '|' + camp + '|' + adset);
+        });
+      });
+    });
+  } else {
+    window.mktDrillExpanded.clear();
+  }
+  renderDrilldownIklan();
+}
+
+function mktDrillBangunTree_() {
+  const fStart = $m('fMktStart') ? $m('fMktStart').value : '';
+  const fEnd = $m('fMktEnd') ? $m('fMktEnd').value : '';
+  const selNamaMeta = typeof getMsFilterSelected === 'function' ? getMsFilterSelected('msFilterMktNamaMeta') : [];
+
+  let rows = dataContent || [];
+  rows = rows.filter(r => r.campaign_name && r.ad_name);
+  if (fStart) rows = rows.filter(r => formati(r.tanggal) >= fStart);
+  if (fEnd) rows = rows.filter(r => formati(r.tanggal) <= fEnd);
+  if (selNamaMeta.length > 0) rows = rows.filter(r => selNamaMeta.includes(r.campaign_name));
+
+  const tree = {};
+  rows.forEach(r => {
+    const minat = (typeof normalisasiMinat === 'function') ? normalisasiMinat(r.campaign_name) : r.campaign_name;
+    const camp = r.campaign_name, adset = r.adset_name || '(tanpa nama adset)';
+    const spend = Number(r.spend) || 0, results = Number(r.results) || 0, purchases = Number(r.purchases) || 0;
+
+    if (!tree[minat]) tree[minat] = { spend: 0, results: 0, purchases: 0, campaigns: {} };
+    tree[minat].spend += spend; tree[minat].results += results; tree[minat].purchases += purchases;
+
+    if (!tree[minat].campaigns[camp]) tree[minat].campaigns[camp] = { spend: 0, results: 0, purchases: 0, adsets: {} };
+    const c = tree[minat].campaigns[camp];
+    c.spend += spend; c.results += results; c.purchases += purchases;
+
+    if (!c.adsets[adset]) c.adsets[adset] = { spend: 0, results: 0, purchases: 0, ads: {} };
+    const a = c.adsets[adset];
+    a.spend += spend; a.results += results; a.purchases += purchases;
+
+    const kunciAd = r.ad_id || r.ad_name;
+    if (!a.ads[kunciAd]) a.ads[kunciAd] = {
+      nama: r.ad_name, headline: r.headline || '', body: r.body_lengkap || '',
+      tipe: r.creative_type || '', spend: 0, results: 0, purchases: 0, ctrSum: 0, n: 0
+    };
+    const d = a.ads[kunciAd];
+    d.spend += spend; d.results += results; d.purchases += purchases;
+    d.ctrSum += Number(r.ctr_persen) || 0; d.n++;
+  });
+  return tree;
+}
+
+function mktDrillCpl_(spend, results) { return results > 0 ? Math.round(spend / results) : null; }
+
+function mktDrillWarnaCpl_(cpl) {
+  if (cpl === null) return '#6b7280';
+  const batas = (typeof ambilThreshold_ === 'function') ? ambilThreshold_('cplMahalRp', 30000) : 30000;
+  return cpl > batas ? '#b91c1c' : '#047857';
+}
+
+// Rata-rata CPL tertimbang-spend dari sekumpulan node bertetangga (siblings),
+// dipakai sebagai patokan "efisien/boros" di setiap level - bukan angka
+// mutlak, karena wajar CPL berbeda antar minat/produk.
+function mktDrillRataCpl_(daftarNode) {
+  let totalSpend = 0, totalResults = 0;
+  daftarNode.forEach(n => { totalSpend += n.spend; totalResults += n.results; });
+  return totalResults > 0 ? (totalSpend / totalResults) : null;
+}
+
+// Klasifikasi & rekomendasi berbasis threshold di tenant-config.js:
+// - efisienDariRataRataPersen: seberapa jauh CPL harus di BAWAH rata-rata
+//   saudara sekelompok supaya dianggap "efisien" (kandidat scale up)
+// - cplMahalRp: batas mutlak CPL "mahal"
+// - adsetBorosMinSpendRp: spend minimum supaya rekomendasi "matikan" masuk akal
+//   (spend kecil dengan CPL jelek belum tentu perlu tindakan - datanya masih tipis)
+function mktDrillKlasifikasi_(spend, results, cpl, avgCpl) {
+  const cplMahal = (typeof ambilThreshold_ === 'function') ? ambilThreshold_('cplMahalRp', 30000) : 30000;
+  const efisienPersen = (typeof ambilThreshold_ === 'function') ? ambilThreshold_('efisienDariRataRataPersen', 30) : 30;
+  const borosMinSpend = (typeof ambilThreshold_ === 'function') ? ambilThreshold_('adsetBorosMinSpendRp', 5000) : 5000;
+
+  if (results === 0) {
+    if (spend >= borosMinSpend) return { label: '⚠️ Belum Hasil', warna: '#b45309', bg: '#fef3c7', saran: 'Spend sudah cukup besar tanpa hasil sama sekali - pertimbangkan dihentikan atau ganti creative/targeting.' };
+    return { label: '⏳ Baru Jalan', warna: '#64748b', bg: '#f1f5f9', saran: 'Spend masih kecil, datanya belum cukup untuk dievaluasi. Pantau lagi.' };
+  }
+
+  const batasEfisien = avgCpl ? avgCpl * (1 - efisienPersen / 100) : null;
+  const batasBoros = avgCpl ? avgCpl * (1 + efisienPersen / 100) : null;
+
+  if (batasEfisien !== null && cpl <= batasEfisien) {
+    return { label: '🟢 Efisien', warna: '#047857', bg: '#dcfce7', saran: 'CPL jauh di bawah rata-rata sekelompoknya - kandidat kuat untuk di-scale up (naikkan budget).' };
+  }
+  if (cpl > cplMahal || (batasBoros !== null && cpl >= batasBoros)) {
+    const saranMatikan = spend >= borosMinSpend
+      ? 'CPL mahal dengan spend yang tidak sedikit - pertimbangkan dimatikan atau ganti creative/targeting.'
+      : 'CPL di atas rata-rata, tapi spend masih kecil - pantau dulu sebelum ambil tindakan.';
+    return { label: '🔴 Boros', warna: '#b91c1c', bg: '#fee2e2', saran: saranMatikan };
+  }
+  return { label: '🟡 Standar', warna: '#a16207', bg: '#fef9c3', saran: 'CPL sesuai rata-rata sekelompoknya - tidak perlu tindakan khusus.' };
+}
+
+function mktDrillBadgeHtml_(k) {
+  return `<span title="${mktEsc(k.saran)}" style="display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:800; background:${k.bg}; color:${k.warna}; cursor:help;">${k.label}</span>`;
+}
+
+function renderDrilldownIklan() {
+  const body = $m('bDrillIklan');
+  if (!body) return;
+
+  const tree = mktDrillBangunTree_();
+  const daftarMinatKey = Object.keys(tree);
+
+  if (daftarMinatKey.length === 0) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:18px; color:#94a3b8;">Belum ada data untuk filter ini.</td></tr>';
+    return;
+  }
+
+  const daftarMinat = daftarMinatKey.sort((a, b) => tree[b].spend - tree[a].spend);
+  const avgCplSemuaMinat = mktDrillRataCpl_(daftarMinat.map(m => tree[m]));
+
+  let html = '';
+  daftarMinat.forEach(minat => {
+    const mObj = tree[minat];
+    const idM = 'm|' + minat;
+    const bukaM = window.mktDrillExpanded.has(idM);
+    const cplM = mktDrillCpl_(mObj.spend, mObj.results);
+    const kM = mktDrillKlasifikasi_(mObj.spend, mObj.results, cplM, avgCplSemuaMinat);
+    html += mktDrillBarisHeader_(idM, 0, bukaM, '📁 ' + mktEsc(minat), Object.keys(mObj.campaigns).length + ' campaign', mObj.spend, mObj.results, mObj.purchases, cplM, '#ede9fe', kM);
+
+    if (!bukaM) return;
+    const daftarCamp = Object.keys(mObj.campaigns).sort((a, b) => mObj.campaigns[b].spend - mObj.campaigns[a].spend);
+    const avgCplCampSekelompok = mktDrillRataCpl_(daftarCamp.map(c => mObj.campaigns[c]));
+    daftarCamp.forEach(camp => {
+      const cObj = mObj.campaigns[camp];
+      const idC = 'c|' + minat + '|' + camp;
+      const bukaC = window.mktDrillExpanded.has(idC);
+      const cplC = mktDrillCpl_(cObj.spend, cObj.results);
+      const kC = mktDrillKlasifikasi_(cObj.spend, cObj.results, cplC, avgCplCampSekelompok);
+      html += mktDrillBarisHeader_(idC, 1, bukaC, '📣 ' + mktEsc(camp), Object.keys(cObj.adsets).length + ' adset', cObj.spend, cObj.results, cObj.purchases, cplC, '#e0e7ff', kC);
+
+      if (!bukaC) return;
+      const daftarAdset = Object.keys(cObj.adsets).sort((a, b) => cObj.adsets[b].spend - cObj.adsets[a].spend);
+      const avgCplAdsetSekelompok = mktDrillRataCpl_(daftarAdset.map(a => cObj.adsets[a]));
+      daftarAdset.forEach(adset => {
+        const aObj = cObj.adsets[adset];
+        const idA = 'a|' + minat + '|' + camp + '|' + adset;
+        const bukaA = window.mktDrillExpanded.has(idA);
+        const cplA = mktDrillCpl_(aObj.spend, aObj.results);
+        const kA = mktDrillKlasifikasi_(aObj.spend, aObj.results, cplA, avgCplAdsetSekelompok);
+        html += mktDrillBarisHeader_(idA, 2, bukaA, '🧩 ' + mktEsc(adset), Object.keys(aObj.ads).length + ' ad', aObj.spend, aObj.results, aObj.purchases, cplA, '#dbeafe', kA);
+
+        if (!bukaA) return;
+        const daftarAd = Object.values(aObj.ads).sort((x, y) => y.spend - x.spend);
+        const avgCplAdSekelompok = mktDrillRataCpl_(daftarAd);
+        daftarAd.forEach(d => {
+          const cplD = mktDrillCpl_(d.spend, d.results);
+          const kD = mktDrillKlasifikasi_(d.spend, d.results, cplD, avgCplAdSekelompok);
+          const ctr = d.n ? (d.ctrSum / d.n).toFixed(2) : '0.00';
+          html += `<tr>
+            <td style="padding:7px 8px 7px 60px;">🎨 ${mktEsc(d.nama)} <span style="font-size:10.5px; color:#94a3b8;">${mktEsc(d.tipe)}</span>${mktDrillBadgeHtml_(kD)}
+              ${d.headline ? `<div style="font-size:11.5px; color:#334155; margin-top:3px;"><b>Headline:</b> ${mktEsc(d.headline)}</div>` : ''}
+              ${d.body ? `<div style="font-size:11.5px; color:#64748b; margin-top:2px; max-width:480px; white-space:normal;"><b>Body:</b> ${mktEsc(d.body)}</div>` : ''}
+            </td>
+            <td class="num">-</td>
+            <td class="num">Rp ${rp(d.spend)}</td>
+            <td class="num">${d.results}</td>
+            <td class="num" style="color:${mktDrillWarnaCpl_(cplD)}; font-weight:700;">${cplD === null ? '-' : 'Rp ' + rp(cplD)}</td>
+            <td class="num">${d.purchases} <span style="font-size:10.5px; color:#94a3b8;">(CTR ${ctr}%)</span></td>
+          </tr>`;
+        });
+      });
+    });
+  });
+
+  body.innerHTML = html;
+}
+
+function mktDrillBarisHeader_(id, level, buka, label, sublabel, spend, results, purchases, cpl, bg, klasifikasi) {
+  const indent = 10 + level * 24;
+  const badge = klasifikasi ? mktDrillBadgeHtml_(klasifikasi) : '';
+  return `<tr style="cursor:pointer; background:${bg};" onclick="mktDrillToggle('${id.replace(/'/g, "\\'")}')">
+    <td style="padding:8px 8px 8px ${indent}px; font-weight:700;"><span style="display:inline-block; width:14px;">${buka ? '▼' : '▶'}</span>${label} <span style="font-weight:500; font-size:11px; color:#475569;">(${sublabel})</span>${badge}</td>
+    <td class="num">-</td>
+    <td class="num">Rp ${rp(spend)}</td>
+    <td class="num">${results}</td>
+    <td class="num" style="color:${mktDrillWarnaCpl_(cpl)}; font-weight:700;">${cpl === null ? '-' : 'Rp ' + rp(cpl)}</td>
+    <td class="num">${purchases}</td>
+  </tr>`;
+}
+
+// =========================================================================
+// PILIH KOLOM TABEL (customizable columns) — generik per tableId, disimpan
+// di localStorage sehingga preferensi bertahan meski browser ditutup.
+// Untuk memakai di tabel lain: tambahkan panel checkbox di HTML (pola sama
+// seperti tblAnalisisIklan_kolomPanel), lalu panggil mktKolomTerapkan(tableId)
+// di akhir fungsi render tabel tsb (setelah tbody diisi ulang).
+// =========================================================================
+function mktKolomKeyStorage_(tableId) { return 'kolom_tersembunyi_' + tableId; }
+
+function mktKolomBacaTersembunyi_(tableId) {
+  try {
+    const raw = localStorage.getItem(mktKolomKeyStorage_(tableId));
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+
+function mktKolomSimpanTersembunyi_(tableId, arr) {
+  try { localStorage.setItem(mktKolomKeyStorage_(tableId), JSON.stringify(arr)); } catch (e) {}
+}
+
+// Terapkan status sembunyi/tampil ke <th>/<td> tabel - dipanggil setiap
+// kali tbody-nya dirender ulang, supaya baris baru ikut mengikuti pilihan.
+function mktKolomTerapkan(tableId) {
+  const table = $m(tableId);
+  if (!table) return;
+  const hidden = mktKolomBacaTersembunyi_(tableId);
+  table.querySelectorAll('tr').forEach(tr => {
+    Array.from(tr.children).forEach((cell, idx) => {
+      cell.style.display = hidden.includes(idx) ? 'none' : '';
+    });
+  });
+}
+
+function mktKolomToggle(tableId, idx, tampilkan) {
+  let hidden = mktKolomBacaTersembunyi_(tableId);
+  if (tampilkan) hidden = hidden.filter(i => i !== idx);
+  else if (!hidden.includes(idx)) hidden.push(idx);
+  mktKolomSimpanTersembunyi_(tableId, hidden);
+  mktKolomTerapkan(tableId);
+}
+
+function mktKolomTogglePanel(panelId) {
+  const el = $m(panelId);
+  if (!el) return;
+  const buka = el.style.display !== 'none';
+  // tutup panel kolom lain yang mungkin sedang terbuka
+  document.querySelectorAll('[id$="_kolomPanel"]').forEach(p => { if (p.id !== panelId) p.style.display = 'none'; });
+  el.style.display = buka ? 'none' : 'block';
+}
+
+// Tutup panel kolom kalau klik di luar panel/tombolnya
+document.addEventListener('click', function (e) {
+  if (e.target.closest('[id$="_kolomPanel"]') || (e.target.tagName === 'BUTTON' && e.target.textContent.includes('⚙️ Kolom'))) return;
+  document.querySelectorAll('[id$="_kolomPanel"]').forEach(p => { p.style.display = 'none'; });
+});
+
+// Saat halaman dimuat, sinkronkan checkbox panel dengan preferensi tersimpan
+// (kalau sebelumnya user pernah menyembunyikan kolom, checkbox ikut ter-uncheck)
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('[id$="_kolomPanel"]').forEach(panel => {
+    const tableId = panel.id.replace(/_kolomPanel$/, '');
+    const hidden = mktKolomBacaTersembunyi_(tableId);
+    panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      const m = (cb.getAttribute('onchange') || '').match(/mktKolomToggle\('([^']+)',\s*(\d+)/);
+      if (m && hidden.includes(Number(m[2]))) cb.checked = false;
+    });
+  });
+});

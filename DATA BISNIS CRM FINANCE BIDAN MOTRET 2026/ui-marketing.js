@@ -193,10 +193,14 @@ function ambilTargetAktif(selectedCampaigns) {
     return { target: global, sumber: 'Global (Semua Produk)' };
 }
 
+function normalisasiMinat_(nilai) {
+    return (typeof normalisasiMinat === 'function') ? normalisasiMinat(nilai) : nilai;
+}
+
 function isiFilterCampaignMarketing() {
     const daftarCampaign = [...new Set([
-        ...(dataGlobal || []).map(r => r.minat),
-        ...(dataMarketing || []).map(m => m.campaign)
+        ...(dataGlobal || []).map(r => normalisasiMinat_(r.minat)),
+        ...(dataMarketing || []).map(m => normalisasiMinat_(m.campaign))
     ])].filter(Boolean).sort();
 
     if (window.msFilterState && window.msFilterState['msFilterMktCampaign']) {
@@ -254,6 +258,9 @@ function renderMarketingTab() {
     }
 
     let fd = dataGlobal;
+    if (typeof normalisasiMinat === 'function') {
+        fd = fd.map(r => ({ ...r, minat: normalisasiMinat(r.minat) }));
+    }
     if (selectedCampaigns.length > 0) fd = fd.filter(r => selectedCampaigns.includes(r.minat));
     if (fStart) fd = fd.filter(r => formati(r.tanggal_chat) >= fStart);
     if (fEnd) fd = fd.filter(r => formati(r.tanggal_chat) <= fEnd);
@@ -889,6 +896,7 @@ function renderBreakdownAdset(dataMentah, petaCampaignName, filterState) {
         <th style="font-size:12px;">CPL</th><th style="font-size:12px;">Purchases</th><th style="font-size:12px;">CTR (rata-rata)</th><th style="font-size:12px;">Periode</th>
     `;
     tbody.innerHTML = MKT_bangunGrupHtml_(campaignUrut, { prefix: 'adset', tipe: false, warna: { bg: '#e0e7ff', fg: '#312e81' } });
+    if (typeof mktKolomTerapkan === 'function') mktKolomTerapkan('tblAdsetPerformance');
 
     return { campaignUrut, dataFlat: data };
 }
@@ -953,6 +961,7 @@ function renderBreakdownContent(dataMentah, petaCampaignName, filterState) {
         <th style="font-size:12px;">CPL</th><th style="font-size:12px;">Purchases</th><th style="font-size:12px;">CTR (rata-rata)</th><th style="font-size:12px;">Periode</th>
     `;
     tbody.innerHTML = MKT_bangunGrupHtml_(campaignUrut, { prefix: 'content', tipe: true, warna: { bg: '#fae8ff', fg: '#701a75' } });
+    if (typeof mktKolomTerapkan === 'function') mktKolomTerapkan('tblAdContentPerformance');
 
     return { campaignUrut, dataFlat: data };
 }
@@ -1351,6 +1360,8 @@ function renderAgregasiAdsetAtauContent(theadId, tbodyId, dataAgregasi, globalCP
             <td style="font-size:12px; color:${v.status.warna}; font-weight:700;">${v.status.label}</td>
         </tr>`;
     }).join('');
+
+    if (typeof mktKolomTerapkan === 'function') mktKolomTerapkan(theadId.replace(/^thead/, 'tbl'));
 }
 
 
@@ -1685,11 +1696,17 @@ function ambilRingkasanMarketingUntukAI_(bagian) {
     let fEnd = document.getElementById('fMktEnd')?.value || '';
 
     let fd = dataGlobal;
+    if (typeof normalisasiMinat === 'function') {
+        fd = fd.map(r => ({ ...r, minat: normalisasiMinat(r.minat) }));
+    }
     if (selectedCampaigns.length > 0) fd = fd.filter(r => selectedCampaigns.includes(r.minat));
     if (fStart) fd = fd.filter(r => formati(r.tanggal_chat) >= fStart);
     if (fEnd) fd = fd.filter(r => formati(r.tanggal_chat) <= fEnd);
 
     let fAds = dataMarketing;
+    if (typeof normalisasiMinat === 'function') {
+        fAds = fAds.map(m => ({ ...m, campaign: normalisasiMinat(m.campaign) }));
+    }
     if (selectedCampaigns.length > 0) fAds = fAds.filter(m => selectedCampaigns.includes(m.campaign));
     if (fStart) fAds = fAds.filter(m => formati(m.tanggal) >= fStart);
     if (fEnd) fAds = fAds.filter(m => formati(m.tanggal) <= fEnd);

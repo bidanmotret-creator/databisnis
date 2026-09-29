@@ -221,6 +221,7 @@
                 <button type="button" class="btn-submit" style="margin:0; background:#4338ca; width:auto; padding:10px 18px;" onclick="tmBukaPengaturan()">
                     ⚙️ Atur Target Mingguan
                 </button>
+                <button type="button" style="padding:10px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;" onclick="msBukaModal()" title="Atur mapping keyword campaign ke kategori minat/produk">🏷️ Mapping Minat</button>
                 <button type="button" id="btnRefreshMarketing" onclick="refreshDataMarketingManual()" style="padding:10px 16px; background:#059669; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;" title="Tarik ulang data terbaru tanpa reload halaman">🔄 Refresh</button>
             </div>
         </div>
@@ -228,7 +229,7 @@
 
 
 
-<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
+<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down Iklan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
 
 <div class="mkt-sub" id="mktSub_sync">
 <div class="mkt-toolbar">
@@ -598,6 +599,18 @@
         Kalau di "Performa per Produk" ada campaign yang ROAS-nya rendah, cek di sini <b>adset mana</b> yang jadi biang keroknya —
         supaya bisa dimatikan/direvisi 1 adset saja tanpa mematikan seluruh campaign.
     </p>
+     <div style="position:relative; display:inline-block; margin-bottom:8px;">
+       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAdsetPerformance_kolomPanel')">⚙️ Kolom</button>
+       <div id="tblAdsetPerformance_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
+         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 1, this.checked)"> Spend</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 2, this.checked)"> Results</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 3, this.checked)"> CPL</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 4, this.checked)"> Purchases</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 5, this.checked)"> CTR</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 6, this.checked)"> Periode</label>
+       </div>
+     </div>
      <div class="table-responsive table-compact-wrap">
         <table id="tblAdsetPerformance" style="width:100%;">
             <thead><tr id="theadAdsetPerformance" style="background:#f1f5f9;"></tr></thead>
@@ -612,6 +625,18 @@
         apakah setting ini konsisten bagus (layak direplikasi lebih banyak) atau konsisten boros
         (harus dihentikan dari template-nya, bukan cuma di-pause satu-satu).
     </p>
+    <div style="position:relative; display:inline-block; margin-bottom:8px;">
+       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAgregasiAdset_kolomPanel')">⚙️ Kolom</button>
+       <div id="tblAgregasiAdset_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
+         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 1, this.checked)"> Muncul (x)</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 2, this.checked)"> Jml Campaign</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 3, this.checked)"> Total Spend</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 4, this.checked)"> Total Results</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 5, this.checked)"> CPL Gabungan</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 6, this.checked)"> Status/Rekomendasi</label>
+       </div>
+     </div>
     <div class="table-responsive table-compact-wrap">
         <table id="tblAgregasiAdset" style="width:100%;">
             <thead><tr id="theadAgregasiAdset" style="background:#f1f5f9;"></tr></thead>
@@ -635,6 +660,19 @@
     <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
         Kreatif (foto/video/copy) mana yang paling menarik perhatian & paling menghasilkan closing.
     </p>
+   <div style="position:relative; display:inline-block; margin-bottom:8px;">
+       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAdContentPerformance_kolomPanel')">⚙️ Kolom</button>
+       <div id="tblAdContentPerformance_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
+         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 1, this.checked)"> Tipe</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 2, this.checked)"> Spend</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 3, this.checked)"> Results</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 4, this.checked)"> CPL</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 5, this.checked)"> Purchases</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 6, this.checked)"> CTR</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 7, this.checked)"> Periode</label>
+       </div>
+     </div>
    <div class="table-responsive table-compact-wrap">
         <table id="tblAdContentPerformance" style="width:100%;">
             <thead><tr id="theadAdContentPerformance" style="background:#f1f5f9;"></tr></thead>
@@ -647,6 +685,18 @@
         Sama seperti di atas, tapi untuk creative/konten iklan — kreatif yang sama dipakai berulang
         di banyak campaign, dilihat performa gabungannya.
     </p>
+    <div style="position:relative; display:inline-block; margin-bottom:8px;">
+       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAgregasiContent_kolomPanel')">⚙️ Kolom</button>
+       <div id="tblAgregasiContent_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
+         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 1, this.checked)"> Muncul (x)</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 2, this.checked)"> Jml Campaign</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 3, this.checked)"> Total Spend</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 4, this.checked)"> Total Results</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 5, this.checked)"> CPL Gabungan</label>
+         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 6, this.checked)"> Status/Rekomendasi</label>
+       </div>
+     </div>
     <div class="table-responsive table-compact-wrap">
         <table id="tblAgregasiContent" style="width:100%;">
             <thead><tr id="theadAgregasiContent" style="background:#f1f5f9;"></tr></thead>
@@ -676,6 +726,18 @@
 <p style="font-size:11.5px; color:#64748b; margin:0 0 8px;">Mengikuti filter tanggal &amp; campaign di atas. Grafik menampilkan maksimal 15 bar teratas; tabel di bawahnya menampilkan sesuai “Jumlah bar”.</p>
 <div id="ikRingkas" class="ik-summary"></div>
 <div class="ik-chartwrap"><canvas id="chartAnalisisIklan"></canvas></div>
+<div style="position:relative; display:inline-block; margin-bottom:8px;">
+  <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAnalisisIklan_kolomPanel')">⚙️ Kolom</button>
+  <div id="tblAnalisisIklan_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
+    <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
+    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 2, this.checked)"> Results</label>
+    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 3, this.checked)"> Amount spent</label>
+    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 4, this.checked)"> CPL</label>
+    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 5, this.checked)"> Purchases</label>
+    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 6, this.checked)"> CTR</label>
+    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 7, this.checked)"> % Spend</label>
+  </div>
+</div>
 <div class="table-responsive table-compact-wrap">
   <table id="tblAnalisisIklan" style="width:100%;">
     <thead><tr style="background:#f1f5f9;"><th>#</th><th>Nama</th><th class="num">Results</th><th class="num">Amount spent</th><th class="num">CPL</th><th class="num">Purchases</th><th class="num">CTR</th><th class="num">% Spend</th></tr></thead>
@@ -696,6 +758,38 @@
 
 
 
+</div>
+
+<div class="mkt-sub" id="mktSub_drill">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🔎 Drill-down Iklan: Minat → Campaign → Adset → Ad</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="mktDrillBukaTutupSemua(true)">⬇️ Buka Semua</button>
+    <button type="button" class="mkt-btn" onclick="mktDrillBukaTutupSemua(false)">⬆️ Tutup Semua</button>
+    <button type="button" class="mkt-btn" onclick="mktRefreshSub('drill', this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_drill', 'Drill-down Iklan', this)">📥 PDF</button>
+  </div>
+</div>
+<p style="font-size:12px; color:#64748b; margin-top:-6px; margin-bottom:12px;">
+  Klik baris untuk membuka/tutup level di bawahnya. Filter tanggal & Nama Campaign (Meta Ads) di atas ikut berlaku di sini.
+  Level Minat mengikuti aturan Mapping Minat yang sedang aktif. Label 🟢/🟡/🔴 membandingkan CPL tiap node dengan rata-rata
+  saudara sekelompoknya (di level yang sama), pakai ambang dari <b>⚙️ Pengaturan Threshold</b> — arahkan kursor ke label untuk lihat rekomendasinya.
+</p>
+<div class="table-responsive">
+<table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+  <thead>
+    <tr style="background:#1e1b4b; color:#fff;">
+      <th style="padding:8px; text-align:left;">Nama / Headline &amp; Body</th>
+      <th class="num" style="padding:8px;">CTR</th>
+      <th class="num" style="padding:8px;">Spend</th>
+      <th class="num" style="padding:8px;">Results</th>
+      <th class="num" style="padding:8px;">CPL</th>
+      <th class="num" style="padding:8px;">Purchases</th>
+    </tr>
+  </thead>
+  <tbody id="bDrillIklan"></tbody>
+</table>
+</div>
 </div>
 
 <div id="tmModalSet" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
@@ -759,6 +853,7 @@
 <script src="tenant-config.js"></script>
 <script src="utils.js"></script>
 <script src="ui-marketing.js"></script>
+<script src="minat-settings-ui.js"></script>
 <script src="mkt-extra.js"></script>
 <script src="api-marketing.js"></script>
 

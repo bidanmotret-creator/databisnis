@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekap Order — SentuhanMomen3D</title>
+<link rel="stylesheet" href="style.css">
+<script src="nav.js"></script>
+<style>
+  .fu-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+  .fu-kpi-card { border-radius:12px; padding:16px 18px; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.10); }
+  .fu-kpi-card .n { font-size:20px; font-weight:900; }
+  .fu-kpi-card .l { font-size:11px; margin-top:4px; font-weight:700; opacity:.9; }
+  .fu-kpi-1 { background:linear-gradient(160deg,#f59e0b,#b45309); }
+  .fu-kpi-2 { background:linear-gradient(160deg,#10b981,#065f46); }
+  .fu-kpi-3 { background:linear-gradient(160deg,#94a3b8,#475569); }
+  .fu-kpi-4 { background:linear-gradient(160deg,#4f46e5,#312e81); }
+  .fu-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:800; color:#fff; background:#94a3b8; white-space:nowrap; }
+  .b-green { background:#10b981; } .b-yellow { background:#f59e0b; } .b-red { background:#ef4444; } .b-blue { background:#4f46e5; } .b-grey { background:#94a3b8; }
+  .row-btn { border:none; border-radius:6px; padding:5px 10px; cursor:pointer; font-size:12px; color:#fff; background:#4f46e5; font-weight:700; }
+  #modalRekap { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; padding:16px; }
+  #modalRekap .box { background:#fff; border-radius:14px; width:100%; max-width:760px; max-height:92vh; display:flex; flex-direction:column; }
+  #modalRekap .box-head { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  #modalRekap .box-body { padding:16px 18px; overflow:auto; }
+  #modalRekap .box-foot { padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+  .mg { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .mg .full { grid-column:1/-1; }
+  .mg label { display:block; font-size:11px; font-weight:700; color:#475569; margin-bottom:3px; }
+  .mg input, .mg select { width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:7px 9px; font-size:13px; }
+  .mg input[readonly] { background:#f1f5f9; color:#64748b; }
+  .flag-box { border-left:4px solid #f59e0b; background:#fffbeb; padding:8px 12px; border-radius:6px; font-size:12.5px; margin-bottom:6px; }
+  .flag-box.repeat { border-color:#4f46e5; background:#eef2ff; }
+  .mode-box { border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-top:12px; font-size:12.5px; }
+  .mode-box label.opt { display:flex; gap:8px; align-items:flex-start; padding:6px 0; cursor:pointer; }
+  .teks-asli { white-space:pre-wrap; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; max-height:180px; overflow:auto; font-family:monospace; }
+  .sec-title { font-size:12px; font-weight:800; color:#334155; margin:14px 0 6px; }
+  .tbl-rekap td, .tbl-rekap th { font-size:12.5px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🧾</div>
+      <div class="brand-text"><strong>Rekap Order</strong><span>SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> CRM Leads</a>
+        <a class="nav-item active" href="rekap.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🧾</span> Rekap Order</a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> AI Chat & Follow-up</a>
+        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> Pengaturan</a>
+        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
+        <a class="nav-item" href="eos.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🎯</span> EOS Dashboard</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">Rekap Order (Data Fix Booking)</div>
+      <button type="button" onclick="muatAntrean()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
+    </div>
+    <div class="content-inner">
+
+      <div class="fu-kpi-grid" id="kpi"></div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <h4 style="margin:0 0 6px;">Tempel Pesan Data Fix Booking</h4>
+        <p style="font-size:12px; color:#64748b; margin:0 0 8px;">Pesan akan dibaca otomatis lalu masuk antrean. Tidak ada yang tertulis ke data Leads sebelum Anda menyetujuinya.</p>
+        <textarea id="teksBaru" rows="6" style="width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:10px; font-size:12.5px; font-family:monospace;" placeholder="Tempel pesan lengkap 'Data Fix Booking ...' di sini"></textarea>
+        <div style="margin-top:8px;"><button type="button" class="btn-co-primary" id="btnMasuk" onclick="masukkanKeAntrean()">📥 Masukkan ke Antrean</button></div>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;" id="tabFilter"></div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="tbl-rekap">
+            <thead><tr style="background:#f1f5f9;">
+              <th>Masuk</th><th>Nama / No HP</th><th>Paket</th><th>DP</th><th>Sisa</th><th>Total</th><th>Catatan</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL TINJAU -->
+<div id="modalRekap">
+  <div class="box">
+    <div class="box-head">
+      <h3 style="margin:0; font-size:15px;" id="rvJudul">Tinjau Antrean</h3>
+      <button type="button" class="btn-co-secondary" onclick="tutupTinjau()">✖ Tutup</button>
+    </div>
+    <div class="box-body">
+      <div id="rvFlags"></div>
+
+      <div class="sec-title">Data yang akan ditulis ke Leads (boleh diedit)</div>
+      <div class="mg">
+        <div><label>Nama</label><input type="text" id="rv_nama"></div>
+        <div><label>No HP</label><input type="text" id="rv_no_hp"></div>
+        <div><label>Domisili / Alamat</label><input type="text" id="rv_alamat"></div>
+        <div><label>Minat Produk <span style="color:#ef4444;">*</span></label><select id="rv_minat"></select></div>
+        <div><label>Paket</label><input type="text" id="rv_paket"></div>
+        <div><label>Sumber</label><select id="rv_sumber"></select></div>
+        <div><label>Data Anak</label><input type="text" id="rv_data_anak"></div>
+        <div><label>Jenis Kelamin Anak</label><input type="text" id="rv_gender_anak"></div>
+        <div><label>Tanggal Awal Chat</label><input type="date" id="rv_tanggal_chat"></div>
+        <div><label>Fee Transport</label><input type="number" id="rv_transport" min="0"></div>
+        <div><label>Tanggal DP</label><input type="date" id="rv_tgl_bayar1"></div>
+        <div><label>Jumlah DP</label><input type="number" id="rv_jml_bayar1" min="0" oninput="hitungSisa()"></div>
+        <div><label>Total Keseluruhan</label><input type="number" id="rv_total" min="0" oninput="hitungSisa()"></div>
+        <div><label>Sisa Hutang (otomatis)</label><input type="text" id="rv_sisa" readonly></div>
+      </div>
+
+      <div id="rvModeWrap"></div>
+
+      <div class="sec-title">Pesan asli</div>
+      <div class="teks-asli" id="rvTeks"></div>
+    </div>
+    <div class="box-foot" id="rvFoot"></div>
+  </div>
+</div>
+
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+
+  let semuaItem = [], opsi = { minat: [], sumber: [] }, filterAktif = 'menunggu_review', itemAktif = null, sedangProses = false;
+
+  async function fetchJsonAman(url, options) {
+    let res;
+    try { res = await fetch(url, options); } catch (err) { throw new Error('Gagal terhubung ke server: ' + err.message); }
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); }
+    catch (err) { throw new Error('Server tidak mengembalikan JSON valid (cek URL deploy Apps Script). Cuplikan: ' + text.substring(0, 200)); }
+    if (json && json.result === 'error') throw new Error(json.message || 'Terjadi error di server.');
+    return json;
+  }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function rp(n) { return 'Rp ' + Math.round(Number(n) || 0).toLocaleString('id-ID'); }
+  const LABEL_STATUS = { menunggu_review: ['Menunggu Review', 'b-yellow'], disetujui: ['Disetujui', 'b-green'], ditolak: ['Ditolak', 'b-grey'] };
+
+  async function muatAntrean() {
+    try {
+      const data = await fetchJsonAman(scriptURL + '?action=getRekapAntrean');
+      semuaItem = data.items || [];
+      opsi = data.opsi || { minat: [], sumber: [] };
+      renderSemua();
+    } catch (err) {
+      document.getElementById('tbody').innerHTML = '<tr><td colspan="9" style="text-align:center; padding:18px; color:#b91c1c;">❌ ' + esc(err.message) + '</td></tr>';
+    }
+  }
+
+  function renderSemua() { renderKpi(); renderTab(); renderTabel(); }
+
+  function hitungPerStatus() {
+    const h = { menunggu_review: 0, disetujui: 0, ditolak: 0 };
+    semuaItem.forEach(i => { if (h[i.status] !== undefined) h[i.status]++; });
+    return h;
+  }
+
+  function renderKpi() {
+    const h = hitungPerStatus();
+    const berflag = semuaItem.filter(i => i.status === 'menunggu_review' && i.flags.length > 0).length;
+    document.getElementById('kpi').innerHTML =
+      '<div class="fu-kpi-card fu-kpi-1"><div class="n">' + h.menunggu_review + '</div><div class="l">Menunggu review</div></div>' +
+      '<div class="fu-kpi-card fu-kpi-4"><div class="n">' + berflag + '</div><div class="l">Menunggu &amp; ada catatan</div></div>' +
+      '<div class="fu-kpi-card fu-kpi-2"><div class="n">' + h.disetujui + '</div><div class="l">Disetujui</div></div>' +
+      '<div class="fu-kpi-card fu-kpi-3"><div class="n">' + h.ditolak + '</div><div class="l">Ditolak</div></div>';
+  }
+
+  function renderTab() {
+    const tabs = [['menunggu_review', '⏳ Menunggu Review'], ['disetujui', '✅ Disetujui'], ['ditolak', '🚫 Ditolak'], ['', 'Semua']];
+    document.getElementById('tabFilter').innerHTML = tabs.map(t =>
+      '<button type="button" class="' + (filterAktif === t[0] ? 'btn-co-primary' : 'btn-co-secondary') + '" onclick="setFilter(\'' + t[0] + '\')">' + t[1] + '</button>').join('');
+  }
+
+  function setFilter(f) { filterAktif = f; renderTab(); renderTabel(); }
+
+  function renderTabel() {
+    const daftar = semuaItem.filter(i => !filterAktif || i.status === filterAktif);
+    const tb = document.getElementById('tbody');
+    if (daftar.length === 0) {
+      tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:18px; color:#94a3b8;">Tidak ada data pada filter ini.</td></tr>';
+      return;
+    }
+    tb.innerHTML = daftar.map(i => {
+      const st = LABEL_STATUS[i.status] || [i.status, 'b-grey'];
+      let cat = '';
+      if (i.is_repeat_order) cat += '<span class="fu-badge b-blue">Repeat ke-' + i.repeat_ke + '</span> ';
+      if (i.flags.length > 0) cat += '<span class="fu-badge b-red">' + i.flags.length + ' catatan</span>';
+      if (!cat) cat = '<span style="color:#94a3b8;">-</span>';
+      const aksi = i.status === 'menunggu_review'
+        ? '<button type="button" class="row-btn" onclick="bukaTinjau(\'' + esc(i.id_antrean) + '\')">Tinjau</button>'
+        : (i.kode_leads_hasil ? '<span style="font-size:11px; color:#64748b;">' + esc(i.kode_leads_hasil) + '</span>' : '');
+      return '<tr>' +
+        '<td>' + esc(i.waktu_masuk.substring(0, 16)) + '</td>' +
+        '<td><b>' + esc(i.nama || '(tanpa nama)') + '</b><br><span style="color:#64748b; font-size:11.5px;">' + esc(i.no_hp) + '</span></td>' +
+        '<td>' + esc(i.paket_kata_kunci || i.paket_mentah) + '</td>' +
+        '<td>' + rp(i.jml_bayar1) + '</td><td>' + rp(i.sisa_tertulis) + '</td><td><b>' + rp(i.total_dihitung) + '</b></td>' +
+        '<td>' + cat + '</td>' +
+        '<td><span class="fu-badge ' + st[1] + '">' + st[0] + '</span></td>' +
+        '<td>' + aksi + '</td></tr>';
+    }).join('');
+  }
+
+  // ---------- tempel pesan baru ----------
+  async function masukkanKeAntrean() {
+    const teks = document.getElementById('teksBaru').value.trim();
+    if (!teks) { alert('Tempel pesan Data Fix Booking dulu.'); return; }
+    const btn = document.getElementById('btnMasuk');
+    btn.disabled = true; btn.textContent = 'Memproses…';
+    try {
+      const p = new URLSearchParams();
+      p.append('action', 'prosesRekapOrderManual');
+      p.append('teksAsli', teks);
+      const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      const nFlag = (r.data && r.data.flags) ? r.data.flags.length : 0;
+      alert('✅ Masuk antrean.' + (nFlag ? '\n' + nFlag + ' catatan perlu dicek saat Tinjau.' : ''));
+      document.getElementById('teksBaru').value = '';
+      filterAktif = 'menunggu_review';
+      await muatAntrean();
+    } catch (err) { alert('❌ ' + err.message); }
+    finally { btn.disabled = false; btn.textContent = '📥 Masukkan ke Antrean'; }
+  }
+
+  // ---------- modal tinjau ----------
+  function isiSelect(id, daftar, nilaiSekarang, labelKosong) {
+    const el = document.getElementById(id);
+    const set = daftar.slice();
+    if (nilaiSekarang && set.indexOf(nilaiSekarang) === -1) set.unshift(nilaiSekarang);
+    el.innerHTML = '<option value="">' + esc(labelKosong) + '</option>' + set.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+    el.value = nilaiSekarang || '';
+  }
+
+  function bukaTinjau(id) {
+    const i = semuaItem.find(x => x.id_antrean === id);
+    if (!i) return;
+    itemAktif = i;
+    document.getElementById('rvJudul').textContent = 'Tinjau: ' + (i.nama || '(tanpa nama)') + ' · ' + i.id_antrean;
+
+    document.getElementById('rvFlags').innerHTML = i.flags.length
+      ? i.flags.map(f => '<div class="flag-box' + (/REPEAT ORDER/.test(f) ? ' repeat' : '') + '">' + esc(f) + '</div>').join('')
+      : '<div class="flag-box" style="border-color:#10b981; background:#ecfdf5;">Tidak ada catatan, pesan terbaca bersih.</div>';
+
+    document.getElementById('rv_nama').value = i.nama;
+    document.getElementById('rv_no_hp').value = i.no_hp;
+    document.getElementById('rv_alamat').value = i.domisili;
+    // Minat sengaja TIDAK diisi otomatis dari kata kunci paket (bisa berisi beberapa kata kunci
+    // sekaligus, mis. "Candy, Handcasting"); admin memilih dari daftar minat resmi.
+    isiSelect('rv_minat', opsi.minat, '', '— pilih minat —');
+    document.getElementById('rv_paket').value = i.paket_kata_kunci || i.paket_mentah;
+    isiSelect('rv_sumber', opsi.sumber, '', '(otomatis)');
+    document.getElementById('rv_data_anak').value = i.data_anak_mentah;
+    document.getElementById('rv_gender_anak').value = i.gender_anak;
+    document.getElementById('rv_tanggal_chat').value = i.tanggal_chat;
+    document.getElementById('rv_transport').value = i.transport;
+    document.getElementById('rv_tgl_bayar1').value = i.tgl_bayar1;
+    document.getElementById('rv_jml_bayar1').value = i.jml_bayar1;
+    document.getElementById('rv_total').value = i.total_dihitung;
+    hitungSisa();
+    document.getElementById('rvTeks').textContent = i.teks_asli;
+
+    renderMode(i);
+    document.getElementById('rvFoot').innerHTML =
+      '<button type="button" class="btn-co-secondary" onclick="tolakAntrean()">🚫 Tolak</button>' +
+      '<button type="button" class="btn-co-primary" id="btnSetuju" onclick="setujuiAntrean()">✅ Setujui &amp; Tulis ke Leads</button>';
+    document.getElementById('modalRekap').style.display = 'flex';
+  }
+
+  function tutupTinjau() { document.getElementById('modalRekap').style.display = 'none'; itemAktif = null; }
+
+  function hitungSisa() {
+    const total = Number(document.getElementById('rv_total').value) || 0;
+    const dp = Number(document.getElementById('rv_jml_bayar1').value) || 0;
+    document.getElementById('rv_sisa').value = rp(total - dp);
+  }
+
+  function renderMode(i) {
+    const wrap = document.getElementById('rvModeWrap');
+    const rw = i.riwayat;
+    if (!rw || !rw.semuaBaris || rw.semuaBaris.length === 0) {
+      wrap.innerHTML = '<div class="mode-box">Nomor ini belum pernah ada di Leads. Akan dibuat sebagai <b>baris baru</b>.</div>';
+      return;
+    }
+    const daftarBaris = rw.semuaBaris.map(b =>
+      '<li><b>' + esc(b.kode_leads) + '</b> · chat ' + esc(b.tanggal_chat) + ' · ' + (b.sudah_bayar ? 'sudah bayar ' + rp(b.total_bayar) : 'belum bayar') + ' · ' + esc(b.status) + '</li>').join('');
+    const perluPilih = !rw.isRepeatOrder;
+    const optKode = rw.semuaBaris.map((b, idx) =>
+      '<option value="' + esc(b.kode_leads) + '"' + (idx === rw.semuaBaris.length - 1 ? ' selected' : '') + '>' + esc(b.kode_leads) + '</option>').join('');
+
+    wrap.innerHTML =
+      '<div class="mode-box"><b>Nomor ini sudah ada di Leads (' + rw.semuaBaris.length + ' baris):</b>' +
+      '<ul style="margin:6px 0 8px 18px; padding:0;">' + daftarBaris + '</ul>' +
+      (perluPilih
+        ? '<div style="color:#b45309; font-weight:700; margin-bottom:4px;">Belum ada yang lunas. Pilih dulu apa yang terjadi:</div>'
+        : '<div style="color:#4338ca; font-weight:700; margin-bottom:4px;">Terdeteksi Repeat Order ke-' + rw.repeatKe + '.</div>') +
+      '<label class="opt"><input type="radio" name="rvMode" value="baris_baru"' + (perluPilih ? '' : ' checked') + ' onchange="ubahMode()"> <span><b>Baris baru</b> — order tambahan / repeat order, tidak menyentuh baris lama.</span></label>' +
+      '<label class="opt"><input type="radio" name="rvMode" value="update_existing" onchange="ubahMode()"> <span><b>Update baris yang ada</b> — lead lama akhirnya closing. Data baris tersebut akan ditimpa dengan isi form.</span></label>' +
+      '<div id="rvKodeTargetWrap" style="display:none; margin-left:24px;"><label style="font-size:11px; font-weight:700;">Baris yang di-update</label> <select id="rvKodeTarget" style="border:1px solid var(--border); border-radius:6px; padding:5px 8px;">' + optKode + '</select></div>' +
+      '</div>';
+  }
+
+  function ubahMode() {
+    const m = document.querySelector('input[name="rvMode"]:checked');
+    const w = document.getElementById('rvKodeTargetWrap');
+    if (w) w.style.display = (m && m.value === 'update_existing') ? 'block' : 'none';
+  }
+
+  function ambilModeTerpilih() {
+    const rw = itemAktif.riwayat;
+    if (!rw || !rw.semuaBaris || rw.semuaBaris.length === 0) return { mode: 'baris_baru', kode: '' };
+    const m = document.querySelector('input[name="rvMode"]:checked');
+    if (!m) return null;
+    return { mode: m.value, kode: m.value === 'update_existing' ? document.getElementById('rvKodeTarget').value : '' };
+  }
+
+  async function setujuiAntrean() {
+    if (sedangProses || !itemAktif) return;
+    const minat = document.getElementById('rv_minat').value;
+    if (!minat) { alert('Pilih Minat Produk dulu (dipakai untuk kode leads dan pengiriman ke Meta).'); return; }
+    const modePilihan = ambilModeTerpilih();
+    if (!modePilihan) { alert('Pilih dulu: Baris baru atau Update baris yang ada.'); return; }
+
+    const ringkas = 'Setujui ' + (itemAktif.nama || itemAktif.no_hp) + '?\n' +
+      (modePilihan.mode === 'update_existing' ? 'Update baris ' + modePilihan.kode : 'Tambah baris baru di Leads') +
+      '\nEvent Purchase juga akan dikirim ke Meta jika sumbernya terdaftar.';
+    if (!confirm(ringkas)) return;
+
+    const override = {
+      nama: document.getElementById('rv_nama').value.trim(),
+      no_hp: document.getElementById('rv_no_hp').value.trim(),
+      alamat: document.getElementById('rv_alamat').value.trim(),
+      minat: minat,
+      paket: document.getElementById('rv_paket').value.trim(),
+      data_anak: document.getElementById('rv_data_anak').value.trim(),
+      gender_anak: document.getElementById('rv_gender_anak').value.trim(),
+      tanggal_chat: document.getElementById('rv_tanggal_chat').value,
+      transport: Number(document.getElementById('rv_transport').value) || 0,
+      tgl_bayar1: document.getElementById('rv_tgl_bayar1').value,
+      jml_bayar1: Number(document.getElementById('rv_jml_bayar1').value) || 0,
+      total: Number(document.getElementById('rv_total').value) || 0
+    };
+    const sumber = document.getElementById('rv_sumber').value;
+    if (sumber) override.sumber = sumber;
+
+    sedangProses = true;
+    const btn = document.getElementById('btnSetuju');
+    if (btn) { btn.disabled = true; btn.textContent = 'Menulis…'; }
+    try {
+      const p = new URLSearchParams();
+      p.append('action', 'approveRekapOrder');
+      p.append('idAntrean', itemAktif.id_antrean);
+      p.append('overrideJson', JSON.stringify(override));
+      p.append('mode', modePilihan.mode);
+      if (modePilihan.kode) p.append('kodeLeadsTarget', modePilihan.kode);
+      const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      alert('✅ Selesai (' + (r.mode === 'update_existing' ? 'update' : 'baris baru') + '). Kode leads: ' + r.kodeLeads);
+      tutupTinjau();
+      await muatAntrean();
+    } catch (err) {
+      alert('❌ ' + err.message);
+      if (btn) { btn.disabled = false; btn.innerHTML = '✅ Setujui &amp; Tulis ke Leads'; }
+    } finally { sedangProses = false; }
+  }
+
+  async function tolakAntrean() {
+    if (sedangProses || !itemAktif) return;
+    const alasan = prompt('Alasan menolak (opsional):', '');
+    if (alasan === null) return;
+    sedangProses = true;
+    try {
+      const p = new URLSearchParams();
+      p.append('action', 'tolakRekapOrder');
+      p.append('idAntrean', itemAktif.id_antrean);
+      p.append('alasan', alasan);
+      await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      tutupTinjau();
+      await muatAntrean();
+    } catch (err) { alert('❌ ' + err.message); }
+    finally { sedangProses = false; }
+  }
+
+  document.addEventListener('DOMContentLoaded', muatAntrean);
+</script>
+</body>
+</html>

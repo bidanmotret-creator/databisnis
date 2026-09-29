@@ -70,6 +70,7 @@
       <div class="topbar-title">CRM Leads</div>
       <button type="button" onclick="tarikDataCrm()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
       <button type="button" onclick="bukaImportMassal()" style="margin-left:8px; padding:8px 14px; background:#4f46e5; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">📥 Import Massal WA</button>
+      <button type="button" onclick="bukaEditorFieldKustom()" style="margin-left:8px; padding:8px 14px; background:#0f766e; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🧩 Field Kustom</button>
     </div>
     <div class="content-inner">
 
@@ -376,6 +377,7 @@
       <div><label>Jumlah Bayar 1</label><input type="number" id="mJml1" oninput="hitungSisa()"></div>
       <div><label>Tgl Bayar 2 (Lunas)</label><input type="date" id="mTgl2"></div>
       <div><label>Jumlah Bayar 2</label><input type="number" id="mJml2" oninput="hitungSisa()"></div>
+      <div class="full" id="mFieldKustom"></div>
       <div class="full" id="mSisa" style="font-weight:800; color:#b45309;"></div>
     </div>
     <p style="font-size:11px; color:#94a3b8; margin:10px 0 0;">Catatan: perubahan pembayaran di sini TIDAK otomatis membuat jurnal. Untuk auto-jurnal, tetap gunakan menu di aplikasi utama.</p>
@@ -421,5 +423,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="ui-crm.js"></script>
 <script src="api-crm.js"></script>
+<script src="fieldkustom.js"></script>
 </body>
 </html>

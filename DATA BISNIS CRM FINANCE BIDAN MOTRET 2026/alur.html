@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alur Klasifikasi — Pengaturan</title>
+<link rel="stylesheet" href="style.css">
+<script src="nav.js"></script>
+<style>
+  .al-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; }
+  .al-card h3 { margin:0 0 4px; }
+  .al-sub { font-size:12px; color:#64748b; margin:0 0 12px; }
+  .al-pill { display:inline-block; padding:3px 11px; border-radius:20px; font-size:11.5px; font-weight:800; }
+  .al-pill.on { background:#dcfce7; color:#166534; } .al-pill.off { background:#e0e7ff; color:#3730a3; }
+  .al-input, .al-select, .al-text { box-sizing:border-box; border:1px solid var(--border); border-radius:6px; padding:6px 8px; font-size:12.5px; width:100%; background:#fff; }
+  .al-text { font-family:inherit; resize:vertical; }
+  .al-btn { border:none; border-radius:8px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; }
+  .al-btn-p { background:#4f46e5; color:#fff; } .al-btn-s { background:#f1f5f9; color:#334155; } .al-btn-d { background:#fee2e2; color:#991b1b; }
+  .al-btn:disabled { opacity:.55; cursor:not-allowed; }
+  .al-mini { border:none; background:none; cursor:pointer; font-size:14px; padding:2px 4px; }
+  table.al-tbl { width:100%; border-collapse:collapse; }
+  table.al-tbl th { background:#f1f5f9; font-size:11.5px; text-align:left; padding:6px 8px; }
+  table.al-tbl td { padding:5px 6px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+  .al-rule { border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; background:#fafbff; }
+  .al-rule-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-weight:800; font-size:13px; }
+  .al-cond { display:grid; grid-template-columns:1.4fr 1fr 1fr auto; gap:6px; margin-bottom:6px; }
+  .al-lbl { font-size:11px; font-weight:700; color:#475569; display:block; margin:8px 0 3px; }
+  .al-hasil { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:12px; font-size:12.5px; margin-top:12px; }
+  .al-hasil pre { white-space:pre-wrap; margin:6px 0 0; font-family:inherit; background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
+  .al-warn { border-left:4px solid #f59e0b; background:#fffbeb; padding:8px 12px; border-radius:6px; font-size:12.5px; }
+  @media (max-width:720px){ .al-cond { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div id="bgRefreshBadge" style="position:fixed; top:14px; right:14px; z-index:9999; background:#0f172a; color:#fff; padding:6px 14px; border-radius:20px; font-size:11.5px; font-weight:700; display:none;">🔄 Memuat…</div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🧭</div>
+      <div class="brand-text"><strong>Alur Klasifikasi</strong><span data-kamus="nama_bisnis">SentuhanMomen3D</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> <span data-kamus="menu_crm">CRM Leads</span></a>
+        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> <span data-kamus="menu_followup">AI Chat & Follow-up</span></a>
+        <a class="nav-item" href="pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> <span data-kamus="menu_pengaturan">Pengaturan</span></a>
+        <a class="nav-item active" href="alur.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🧭</span> Alur Klasifikasi</a>
+        <a class="nav-item" href="kamus.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🗂️</span> Kamus Istilah</a>
+        <a class="nav-item" href="onboarding.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🚀</span> Setup Klien Baru</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">Atur pertanyaan &amp; keputusan bot tanpa sentuh kode</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-title">🧭 Alur Klasifikasi Customer</div>
+      <button type="button" class="al-btn al-btn-p" id="btnSimpan" style="margin-left:auto;" onclick="simpanAlur()">💾 Simpan Alur Produk Ini</button>
+    </div>
+    <div class="content-inner">
+
+      <div class="al-card">
+        <h3>Produk</h3>
+        <p class="al-sub">Alur kustom berlaku per produk. Produk yang belum diatur di sini tetap memakai alur bawaan sistem (tanya usia anak &amp; domisili).</p>
+        <div style="display:grid; grid-template-columns:minmax(220px,1fr) auto; gap:10px; align-items:end;">
+          <div>
+            <label class="al-lbl" style="margin-top:0;">Pilih produk</label>
+            <select id="selProduk" class="al-select" onchange="gantiProduk()"></select>
+          </div>
+          <div id="statusProduk"></div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+          <button type="button" class="al-btn al-btn-s" onclick="isiContoh('fotografi')">📸 Mulai dari contoh fotografi</button>
+          <button type="button" class="al-btn al-btn-s" onclick="isiContoh('klinik')">🏥 Mulai dari contoh klinik</button>
+          <button type="button" class="al-btn al-btn-d" onclick="hapusAlur()">↩️ Kembali ke alur bawaan</button>
+        </div>
+      </div>
+
+      <div class="al-card">
+        <h3>1. Informasi yang ditanyakan ke customer</h3>
+        <p class="al-sub">AI membaca balasan customer lalu mengisi kolom-kolom ini. Yang bertanda wajib akan ditanyakan ulang kalau belum terjawab. Untuk tipe <b>tanggal</b>, sistem otomatis menghitung <code>usia_hari</code> (negatif kalau tanggalnya di masa depan, misalnya HPL).</p>
+        <p class="al-sub" style="margin-top:-4px;">💡 Kalau <b>Kunci</b> di bawah sama dengan kunci di <a href="crm.html?fieldkustom=1">Field Kustom</a>, jawaban customer otomatis muncul sebagai isian awal di form Edit Lead (<a href="crm.html">CRM Leads</a>).</p>
+        <div class="table-responsive">
+          <table class="al-tbl">
+            <thead><tr><th style="width:17%;">Kunci</th><th style="width:22%;">Label (tampil ke customer)</th><th style="width:12%;">Tipe</th><th style="width:7%;">Wajib</th><th>Pilihan / Petunjuk untuk AI</th><th style="width:90px;"></th></tr></thead>
+            <tbody id="bodyFields"></tbody>
+          </table>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <button type="button" class="al-btn al-btn-s" onclick="tambahField()">+ Tambah informasi</button>
+          <button type="button" class="al-btn al-btn-s" onclick="buatTeksPertanyaan()">📋 Buat teks pertanyaan siap salin</button>
+        </div>
+        <div id="boxPertanyaan" style="display:none; margin-top:10px;">
+          <textarea id="txtPertanyaan" class="al-text" rows="5" readonly></textarea>
+          <p class="al-sub" style="margin:4px 0 0;">Tempel ke kolom <b>Pesan Qualifying</b> produk ini di halaman <a href="followup.html?tab=template">Follow-up → Pengaturan Template</a>, supaya pertanyaan yang dikirim bot sama dengan informasi di atas.</p>
+        </div>
+      </div>
+
+      <div class="al-card">
+        <h3>2. Aturan keputusan</h3>
+        <p class="al-sub">Dicek dari atas ke bawah; <b>aturan pertama yang semua kondisinya terpenuhi</b> yang dipakai. Aturan tanpa kondisi berarti "selain itu" (taruh paling bawah). Kalau tidak ada yang cocok, customer diteruskan ke CS untuk direview.</p>
+        <div id="listAturan"></div>
+        <button type="button" class="al-btn al-btn-s" onclick="tambahAturan()">+ Tambah aturan</button>
+      </div>
+
+      <div class="al-card">
+        <h3>3. Uji dengan contoh pesan</h3>
+        <p class="al-sub">Memakai pengaturan yang sedang tampil di layar (belum perlu disimpan). Tidak mengirim WhatsApp dan tidak menulis data apa pun. Memakai kuota AI 1x per uji.</p>
+        <textarea id="txtUji" class="al-text" rows="3" placeholder="Contoh balasan customer, misalnya: hpl 15 oktober, rumah di kedaton"></textarea>
+        <div style="margin-top:8px;"><button type="button" class="al-btn al-btn-p" id="btnUji" onclick="ujiPesan()">🧪 Uji pesan ini</button></div>
+        <div id="hasilUji"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';</script>
+<script src="kamus.js"></script>
+<script>
+  async function fetchJsonAman(url, options) {
+    let res;
+    try { res = await fetch(url, options); }
+    catch (err) { throw new Error('Gagal terhubung ke server: ' + err.message); }
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); }
+    catch (err) { throw new Error('Server tidak mengembalikan JSON valid. Cuplikan: ' + text.substring(0, 200)); }
+    if (json && json.result === 'error') throw new Error(json.message || 'Terjadi error di server.');
+    return json;
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  const TIPE = [['teks', 'Teks'], ['angka', 'Angka'], ['tanggal', 'Tanggal'], ['pilihan', 'Pilihan'], ['ya_tidak', 'Ya / Tidak']];
+  const OPERATOR = [['=', 'sama dengan'], ['!=', 'tidak sama dengan'], ['<=', 'kurang dari / sama (≤)'], ['>=', 'lebih dari / sama (≥)'], ['<', 'kurang dari (<)'], ['>', 'lebih dari (>)'], ['berisi', 'mengandung kata'], ['terisi', 'terisi'], ['kosong', 'kosong']];
+  const TANPA_NILAI = ['terisi', 'kosong'];
+
+  let semuaKonfig = {}, daftarMinat = [], state = { fields: [], aturan: [] }, produkAktif = '';
+
+  function labelAksi(a) {
+    const K = window.KAMUS || {};
+    if (a === 'lanjut') return 'Lanjut, kirim pesan → ' + (K.stage_2_label || 'Tahap 2');
+    if (a === 'review') return 'Serahkan ke CS untuk direview → ' + (K.stage_3_label || 'Tahap 3');
+    return 'Tolak halus, kirim pesan → ' + (K.stage_2_label || 'Tahap 2');
+  }
+
+  // ---------- muat ----------
+  async function muat() {
+    const badge = document.getElementById('bgRefreshBadge');
+    badge.style.display = 'inline-block';
+    try {
+      const r = await fetchJsonAman(scriptURL + '?action=getAlurKlasifikasi');
+      semuaKonfig = r.konfig || {};
+      daftarMinat = r.daftarMinat || [];
+      Object.keys(semuaKonfig).forEach(m => { if (daftarMinat.indexOf(m) === -1) daftarMinat.push(m); });
+      const sel = document.getElementById('selProduk');
+      sel.innerHTML = daftarMinat.map(m => '<option value="' + esc(m) + '">' + esc(m) + '</option>').join('');
+      if (!daftarMinat.length) { sel.innerHTML = '<option value="">(belum ada produk di Pengaturan Template)</option>'; }
+      gantiProduk();
+    } catch (err) {
+      alert('❌ Gagal memuat: ' + err.message);
+    } finally { badge.style.display = 'none'; }
+  }
+  document.addEventListener('DOMContentLoaded', muat);
+  document.addEventListener('kamusSiap', () => { renderAturan(); });
+
+  function salin(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function gantiProduk() {
+    produkAktif = document.getElementById('selProduk').value;
+    const k = semuaKonfig[produkAktif];
+    state = k ? salin(k) : { fields: [], aturan: [] };
+    document.getElementById('boxPertanyaan').style.display = 'none';
+    document.getElementById('hasilUji').innerHTML = '';
+    renderStatus(); renderFields(); renderAturan();
+  }
+
+  function renderStatus() {
+    const aktif = !!semuaKonfig[produkAktif];
+    document.getElementById('statusProduk').innerHTML = aktif
+      ? '<span class="al-pill on">Alur kustom aktif</span>'
+      : '<span class="al-pill off">Memakai alur bawaan</span>';
+  }
+
+  // ---------- informasi (fields) ----------
+  function renderFields() {
+    const tb = document.getElementById('bodyFields');
+    if (!state.fields.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:14px;">Belum ada informasi. Tambahkan, atau mulai dari contoh di atas.</td></tr>';
+      return;
+    }
+    tb.innerHTML = state.fields.map((f, i) => `
+      <tr>
+        <td><input class="al-input" value="${esc(f.key)}" placeholder="mis. keluhan" onchange="ubahField(${i},'key',this.value.trim())"></td>
+        <td><input class="al-input" value="${esc(f.label)}" placeholder="mis. Keluhan utama" onchange="ubahField(${i},'label',this.value)"></td>
+        <td><select class="al-select" onchange="ubahField(${i},'tipe',this.value); renderFields();">
+          ${TIPE.map(t => '<option value="' + t[0] + '"' + (f.tipe === t[0] ? ' selected' : '') + '>' + t[1] + '</option>').join('')}</select></td>
+        <td style="text-align:center;"><input type="checkbox" ${f.wajib ? 'checked' : ''} onchange="ubahField(${i},'wajib',this.checked)"></td>
+        <td>
+          ${f.tipe === 'pilihan' ? '<input class="al-input" style="margin-bottom:4px;" value="' + esc((f.pilihan || []).join(' | ')) + '" placeholder="Pilihan dipisah tanda | , mis. Gigi | Kulit | Mata" onchange="ubahPilihan(' + i + ',this.value)">' : ''}
+          <input class="al-input" value="${esc(f.petunjuk || '')}" placeholder="Petunjuk untuk AI (opsional)" onchange="ubahField(${i},'petunjuk',this.value)">
+        </td>
+        <td style="white-space:nowrap;">
+          <button class="al-mini" title="Naik" onclick="geserField(${i},-1)">⬆️</button>
+          <button class="al-mini" title="Turun" onclick="geserField(${i},1)">⬇️</button>
+          <button class="al-mini" title="Hapus" onclick="hapusField(${i})">🗑️</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function ubahField(i, prop, val) { state.fields[i][prop] = val; if (prop === 'key' || prop === 'tipe') renderAturan(); }
+  function ubahPilihan(i, val) { state.fields[i].pilihan = val.split('|').map(s => s.trim()).filter(Boolean); }
+  function tambahField() { state.fields.push({ key: '', label: '', tipe: 'teks', wajib: true, pilihan: [], petunjuk: '' }); renderFields(); renderAturan(); }
+  function hapusField(i) { state.fields.splice(i, 1); renderFields(); renderAturan(); }
+  function geserField(i, d) {
+    const j = i + d; if (j < 0 || j >= state.fields.length) return;
+    [state.fields[i], state.fields[j]] = [state.fields[j], state.fields[i]]; renderFields();
+  }
+
+  function buatTeksPertanyaan() {
+    const f = state.fields.filter(x => x.label.trim());
+    if (!f.length) { alert('Isi dulu informasi yang ditanyakan.'); return; }
+    const angka = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
+    const teks = 'Halo [NAMA]! Terima kasih sudah menghubungi kami 😊\n\n[PROMO_LINE]Supaya kami bisa bantu lebih lanjut, boleh info dulu ya kak:\n' +
+      f.map((x, i) => (angka[i] || (i + 1) + '.') + ' ' + x.label).join('\n');
+    document.getElementById('txtPertanyaan').value = teks;
+    document.getElementById('boxPertanyaan').style.display = 'block';
+  }
+
+  // ---------- aturan ----------
+  function daftarRujukan() {
+    const r = [];
+    state.fields.forEach(f => {
+      if (!f.key) return;
+      r.push([f.key, f.label || f.key]);
+      if (f.tipe === 'tanggal') r.push([f.key + '_usia_hari', 'usia dari ' + (f.label || f.key) + ' (hari)']);
+    });
+    return r;
+  }
+
+  function renderAturan() {
+    const box = document.getElementById('listAturan');
+    const ref = daftarRujukan();
+    if (!state.aturan.length) { box.innerHTML = '<p style="color:#94a3b8; font-size:12.5px;">Belum ada aturan.</p>'; return; }
+    box.innerHTML = state.aturan.map((r, i) => `
+      <div class="al-rule">
+        <div class="al-rule-head">
+          <span>Aturan ${i + 1}${(r.kondisi || []).length === 0 ? ' <span style="font-weight:600; color:#64748b;">(selain itu)</span>' : ''}</span>
+          <span>
+            <button class="al-mini" title="Naik" onclick="geserAturan(${i},-1)">⬆️</button>
+            <button class="al-mini" title="Turun" onclick="geserAturan(${i},1)">⬇️</button>
+            <button class="al-mini" title="Hapus" onclick="hapusAturan(${i})">🗑️</button>
+          </span>
+        </div>
+        <span class="al-lbl" style="margin-top:0;">Jika (semua kondisi harus terpenuhi):</span>
+        ${(r.kondisi || []).map((c, j) => `
+          <div class="al-cond">
+            <select class="al-select" onchange="ubahKondisi(${i},${j},'field',this.value)">
+              <option value="">— pilih informasi —</option>
+              ${ref.map(x => '<option value="' + esc(x[0]) + '"' + (c.field === x[0] ? ' selected' : '') + '>' + esc(x[1]) + '</option>').join('')}
+              ${c.field && !ref.some(x => x[0] === c.field) ? '<option value="' + esc(c.field) + '" selected>⚠ ' + esc(c.field) + ' (tidak ada)</option>' : ''}
+            </select>
+            <select class="al-select" onchange="ubahKondisi(${i},${j},'op',this.value); renderAturan();">
+              ${OPERATOR.map(o => '<option value="' + o[0] + '"' + (c.op === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('')}
+            </select>
+            <input class="al-input" value="${esc(c.nilai || '')}" ${TANPA_NILAI.indexOf(c.op) !== -1 ? 'disabled placeholder="-"' : 'placeholder="nilai (mengandung: pisah dengan |)"'} onchange="ubahKondisi(${i},${j},'nilai',this.value)">
+            <button class="al-mini" title="Hapus kondisi" onclick="hapusKondisi(${i},${j})">✖</button>
+          </div>`).join('')}
+        <button type="button" class="al-btn al-btn-s" style="padding:4px 10px; font-size:11.5px;" onclick="tambahKondisi(${i})">+ kondisi</button>
+
+        <label class="al-lbl">Maka:</label>
+        <select class="al-select" onchange="ubahAturan(${i},'aksi',this.value)">
+          ${['lanjut', 'review', 'tolak'].map(a => '<option value="' + a + '"' + (r.aksi === a ? ' selected' : '') + '>' + esc(labelAksi(a)) + '</option>').join('')}
+        </select>
+        <label class="al-lbl">Pesan yang dikirim ke customer (boleh kosong):</label>
+        <textarea class="al-text" rows="3" onchange="ubahAturan(${i},'template',this.value)">${esc(r.template || '')}</textarea>
+        <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Placeholder: [NAMA]${state.fields.filter(f => f.key).map(f => ', [' + esc(f.key.toUpperCase()) + ']' + (f.tipe === 'tanggal' ? ', [' + esc(f.key.toUpperCase()) + '_USIA_HARI]' : '')).join('')}</div>
+      </div>`).join('');
+  }
+
+  function ubahAturan(i, p, v) { state.aturan[i][p] = v; }
+  function ubahKondisi(i, j, p, v) { state.aturan[i].kondisi[j][p] = v; }
+  function tambahKondisi(i) { state.aturan[i].kondisi = state.aturan[i].kondisi || []; state.aturan[i].kondisi.push({ field: '', op: '=', nilai: '' }); renderAturan(); }
+  function hapusKondisi(i, j) { state.aturan[i].kondisi.splice(j, 1); renderAturan(); }
+  function tambahAturan() { state.aturan.push({ kondisi: [{ field: '', op: '=', nilai: '' }], aksi: 'lanjut', template: '', catatan: '' }); renderAturan(); }
+  function hapusAturan(i) { state.aturan.splice(i, 1); renderAturan(); }
+  function geserAturan(i, d) {
+    const j = i + d; if (j < 0 || j >= state.aturan.length) return;
+    [state.aturan[i], state.aturan[j]] = [state.aturan[j], state.aturan[i]]; renderAturan();
+  }
+
+  // ---------- contoh awal ----------
+  function isiContoh(jenis) {
+    if (state.fields.length && !confirm('Isi yang sekarang di layar akan diganti contoh. Lanjutkan? (Belum tersimpan sampai Anda klik Simpan)')) return;
+    if (jenis === 'fotografi') {
+      state = {
+        fields: [
+          { key: 'tanggal_lahir', label: 'Tanggal lahir atau HPL anak', tipe: 'tanggal', wajib: true, pilihan: [], petunjuk: 'HPL berarti tanggal di masa depan' },
+          { key: 'domisili', label: 'Domisili', tipe: 'teks', wajib: true, pilihan: [], petunjuk: 'boleh kota, kecamatan, atau nama perumahan' }
+        ],
+        aturan: [
+          { kondisi: [{ field: 'tanggal_lahir_usia_hari', op: '<=', nilai: '15' }], aksi: 'lanjut', template: 'Kalau fix mau foto, bisa segera booking ya kak, karena usia pemotretan maksimal 15 hari 😊', catatan: '' },
+          { kondisi: [{ field: 'tanggal_lahir_usia_hari', op: '<=', nilai: '30' }], aksi: 'review', template: 'Baik kak, usia baby sudah [TANGGAL_LAHIR_USIA_HARI] hari ya. Boleh info BB lahir baby & ada kondisi kesehatan tertentu tidak kak? Tim kami akan cek dan konfirmasi ya 🙏', catatan: '' },
+          { kondisi: [], aksi: 'tolak', template: 'Mohon maaf kak, usia baby sudah [TANGGAL_LAHIR_USIA_HARI] hari, kemungkinan sudah di luar window ideal pemotretan kami 🙏', catatan: '' }
+        ]
+      };
+    } else {
+      state = {
+        fields: [
+          { key: 'keluhan', label: 'Keluhan utama', tipe: 'teks', wajib: true, pilihan: [], petunjuk: '' },
+          { key: 'domisili', label: 'Domisili', tipe: 'teks', wajib: true, pilihan: [], petunjuk: '' },
+          { key: 'pernah_periksa', label: 'Sudah pernah periksa sebelumnya', tipe: 'ya_tidak', wajib: false, pilihan: [], petunjuk: '' }
+        ],
+        aturan: [
+          { kondisi: [], aksi: 'lanjut', template: 'Terima kasih kak [NAMA], keluhan "[KELUHAN]" sudah kami catat. Tim kami akan segera menghubungi untuk jadwal konsultasi 🙏', catatan: '' }
+        ]
+      };
+    }
+    renderFields(); renderAturan();
+  }
+
+  // ---------- simpan / hapus ----------
+  function bersihkan() {
+    return {
+      fields: state.fields.map(f => ({ key: f.key.trim(), label: (f.label || '').trim(), tipe: f.tipe, wajib: !!f.wajib, pilihan: f.pilihan || [], petunjuk: f.petunjuk || '' })),
+      aturan: state.aturan.map(r => ({ kondisi: (r.kondisi || []).map(c => ({ field: c.field, op: c.op, nilai: TANPA_NILAI.indexOf(c.op) !== -1 ? '' : (c.nilai || '') })), aksi: r.aksi, template: r.template || '', catatan: r.catatan || '' }))
+    };
+  }
+
+  async function simpanAlur() {
+    if (!produkAktif) { alert('Pilih produk dulu.'); return; }
+    if (!state.fields.length) { alert('Belum ada informasi yang ditanyakan. Kalau ingin kembali ke alur bawaan, pakai tombol "Kembali ke alur bawaan".'); return; }
+    if (!confirm('Simpan alur kustom untuk "' + produkAktif + '"? Customer baru untuk produk ini akan langsung memakai alur ini.')) return;
+    const btn = document.getElementById('btnSimpan');
+    btn.disabled = true;
+    try {
+      const p = new URLSearchParams();
+      p.append('action', 'simpanAlurKlasifikasi');
+      p.append('minat', produkAktif);
+      p.append('dataJson', JSON.stringify(bersihkan()));
+      await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      alert('✅ Alur tersimpan.');
+      await muat();
+      document.getElementById('selProduk').value = produkAktif; gantiProduk();
+    } catch (err) { alert('❌ ' + err.message); }
+    finally { btn.disabled = false; }
+  }
+
+  async function hapusAlur() {
+    if (!semuaKonfig[produkAktif]) { alert('Produk ini sudah memakai alur bawaan.'); return; }
+    if (!confirm('Hapus alur kustom "' + produkAktif + '"? Produk ini kembali ke alur bawaan (tanya usia anak & domisili).')) return;
+    try {
+      const p = new URLSearchParams();
+      p.append('action', 'simpanAlurKlasifikasi');
+      p.append('minat', produkAktif);
+      p.append('dataJson', JSON.stringify({ fields: [], aturan: [] }));
+      await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      alert('✅ Kembali ke alur bawaan.');
+      const keep = produkAktif;
+      await muat();
+      document.getElementById('selProduk').value = keep; gantiProduk();
+    } catch (err) { alert('❌ ' + err.message); }
+  }
+
+  // ---------- uji ----------
+  async function ujiPesan() {
+    const teks = document.getElementById('txtUji').value.trim();
+    if (!state.fields.length) { alert('Isi dulu informasi & aturan yang mau diuji.'); return; }
+    if (!teks) { alert('Tulis contoh pesan customer dulu.'); return; }
+    const btn = document.getElementById('btnUji'), out = document.getElementById('hasilUji');
+    btn.disabled = true; btn.textContent = 'Menguji…'; out.innerHTML = '';
+    try {
+      const p = new URLSearchParams();
+      p.append('action', 'ujiAlurKlasifikasi');
+      p.append('minat', produkAktif);
+      p.append('teks', teks);
+      p.append('konfigJson', JSON.stringify(bersihkan()));
+      const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
+      out.innerHTML = renderHasilUji(r.hasil);
+    } catch (err) {
+      out.innerHTML = '<div class="al-hasil" style="border-color:#fecaca; background:#fef2f2; white-space:pre-wrap;">❌ ' + esc(err.message) + '</div>';
+    } finally { btn.disabled = false; btn.textContent = '🧪 Uji pesan ini'; }
+  }
+
+  function renderHasilUji(h) {
+    const baris = state.fields.map(f => {
+      const v = h.nilai[f.key];
+      const turunan = f.tipe === 'tanggal' && h.turunan[f.key + '_usia_hari'] !== '' && h.turunan[f.key + '_usia_hari'] != null
+        ? ' <span style="color:#64748b;">(usia ' + esc(h.turunan[f.key + '_usia_hari']) + ' hari)</span>' : '';
+      return '<tr><td>' + esc(f.label || f.key) + (f.wajib ? ' *' : '') + '</td><td>' + (v ? '<b>' + esc(v) + '</b>' + turunan : '<span style="color:#b91c1c;">tidak terbaca</span>') + '</td></tr>';
+    }).join('');
+    let bawah;
+    if (h.kurang.length) {
+      bawah = '<div class="al-warn" style="margin-top:10px;"><b>Belum lengkap</b> — bot akan menanyakan ulang: ' + esc(h.kurang.join(', ')) + '.<pre>' + esc(h.pesanKurang) + '</pre></div>';
+    } else if (h.aturan.nomor === 0) {
+      bawah = '<div class="al-warn" style="margin-top:10px;"><b>Tidak ada aturan yang cocok</b> → diteruskan ke CS untuk direview (' + esc(labelAksi('review')) + '). Tambahkan aturan "selain itu" di paling bawah kalau ini tidak diinginkan.</div>';
+    } else {
+      bawah = '<div style="margin-top:10px;"><b>Aturan ' + h.aturan.nomor + ' yang kena</b> → ' + esc(labelAksi(h.aturan.aksi)) +
+        (h.aturan.pesan.trim() ? '<pre>' + esc(h.aturan.pesan) + '</pre>' : '<div style="color:#64748b;">(tidak ada pesan yang dikirim)</div>') + '</div>';
+    }
+    return '<div class="al-hasil"><b>Hasil pembacaan AI</b><table class="al-tbl" style="margin-top:6px;"><tbody>' + baris + '</tbody></table>' + bawah + '</div>';
+  }
+</script>
+</body>
+</html>
