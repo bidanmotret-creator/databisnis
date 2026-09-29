@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Analisis Marketing — SentuhanMomen3D</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
@@ -28,16 +28,7 @@
       <div class="brand-icon">📢</div>
       <div class="brand-text"><strong>Analisis Marketing</strong><span>SentuhanMomen3D</span></div>
     </div>
-    <nav class="sidebar-nav">
-      <div class="nav-group">
-        <a class="nav-item" href="index.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🏠</span> Menu Utama</a>
-        <a class="nav-item" href="crm.html" style="text-decoration:none; display:flex;"><span class="nav-ico">👥</span> CRM Leads</a>
-        <a class="nav-item" href="followup.html" style="text-decoration:none; display:flex;"><span class="nav-ico">🤖</span> AI Chat &amp; Follow-up</a>
-        <a class="nav-item" href="followup-pengaturan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">⚙️</span> Pengaturan AI</a>
-        <a class="nav-item" href="index-keuangan.html" style="text-decoration:none; display:flex;"><span class="nav-ico">💰</span> Laporan Keuangan</a>
-        <a class="nav-item" href="index-marketing.html" style="text-decoration:none; display:flex;"><span class="nav-ico">📈</span> Analisis Marketing</a>
-      </div>
-    </nav>
+   <nav class="sidebar-nav"></nav>
     <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
   </aside>
 
@@ -50,10 +41,7 @@
     <div class="content-inner">
 
 <div id="tabMarketing" class="tab-content active">
-    <div id="indikatorDataMarketingSiap" style="display:none; align-items:center; gap:10px; background:#fef9c3; color:#854d0e; padding:10px 16px; border-radius:8px; font-size:12.5px; font-weight:600; margin-bottom:14px;">
-        <div style="width:16px; height:16px; border:2.5px solid #fde68a; border-top-color:#d97706; border-radius:50%; animation:spinLoadingOverlay 0.8s linear infinite; flex-shrink:0;"></div>
-        ⏳ Data Marketing masih dimuat di belakang layar (Keuangan sudah lebih dulu tampil supaya lebih cepat) — halaman ini akan otomatis terisi begitu selesai.
-    </div>
+    
     
     <h2>📢 Metrik Marketing & ROAS (Funnel Analysis)</h2>
     <p style="color:var(--text-light); margin-top:-10px;">Perjalanan calon klien dari <strong>dilihat iklannya</strong> sampai <strong>bayar DP</strong> — empat tahap, empat warna.</p>
@@ -177,7 +165,7 @@
             <div class="form-group">
                 <label>Minat Produk</label>
                 <div class="ms-filter" id="msFilterMktCampaign">
-                    <button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktCampaign')">Semua Campaign ▾</button>
+                    <button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktCampaign')">Semua Minat ▾</button>
                     <div class="ms-filter-panel">
                         <input type="text" class="ms-filter-search" placeholder="Cari minat produk..." oninput="filterMsOptions('msFilterMktCampaign', this.value)">
                         <div class="ms-filter-options"></div>
@@ -773,7 +761,7 @@
 <p style="font-size:12px; color:#64748b; margin-top:-6px; margin-bottom:12px;">
   Klik baris untuk membuka/tutup level di bawahnya. Filter tanggal & Nama Campaign (Meta Ads) di atas ikut berlaku di sini.
   Level Minat mengikuti aturan Mapping Minat yang sedang aktif. Label 🟢/🟡/🔴 membandingkan CPL tiap node dengan rata-rata
-  saudara sekelompoknya (di level yang sama), pakai ambang dari <b>⚙️ Pengaturan Threshold</b> — arahkan kursor ke label untuk lihat rekomendasinya.
+  saudara sekelompoknya (di level yang sama), pakai ambang dari <code>tenant-config.js</code> (<code>cplMahalRp</code>, <code>efisienDariRataRataPersen</code>, <code>adsetBorosMinSpendRp</code>) — arahkan kursor ke label untuk lihat rekomendasinya.
 </p>
 <div class="table-responsive">
 <table style="width:100%; border-collapse:collapse; font-size:12.5px;">

@@ -78,7 +78,7 @@ async function mktPdf(panelId, judul, btn) {
       part.getContext('2d').drawImage(canvas, 0, y, canvas.width, potong, 0, 0, canvas.width, potong);
       if (hal > 0) pdf.addPage();
       pdf.setFontSize(11); pdf.setTextColor(30, 27, 75);
-      pdf.text('BIDAN MOTRET — ' + judul, m, m + 4);
+            pdf.text(((typeof TENANT_CONFIG !== 'undefined' && TENANT_CONFIG.meta && TENANT_CONFIG.meta.namaBisnis) || 'Marketing') + ' — ' + judul, m, m + 4);
       pdf.setFontSize(8); pdf.setTextColor(100, 116, 139);
       pdf.text('Dibuat ' + tgl, m, m + 9);
       pdf.addImage(part.toDataURL('image/jpeg', 0.85), 'JPEG', m, m + headerH, lebar, potong * skala);

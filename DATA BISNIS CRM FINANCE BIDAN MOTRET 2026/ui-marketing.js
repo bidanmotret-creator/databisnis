@@ -76,7 +76,7 @@ function updateMsFilterButtonLabel(containerId) {
     if (!btn) return;
 
     const jml = state.selected.size;
-    if (jml === 0) btn.textContent = 'Semua Campaign ▾';
+        if (jml === 0) btn.textContent = (containerId === 'msFilterMktCampaign' ? 'Semua Minat' : 'Semua Campaign') + ' ▾';
     else if (jml === 1) btn.textContent = [...state.selected][0] + ' ▾';
     else btn.textContent = jml + ' dipilih ▾';
 }
