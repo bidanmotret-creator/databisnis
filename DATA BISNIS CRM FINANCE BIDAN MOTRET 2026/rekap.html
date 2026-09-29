@@ -80,7 +80,7 @@
         <div class="table-responsive">
           <table class="tbl-rekap">
             <thead><tr style="background:#f1f5f9;">
-              <th>Masuk</th><th>Nama / No HP</th><th>Paket</th><th>DP</th><th>Sisa</th><th>Total</th><th>Catatan</th><th>Status</th><th></th>
+              <th>Masuk</th><th>Nama / No HP</th><th>Paket</th><th>Domisili / Wilayah</th><th>DP</th><th>Sisa</th><th>Total</th><th>Catatan</th><th>Status</th><th></th>
             </tr></thead>
             <tbody id="tbody"></tbody>
           </table>
@@ -107,6 +107,9 @@
         <div><label>No HP</label><input type="text" id="rv_no_hp"></div>
         <div><label>Domisili / Alamat</label><input type="text" id="rv_alamat"></div>
         <div><label>Minat Produk <span style="color:#ef4444;">*</span></label><select id="rv_minat"></select></div>
+        <div><label>Provinsi</label><select id="rv_provinsi" onchange="isiKabupaten(this.value,'')"></select></div>
+        <div><label>Kabupaten / Kota</label><select id="rv_kabupaten"></select></div>
+        <div class="full" id="rvWilayahInfo" style="display:none; font-size:11px; margin-top:-4px;"></div>
         <div><label>Paket</label><input type="text" id="rv_paket"></div>
         <div><label>Sumber</label><select id="rv_sumber"></select></div>
         <div><label>Data Anak</label><input type="text" id="rv_data_anak"></div>
@@ -131,7 +134,7 @@
 <script>
   const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
 
-  let semuaItem = [], opsi = { minat: [], sumber: [] }, filterAktif = 'menunggu_review', itemAktif = null, sedangProses = false;
+  let wilayah = { provinsi: [], kabupatenByProvinsi: {} }, semuaItem = [], opsi = { minat: [], sumber: [] }, filterAktif = 'menunggu_review', itemAktif = null, sedangProses = false;
 
   async function fetchJsonAman(url, options) {
     let res;
@@ -153,9 +156,10 @@
       const data = await fetchJsonAman(scriptURL + '?action=getRekapAntrean');
       semuaItem = data.items || [];
       opsi = data.opsi || { minat: [], sumber: [] };
+      wilayah = data.wilayahOptions || { provinsi: [], kabupatenByProvinsi: {} };
       renderSemua();
     } catch (err) {
-      document.getElementById('tbody').innerHTML = '<tr><td colspan="9" style="text-align:center; padding:18px; color:#b91c1c;">❌ ' + esc(err.message) + '</td></tr>';
+      document.getElementById('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center; padding:18px; color:#b91c1c;">❌ ' + esc(err.message) + '</td></tr>';
     }
   }
 
@@ -189,7 +193,7 @@
     const daftar = semuaItem.filter(i => !filterAktif || i.status === filterAktif);
     const tb = document.getElementById('tbody');
     if (daftar.length === 0) {
-      tb.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:18px; color:#94a3b8;">Tidak ada data pada filter ini.</td></tr>';
+      tb.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:18px; color:#94a3b8;">Tidak ada data pada filter ini.</td></tr>';
       return;
     }
     tb.innerHTML = daftar.map(i => {
@@ -205,6 +209,7 @@
         '<td>' + esc(i.waktu_masuk.substring(0, 16)) + '</td>' +
         '<td><b>' + esc(i.nama || '(tanpa nama)') + '</b><br><span style="color:#64748b; font-size:11.5px;">' + esc(i.no_hp) + '</span></td>' +
         '<td>' + esc(i.paket_kata_kunci || i.paket_mentah) + '</td>' +
+        '<td>' + selWilayahTabel(i) + '</td>' +
         '<td>' + rp(i.jml_bayar1) + '</td><td>' + rp(i.sisa_tertulis) + '</td><td><b>' + rp(i.total_dihitung) + '</b></td>' +
         '<td>' + cat + '</td>' +
         '<td><span class="fu-badge ' + st[1] + '">' + st[0] + '</span></td>' +
@@ -232,6 +237,67 @@
     finally { btn.disabled = false; btn.textContent = '📥 Masukkan ke Antrean'; }
   }
 
+  // ---------- wilayah (provinsi & kabupaten/kota, sama dengan dropdown di CRM) ----------
+  function selWilayahTabel(i) {
+    const w = i.wilayah_hasil;
+    if (w && (w.kabupaten_kota || w.provinsi)) {
+      return '<b>' + esc(w.kabupaten_kota || '-') + '</b><br><span style="color:#64748b; font-size:11.5px;">' + esc(w.provinsi || '-') + '</span>';
+    }
+    return i.domisili ? '<span style="color:#64748b;">' + esc(i.domisili) + '</span>' : '<span style="color:#94a3b8;">-</span>';
+  }
+
+  function isiProvinsi(nilai) {
+    const el = document.getElementById('rv_provinsi');
+    const daftar = (wilayah.provinsi || []).slice();
+    if (nilai && daftar.indexOf(nilai) === -1) daftar.unshift(nilai);
+    el.innerHTML = '<option value="">— pilih provinsi —</option>' + daftar.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+    el.value = nilai || '';
+  }
+
+  function isiKabupaten(provinsi, nilai) {
+    const el = document.getElementById('rv_kabupaten');
+    const daftar = ((wilayah.kabupatenByProvinsi || {})[provinsi] || []).slice();
+    if (nilai && daftar.indexOf(nilai) === -1) daftar.unshift(nilai);
+    el.innerHTML = '<option value="">— pilih kabupaten/kota —</option>' + daftar.map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+    el.value = nilai || '';
+  }
+
+  // Saran dari teks domisili: cari nama kabupaten/kota (tanpa awalan "Kota"/"Kab.") di dalam domisili.
+  // Hanya SARAN untuk dicek admin; kalau tidak ketemu, dibiarkan kosong.
+  function saranWilayah(domisili) {
+    const teks = String(domisili || '').toLowerCase();
+    if (!teks) return null;
+    let terbaik = null;
+    Object.keys(wilayah.kabupatenByProvinsi || {}).forEach(prov => {
+      wilayah.kabupatenByProvinsi[prov].forEach(kab => {
+        const inti = String(kab).toLowerCase().replace(/^(kabupaten|kab\.?|kota)\s+/i, '').trim();
+        if (inti.length >= 4 && teks.indexOf(inti) !== -1 && (!terbaik || inti.length > terbaik.panjang)) {
+          terbaik = { provinsi: prov, kabupaten: kab, panjang: inti.length };
+        }
+      });
+    });
+    return terbaik;
+  }
+
+  function siapkanWilayahModal(i) {
+    const info = document.getElementById('rvWilayahInfo');
+    const adaDaftar = (wilayah.provinsi || []).length > 0;
+    const saran = adaDaftar ? saranWilayah(i.domisili) : null;
+    isiProvinsi(saran ? saran.provinsi : '');
+    isiKabupaten(saran ? saran.provinsi : '', saran ? saran.kabupaten : '');
+    info.style.display = 'block';
+    if (!adaDaftar) {
+      info.style.color = '#b45309';
+      info.textContent = 'Daftar wilayah belum termuat dari server (perbarui RekapOrder_API.gs). Provinsi & kabupaten tidak akan ikut tersimpan.';
+    } else if (saran) {
+      info.style.color = '#4338ca';
+      info.textContent = 'Terisi otomatis dari domisili "' + i.domisili + '" — mohon dicek ulang.';
+    } else {
+      info.style.color = '#64748b';
+      info.textContent = 'Tidak bisa ditebak dari domisili "' + (i.domisili || '-') + '" — pilih manual kalau diketahui (boleh dikosongkan).';
+    }
+  }
+
   // ---------- modal tinjau ----------
   function isiSelect(id, daftar, nilaiSekarang, labelKosong) {
     const el = document.getElementById(id);
@@ -254,6 +320,7 @@
     document.getElementById('rv_nama').value = i.nama;
     document.getElementById('rv_no_hp').value = i.no_hp;
     document.getElementById('rv_alamat').value = i.domisili;
+    siapkanWilayahModal(i);
     // Minat sengaja TIDAK diisi otomatis dari kata kunci paket (bisa berisi beberapa kata kunci
     // sekaligus, mis. "Candy, Handcasting"); admin memilih dari daftar minat resmi.
     isiSelect('rv_minat', opsi.minat, '', '— pilih minat —');
@@ -351,6 +418,9 @@
     };
     const sumber = document.getElementById('rv_sumber').value;
     if (sumber) override.sumber = sumber;
+    const prov = document.getElementById('rv_provinsi').value, kab = document.getElementById('rv_kabupaten').value;
+    if (prov) override.provinsi = prov;
+    if (kab) override.kabupaten_kota = kab;
 
     sedangProses = true;
     const btn = document.getElementById('btnSetuju');
@@ -363,7 +433,8 @@
       p.append('mode', modePilihan.mode);
       if (modePilihan.kode) p.append('kodeLeadsTarget', modePilihan.kode);
       const r = await fetchJsonAman(scriptURL, { method: 'POST', body: p });
-      alert('✅ Selesai (' + (r.mode === 'update_existing' ? 'update' : 'baris baru') + '). Kode leads: ' + r.kodeLeads);
+      const d = r.data || r;
+      alert('✅ Selesai (' + (d.mode === 'update_existing' ? 'update' : 'baris baru') + '). Kode leads: ' + (d.kodeLeads || '-'));
       tutupTinjau();
       await muatAntrean();
     } catch (err) {
