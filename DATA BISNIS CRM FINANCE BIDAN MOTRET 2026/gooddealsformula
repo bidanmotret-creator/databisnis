@@ -89,7 +89,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 
 <script>
 // GANTI dengan URL Web App Google Apps Script Anda setelah deploy (lihat apps-script/Code.gs)
-const BACKEND_URL = "https://script.google.com/macros/s/XXXXXXXXXXXXXXXX/exec";
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwnvl7f2CN5891nbSKpaG4RGChwZoSHSISZPfd3VsGtip8o5xiJMMKCTzwwHVJGbxAu/exec";
 
 const $=s=>document.querySelector(s);
 $('#clr').onclick=()=>{$('#f').reset();$('#report').style.display='none';};
