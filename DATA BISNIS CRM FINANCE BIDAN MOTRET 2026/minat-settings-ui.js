@@ -54,7 +54,7 @@
 
     <div class="ms-section">
       <b style="font-size:13px;">🔎 Belum Termapping</b>
-      <p class="ms-sub" style="margin-top:2px;">Nilai campaign/minat dari data yang sedang dimuat, yang belum ketangkap aturan manapun.</p>
+      <p class="ms-sub" style="margin-top:2px;">Nilai campaign/minat dari data yang sedang dimuat, yang belum ketangkap aturan manapun. Kata kunci yang berulang di beberapa campaign otomatis dikelompokkan jadi satu rekomendasi aturan.</p>
       <div id="msBelumList" style="max-height:160px; overflow:auto;"></div>
     </div>
 
@@ -133,6 +133,67 @@
     return hitung;
   }
 
+  // Kata-kata umum jargon operasional iklan Meta yang HAMPIR PASTI bukan
+  // nama produk/minat, walau sering muncul berulang di banyak campaign.
+  // Daftar ini generik (bukan spesifik studio foto) supaya tetap relevan
+  // kalau tool dipakai klien lain di bidang berbeda.
+  const MS_STOPWORDS = new Set([
+    'copy', 'bofu', 'tofu', 'mofu', 'ctwa', 'cbo', 'abo', 'bidcap', 'vv', 'ig',
+    'visit', 'engage', 'follow', 'follower', 'profile', 'video', 'foto', 'poster',
+    'iklan', 'ads', 'ad', 'campaign', 'kampanye', 'the', 'dan', 'di', 'ke', 'dari',
+    'untuk', 'dengan', 'atau', 'yang', 'per', 'cpl', 'rb', 'ribu', 'jt', 'juta',
+    'jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des',
+    'hari', 'minggu', 'bulan', 'wincon', 'test', 'testing', 'baru', 'lama', 'new', 'old'
+  ]);
+
+  // Pecah 1 nilai jadi token bermakna: huruf saja, panjang >=4, bukan stopword,
+  // bukan angka murni (angka biasanya tanggal/CPL/jumlah lead, bukan nama produk).
+  function msTokenisasi_(teks) {
+    return String(teks || '').toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(t => t.length >= 4 && !/^\d+$/.test(t) && !MS_STOPWORDS.has(t));
+  }
+
+  // Kelompokkan nilai-nilai yang belum termapping berdasarkan token yang
+  // paling sering muncul BERSAMA di antara mereka (bukan cuma dalam 1 nilai) -
+  // token yang recurring lintas beberapa campaign lebih mungkin adalah nama
+  // produk/minat sesungguhnya, dibanding kata acak yang cuma muncul sekali.
+  function msKelompokkanSaran_(daftarNilai) {
+    const tokenPerNilai = {};
+    const frekuensiToken = {};
+    daftarNilai.forEach(nilai => {
+      const tokens = [...new Set(msTokenisasi_(nilai))]; // unik per nilai, biar tidak dobel-hitung dalam 1 nilai
+      tokenPerNilai[nilai] = tokens;
+      tokens.forEach(t => { frekuensiToken[t] = (frekuensiToken[t] || 0) + 1; });
+    });
+
+    const sisaNilai = new Set(daftarNilai);
+    const kelompok = []; // { token, minatSaran, anggota: [nilai,...] }
+
+    // Proses token dari yang paling sering muncul dulu, supaya kelompok yang
+    // paling "meyakinkan" (recurring paling banyak) diambil lebih dulu.
+    const tokenUrut = Object.keys(frekuensiToken)
+      .filter(t => frekuensiToken[t] >= 2) // minimal muncul di 2 campaign berbeda
+      .sort((a, b) => frekuensiToken[b] - frekuensiToken[a]);
+
+    tokenUrut.forEach(token => {
+      const anggota = [...sisaNilai].filter(nilai => tokenPerNilai[nilai].includes(token));
+      if (anggota.length < 2) return; // sudah keambil kelompok lain / cuma sisa 1
+      anggota.forEach(n => sisaNilai.delete(n));
+      kelompok.push({
+        token,
+        minatSaran: token.charAt(0).toUpperCase() + token.slice(1),
+        anggota
+      });
+    });
+
+    // Sisanya (tidak ada token recurring yang meyakinkan) - tetap ditampilkan
+    // satu-satu, dengan pattern default berupa escape literal nilai itu sendiri.
+    const sendirian = [...sisaNilai];
+
+    return { kelompok, sendirian };
+  }
+
   function msRenderBelumTermapping() {
     const wrap = document.getElementById('msBelumList');
     const hitung = msKumpulkanNilaiMentah_();
@@ -140,18 +201,57 @@
       try { return { pattern: new RegExp(r.pattern, 'i'), minat: r.minat }; } catch (e) { return null; }
     }).filter(Boolean);
 
-    const belum = Object.keys(hitung).filter(nilai => !draftRules.some(r => r.pattern.test(nilai)))
-      .sort((a, b) => hitung[b] - hitung[a]);
+    const belum = Object.keys(hitung).filter(nilai => !draftRules.some(r => r.pattern.test(nilai)));
 
-    wrap.innerHTML = belum.length === 0
-      ? '<div style="color:#64748b; font-style:italic; font-size:12px;">Semua nilai pada data yang dimuat sudah termapping.</div>'
-      : belum.map(nilai => `
+    if (belum.length === 0) {
+      wrap.innerHTML = '<div style="color:#64748b; font-style:italic; font-size:12px;">Semua nilai pada data yang dimuat sudah termapping.</div>';
+      return;
+    }
+
+    const { kelompok, sendirian } = msKelompokkanSaran_(belum);
+    let html = '';
+
+    if (kelompok.length > 0) {
+      html += '<div style="font-size:11.5px; font-weight:700; color:#4338ca; margin:6px 0 4px;">💡 Rekomendasi kata kunci (dari pola yang berulang)</div>';
+      html += kelompok.map(k => {
+        const totalMuncul = k.anggota.reduce((a, n) => a + (hitung[n] || 0), 0);
+        const contoh = k.anggota.slice(0, 3).map(n => msEsc(n)).join(' &middot; ');
+        const sisaLain = k.anggota.length > 3 ? ` <span style="color:#94a3b8;">+${k.anggota.length - 3} lagi</span>` : '';
+        return `
+        <div class="ms-belum-item" style="align-items:flex-start;">
+          <span>
+            <b>${msEsc(k.token)}</b> <span style="color:#94a3b8;">→ muncul di ${k.anggota.length} campaign, total ${totalMuncul}x</span>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">${contoh}${sisaLain}</div>
+          </span>
+          <button type="button" class="ms-btn ms-btn-primary" style="padding:4px 10px; font-size:11px; white-space:nowrap;" onclick="msJadikanAturanToken('${msEscJs(k.token)}', '${msEscJs(k.minatSaran)}')">+ Gunakan sebagai Aturan</button>
+        </div>`;
+      }).join('');
+    }
+
+    if (sendirian.length > 0) {
+      const sendirianUrut = sendirian.sort((a, b) => hitung[b] - hitung[a]);
+      html += '<div style="font-size:11.5px; font-weight:700; color:#64748b; margin:10px 0 4px;">Lainnya (belum ada pola kata kunci yang jelas)</div>';
+      html += sendirianUrut.map(nilai => `
         <div class="ms-belum-item">
           <span>${msEsc(nilai)} <span style="color:#94a3b8;">(${hitung[nilai]}x)</span></span>
-          <button type="button" class="ms-btn ms-btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="msJadikanAturan('${msEscJs(nilai)}')">+ Jadikan Aturan</button>
+          <button type="button" class="ms-btn ms-btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="msJadikanAturan('${msEscJs(nilai)}')">+ Jadikan Aturan (persis)</button>
         </div>`).join('');
+    }
+
+    wrap.innerHTML = html;
   }
 
+  // Dipakai untuk saran dari kelompok token - pattern berupa match terhadap
+  // token itu sendiri (regex, bisa diedit manual sesudahnya di tabel aturan
+  // kalau user mau perluas/persempit cakupannya).
+  window.msJadikanAturanToken = function (token, minatSaran) {
+    window.msRulesState.push({ pattern: token, minat: minatSaran });
+    msRenderRules();
+    msRenderBelumTermapping();
+  };
+
+  // Dipakai untuk nilai "sendirian" - pattern berupa escape literal persis
+  // nilai itu (perilaku lama, tetap dipertahankan sebagai fallback).
   window.msJadikanAturan = function (nilaiAsli) {
     const escaped = nilaiAsli.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     window.msRulesState.push({ pattern: escaped, minat: nilaiAsli });
