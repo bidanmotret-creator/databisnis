@@ -24,19 +24,37 @@ const MENU_APLIKASI = [
   { grup: 'Pengaturan', href: 'onboarding.html',      ico: '🚀', teks: 'Setup Klien Baru' }
 ];
 
+// ---- Token akses (dikirim ke Apps Script; dicek di Auth.gs) -------------
+const KUNCI_TOKEN_APP = 'app_api_token';
+function ambilTokenApp_() { try { return localStorage.getItem(KUNCI_TOKEN_APP) || ''; } catch (e) { return ''; } }
+function simpanTokenApp_(t) { try { if (t) localStorage.setItem(KUNCI_TOKEN_APP, t); else localStorage.removeItem(KUNCI_TOKEN_APP); } catch (e) {} }
+function tanyaTokenApp_(pesan) {
+  const t = (window.prompt(pesan || 'Masukkan token akses aplikasi:') || '').trim();
+  if (t) simpanTokenApp_(t);
+  return t;
+}
+function untukAppsScript_(url) { return /^https:\/\/script\.google(usercontent)?\.com\//.test(String(url)); }
+
+function pasangTokenApp_(url, opts, token) {
+  if (!token || !untukAppsScript_(url)) return { url, opts };
+  if (!opts || !opts.body) {                       // GET -> ?token=
+    return { url: url + (url.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(token), opts };
+  }
+  if (typeof FormData !== 'undefined' && opts.body instanceof FormData) { opts.body.set('token', token); }
+  return { url, opts };                            // body JSON/lain (form publik): tidak disentuh
+}
+
 // Ambil JSON dari Apps Script. Kalau server membalas HTML (halaman error /
 // login / action tidak dikenal), tampilkan pesan yang jelas, bukan SyntaxError.
-async function fetchJsonAman(url, opts) {
-  const res = await fetch(url, opts);
+// Kalau server menolak token (code:'AUTH'), minta token sekali lalu ulangi.
+async function fetchJsonAman(url, opts, sudahCobaToken) {
+  const req = pasangTokenApp_(url, opts, ambilTokenApp_());
+  const res = await fetch(req.url, req.opts);
   const teks = await res.text();
+  let obj;
   try {
-    const obj = JSON.parse(teks);
-    // Permintaan GET yang gagal di server dibalas {result:"error"}. Lempar sebagai error
-    // supaya tidak diam-diam tampil sebagai data kosong.
-    if (!opts && obj && obj.result === 'error') throw new Error('Server: ' + (obj.message || 'error tidak diketahui'));
-    return obj;
+    obj = JSON.parse(teks);
   } catch (e) {
-    if (e.message && e.message.indexOf('Server:') === 0) throw e;
     const awal = teks.trim().slice(0, 80).replace(/\s+/g, ' ');
     throw new Error(
       'Server membalas HTML, bukan JSON (HTTP ' + res.status + '). ' +
@@ -44,6 +62,18 @@ async function fetchJsonAman(url, opts) {
       'atau akses Web App belum "Anyone". Awal balasan: ' + awal
     );
   }
+  if (obj && obj.result === 'error' && obj.code === 'AUTH') {
+    simpanTokenApp_('');
+    if (!sudahCobaToken) {
+      const t = tanyaTokenApp_('Token akses diperlukan atau salah. Masukkan token:');
+      if (t) return fetchJsonAman(url, opts, true);
+    }
+    throw new Error('Server: token akses ditolak.');
+  }
+  // Permintaan GET yang gagal di server dibalas {result:"error"}. Lempar sebagai error
+  // supaya tidak diam-diam tampil sebagai data kosong.
+  if (!opts && obj && obj.result === 'error') throw new Error('Server: ' + (obj.message || 'error tidak diketahui'));
+  return obj;
 }
 
 (function () {
