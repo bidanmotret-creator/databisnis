@@ -3,9 +3,33 @@
 // Analisis Marketing (index-marketing.html). Hanya menarik & menampilkan
 // data marketing/Meta Ads; bagian Laporan Keuangan dihapus supaya halaman
 // ini ringan & berdiri sendiri.
+//
+// PERUBAHAN (patch):
+//  1. tarikDataServer: error render dipisah dari error server, dan pesan
+//     tampil di banner (bukan alert) supaya tidak menyesatkan.
+//  2. jalankanAnalisisMarketingAI: ditambah bagian 'produk'.
 // =========================================================================
 
+// Banner error non-blokir (pengganti alert). Dibuat sekali, dipakai ulang.
+function tampilkanBannerMkt_(pesan) {
+  let el = document.getElementById('bannerErrorMkt');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'bannerErrorMkt';
+    el.style.cssText = 'background:#fee2e2; color:#991b1b; padding:10px 16px; border-radius:8px; font-size:12.5px; font-weight:600; margin-bottom:14px; white-space:pre-wrap;';
+    const wadah = document.getElementById('tabMarketing');
+    if (wadah) wadah.insertBefore(el, wadah.firstChild); else document.body.insertBefore(el, document.body.firstChild);
+  }
+  el.textContent = pesan;
+  el.style.display = 'block';
+}
+function sembunyikanBannerMkt_() {
+  const el = document.getElementById('bannerErrorMkt');
+  if (el) el.style.display = 'none';
+}
+
 async function tarikDataServer() {
+  let dataDiterima = false;
   try {
     const data = await fetchJsonAman(scriptURL + '?action=getData');
 
@@ -20,24 +44,36 @@ async function tarikDataServer() {
     dataTargetMingguanMarketing = data.targetMingguanMarketing || { global: null, perProduk: {} };
 
     window.mktTerakhirMuat = new Date();
-    if (typeof renderMarketingTab === 'function') renderMarketingTab();
-    if (typeof mktUpdateStamp === 'function') mktUpdateStamp();
+    dataDiterima = true;
+    sembunyikanBannerMkt_();
   } catch (err) {
+    // Error di sini = masalah SERVER / koneksi / URL Apps Script.
     console.error('Gagal memuat data dari server:', err);
-    alert('❌ Gagal memuat data dari server. Cek koneksi atau URL Apps Script (scriptURL) di index-marketing.html.\n\n' + err);
-  } finally {
-    const overlay = document.getElementById('globalLoadingOverlay');
-    if (overlay) overlay.style.display = 'none';
+    tampilkanBannerMkt_('❌ Gagal memuat data dari server. Cek koneksi atau URL Apps Script (scriptURL).\n' + (err && err.message ? err.message : err));
   }
+
+  // Render dipisah: error di sini = bug di kode tampilan, BUKAN masalah server.
+  if (dataDiterima) {
+    try {
+      if (typeof renderMarketingTab === 'function') renderMarketingTab();
+      if (typeof mktUpdateStamp === 'function') mktUpdateStamp();
+    } catch (err) {
+      console.error('Data berhasil dimuat, tetapi tampilan gagal dirender:', err);
+      tampilkanBannerMkt_('⚠️ Data dari server berhasil dimuat, tetapi tampilan gagal dirender (bug di kode halaman, bukan masalah server).\nDetail: ' + (err && err.message ? err.message : err) + '\nBuka Console browser (F12) untuk lokasi barisnya.');
+    }
+  }
+
+  const overlay = document.getElementById('globalLoadingOverlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 // =========================================================================
 // ANALISIS AI (GEMINI) — MARKETING.
 // =========================================================================
 async function jalankanAnalisisMarketingAI(bagian) {
-  const mapIdBtn = { funnel: 'btnAiFunnel', adset: 'btnAiAdsetContent', tren: 'btnAiTrenMarketing' };
-  const mapIdLoading = { funnel: 'aiFunnelLoading', adset: 'aiAdsetContentLoading', tren: 'aiTrenMarketingLoading' };
-  const mapIdOutput = { funnel: 'aiFunnelOutput', adset: 'aiAdsetContentOutput', tren: 'aiTrenMarketingOutput' };
+  const mapIdBtn = { funnel: 'btnAiFunnel', produk: 'btnAiProduk', adset: 'btnAiAdsetContent', tren: 'btnAiTrenMarketing' };
+  const mapIdLoading = { funnel: 'aiFunnelLoading', produk: 'aiProdukLoading', adset: 'aiAdsetContentLoading', tren: 'aiTrenMarketingLoading' };
+  const mapIdOutput = { funnel: 'aiFunnelOutput', produk: 'aiProdukOutput', adset: 'aiAdsetContentOutput', tren: 'aiTrenMarketingOutput' };
 
   const btn = document.getElementById(mapIdBtn[bagian]);
   const loadingEl = document.getElementById(mapIdLoading[bagian]);
