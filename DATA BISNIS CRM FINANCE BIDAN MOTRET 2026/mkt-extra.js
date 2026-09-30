@@ -4,7 +4,7 @@
 // Muat SETELAH ui-marketing.js dan SEBELUM api-marketing.js.
 // =========================================================================
 
-const MKT_SUBS = ['funnel', 'produk', 'tren', 'adset', 'creative', 'iklan', 'drill', 'sync', 'capi'];
+const MKT_SUBS = ['funnel', 'produk', 'tren', 'adset', 'creative', 'konten', 'promo', 'iklan', 'drill', 'sync', 'capi'];
 const $m = id => document.getElementById(id);
 
 // ------------------------------------------------------------ SUB-MENU
@@ -15,6 +15,8 @@ function mktBukaSub(id, push) {
   if (push !== false) { try { history.replaceState(null, '', '#' + id); } catch (e) {} }
   setTimeout(() => {
     try { if (window.Chart && Chart.instances) Object.values(Chart.instances).forEach(c => c.resize()); } catch (e) {}
+    if (id === 'konten' && typeof kbBukaSub === 'function') kbBukaSub();
+    if (id === 'promo' && typeof ptBukaSub === 'function') ptBukaSub();
     if (id === 'iklan') renderAnalisisIklan();
     if (id === 'drill') renderDrilldownIklan();
     if (id === 'capi') renderCapiPerLead();
@@ -40,6 +42,8 @@ async function mktRefreshSub(id, btn) {
   try {
     if (id === 'capi') { await tarikDataServer(); await muatAuditCapiAudience(); }
     else if (id === 'sync') { renderRiwayatSyncMeta(); await tarikDataServer(); }
+    else if (id === 'konten') { await kbRefresh(null); }
+    else if (id === 'promo') { await ptRefresh(null); }
     else await tarikDataServer();
   } finally {
     if (btn) { btn.disabled = false; btn.innerText = asli; }

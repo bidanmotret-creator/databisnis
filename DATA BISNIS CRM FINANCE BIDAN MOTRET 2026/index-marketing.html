@@ -217,7 +217,7 @@
 
 
 
-<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down Iklan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
+<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="konten" onclick="mktBukaSub('konten')">🎬 Konten Berjalan</button><button type="button" class="mkt-chip" data-sub="promo" onclick="mktBukaSub('promo')">🧪 Tes Promo</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down Iklan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
 
 <div class="mkt-sub" id="mktSub_sync">
 <div class="mkt-toolbar">
@@ -695,6 +695,68 @@
 
 </div>
 
+<div class="mkt-sub" id="mktSub_konten">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🎬 Konten Berjalan</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="kbRefresh(this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_konten', 'Konten Berjalan', this)">📥 PDF</button>
+  </div>
+</div>
+<p style="color:var(--text-light); font-size:12px; margin:0 0 10px;">
+  Iklan yang sedang tayang beserta hasil riilnya di CRM (leads, closing, terbayar). "Berjalan" = ada spend dalam 3 hari terakhir dan status Meta ACTIVE.
+  Atribusi first-touch via chat CTWA; data CTWA baru ada sejak 16 Sep 2026, jadi angka lead/closing masih sampel kecil.
+</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+  <select id="kbCampaign" onchange="kbGantiFilter(false)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px; max-width:260px;"><option value="">Semua campaign</option></select>
+  <select id="kbPeriode" onchange="kbGantiFilter(true)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px;">
+    <option value="7">7 hari</option><option value="14" selected>14 hari</option><option value="30">30 hari</option><option value="60">60 hari</option><option value="semua">Semua</option>
+  </select>
+  <input id="kbCari" type="search" placeholder="Cari nama / caption..." oninput="kbGantiFilter(false)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px;">
+  <label style="font-size:12.5px;"><input type="checkbox" id="kbBerjalan" checked onchange="kbGantiFilter(false)"> Hanya yang berjalan</label>
+  <span id="kbStatusMuat" style="font-size:12px; color:#64748b;"></span>
+</div>
+<div id="kbCatatan" style="display:none; background:#fef3c7; color:#92400e; padding:8px 12px; border-radius:8px; font-size:12px; margin-bottom:10px;"></div>
+<div id="kbRingkas" style="font-size:12.5px; font-weight:600; color:#334155; margin-bottom:6px;"></div>
+<div class="table-responsive table-compact-wrap">
+  <table id="tblKonten" style="width:100%;">
+    <thead><tr id="theadKonten" style="background:#f1f5f9;"></tr></thead>
+    <tbody id="bKonten"></tbody>
+  </table>
+</div>
+</div>
+
+<div class="mkt-sub" id="mktSub_promo">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🧪 Papan Tes Promo</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="ptBukaKamus()">📚 Kamus Promo</button>
+    <button type="button" class="mkt-btn" onclick="ptRefresh(this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_promo', 'Tes Promo', this)">📥 PDF</button>
+  </div>
+</div>
+<p style="color:var(--text-light); font-size:12px; margin:0 0 10px;">
+  Iklan dikelompokkan per label promo yang terdeteksi dari headline dan caption (format kreatif dari nama iklan). Satu iklan bisa masuk beberapa baris, jadi baris tidak boleh dijumlahkan.
+  <b>Ini indikasi, bukan A/B murni</b>: audiens, adset, dan placement bisa berbeda antar iklan. Vonis baru keluar bila spend, impresi, dan results cukup.
+</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+  <select id="ptCampaign" onchange="ptRender()" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px; max-width:260px;"><option value="">Semua campaign</option></select>
+  <select id="ptPeriode" onchange="ptRender()" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px;">
+    <option value="7">7 hari</option><option value="14" selected>14 hari</option><option value="30">30 hari</option><option value="60">60 hari</option><option value="semua">Semua</option>
+  </select>
+  <label style="font-size:12.5px;"><input type="checkbox" id="ptBerjalan" checked onchange="ptRender()"> Hanya yang berjalan</label>
+</div>
+<div id="ptCatatan" style="display:none; background:#fef3c7; color:#92400e; padding:8px 12px; border-radius:8px; font-size:12px; margin-bottom:10px;"></div>
+<div id="ptRingkas" style="font-size:12.5px; font-weight:600; color:#334155; margin-bottom:6px;"></div>
+<div class="table-responsive table-compact-wrap">
+  <table id="tblPromoTes" style="width:100%;">
+    <thead><tr id="theadPromoTes" style="background:#f1f5f9;"></tr></thead>
+    <tbody id="bPromoTes"></tbody>
+  </table>
+</div>
+<p style="font-size:11.5px; color:#94a3b8; margin-top:6px;">† Leads, closing, terbayar = kumulatif sejak chat CTWA pertama (tidak mengikuti filter periode).</p>
+</div>
+
 <div class="mkt-sub" id="mktSub_iklan">
 <div class="mkt-toolbar">
   <div><b class="mkt-toolbar-title">🔍 Analisis Iklan</b><span class="mkt-stamp"></span></div>
@@ -843,6 +905,8 @@
 <script src="ui-marketing.js"></script>
 <script src="minat-settings-ui.js"></script>
 <script src="mkt-extra.js"></script>
+<script src="konten-berjalan.js"></script>
+<script src="promo-tes.js"></script>
 <script src="api-marketing.js"></script>
 
 </body>

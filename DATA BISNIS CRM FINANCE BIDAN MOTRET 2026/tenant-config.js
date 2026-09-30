@@ -144,6 +144,10 @@ const TENANT_CONFIG = {
     clickToLeadWaspadaPersen: 5,
     adsetBorosMinSpendRp: 5000,     // ambang "boros" utk kandidat terburuk
     polaBerulangMinSpendRp: 15000,  // ambang utk agregasi lintas-campaign
+    kontenMinSpendRp: 150000,       // di bawah ini -> ⚪ TUNGGU DATA (tanpa vonis)
+    kontenMinImpresi: 1000,
+    promoMinResults: 5,             // Papan Tes Promo: minimal results Meta sebelum ada vonis
+    promoBandPersen: 15,            // CPL dalam +-15% rata-rata = 'setara'         // di bawah ini -> ⚪ TUNGGU DATA
     efisienDariRataRataPersen: 30   // adset "efisien" = CPL < 70% rata-rata (100-30)
   },
 
