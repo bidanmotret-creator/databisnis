@@ -17,7 +17,9 @@ const KB = {
   atribusi: null,        // { [ad_id]: {leads, ctwa, closing, dp, terbayar} }
   atribusiSince: null,   // kunci cache atribusi (since yang dipakai saat fetch)
   memuat: false,
-  errMaster: '', errAtribusi: '',
+  analisis: null,        // { [ad_id]: {rekom, aspek, alasan, saran, promo, periode, waktu} } dari DB_AnalisisKonten
+  errMaster: '', errAtribusi: '', errAnalisis: '',
+  aiBerjalan: false,
   urut: { k: 'spend', d: -1 },
   buka: {},              // ad_id -> true kalau baris detail terbuka
   hasil: []              // baris hasil agregasi terakhir (untuk sort/render ulang)
@@ -87,33 +89,58 @@ function kbBacaAtribusi_(res) {
   return peta;
 }
 
+function kbBacaAnalisis_(res) {
+  const peta = {};
+  ((res && res.rows) || []).forEach(r => {
+    const id = String(r.ad_id || '').trim();
+    if (!id) return;
+    let promo = [];
+    try { promo = JSON.parse(r.promo_json || '[]'); } catch (e) { promo = []; }
+    peta[id] = { rekom: String(r.rekomendasi || ''), aspek: String(r.aspek_revisi || ''), alasan: String(r.alasan || ''),
+      saran: String(r.saran_tes || ''), promo: Array.isArray(promo) ? promo : [], periode: String(r.periode_metrik || ''), waktu: String(r.dianalisis_pada || '') };
+  });
+  return peta;
+}
+
 // ------------------------------------------------------------ A1: PEMUATAN LAZY
 function kbPeriodeHari_() {
   const v = ($m('kbPeriode') || {}).value || '14';
   return v === 'semua' ? 0 : Number(v);
 }
+// Web App Apps Script kadang membalas 404 HTML secara sporadis; coba ulang sekali sebelum menyerah
+async function kbFetchUlang_(url) {
+  try { return await fetchJsonAman(url); }
+  catch (e1) { await new Promise(r => setTimeout(r, 1500)); return await fetchJsonAman(url); }
+}
+
 async function kbMuatData(paksa) {
   if (KB.memuat) return;
   const hari = kbPeriodeHari_();
   const since = ''; // perAd dari server kumulatif sejak CTWA pertama (since hanya memengaruhi perHari)
   const perluMaster = paksa || KB.master === null;
   const perluAtribusi = paksa || KB.atribusi === null;
-  if (!perluMaster && !perluAtribusi) return;
+  const perluAnalisis = paksa || KB.analisis === null;
+  if (!perluMaster && !perluAtribusi && !perluAnalisis) return;
 
   KB.memuat = true;
   kbSetStatus_('⏳ Memuat data konten & atribusi...');
   try {
-    const [m, a] = await Promise.allSettled([
-      perluMaster ? fetchJsonAman(scriptURL + '?action=getAdCreativeMaster') : Promise.resolve(null),
-      perluAtribusi ? fetchJsonAman(scriptURL + '?action=getAtribusiLeads&since=' + encodeURIComponent(since)) : Promise.resolve(null)
+    const [m, a, g] = await Promise.allSettled([
+      perluMaster ? kbFetchUlang_(scriptURL + '?action=getAdCreativeMaster') : Promise.resolve(null),
+      perluAtribusi ? kbFetchUlang_(scriptURL + '?action=getAtribusiLeads&since=' + encodeURIComponent(since)) : Promise.resolve(null),
+      perluAnalisis ? kbFetchUlang_(scriptURL + '?action=getAnalisisKonten') : Promise.resolve(null)
     ]);
     if (perluMaster) {
       if (m.status === 'fulfilled' && m.value) { KB.master = kbBacaMaster_(m.value); KB.errMaster = ''; }
-      else { KB.master = KB.master || {}; KB.errMaster = m.reason ? String(m.reason.message || m.reason) : 'respon kosong'; }
+      else { KB.errMaster = m.reason ? String(m.reason.message || m.reason) : 'respon kosong'; }
     }
     if (perluAtribusi) {
       if (a.status === 'fulfilled' && a.value) { KB.atribusi = kbBacaAtribusi_(a.value); KB.atribusiSince = since; KB.errAtribusi = ''; }
-      else { KB.atribusi = KB.atribusi || {}; KB.errAtribusi = a.reason ? String(a.reason.message || a.reason) : 'respon kosong'; }
+      else { KB.errAtribusi = a.reason ? String(a.reason.message || a.reason) : 'respon kosong'; }
+    }
+    if (perluAnalisis) {
+      if (g.status === 'fulfilled' && g.value && g.value.result === 'success') { KB.analisis = kbBacaAnalisis_(g.value); KB.errAnalisis = ''; }
+      else { KB.errAnalisis = g.reason ? String(g.reason.message || g.reason) : ((g.value && g.value.message) || 'endpoint getAnalisisKonten belum dipasang'); }
     }
   } finally {
     KB.memuat = false;
@@ -141,6 +168,42 @@ async function kbRefresh(btn) {
     if (typeof mktUpdateStamp === 'function') mktUpdateStamp();
   }
 }
+async function kbJalankanAnalisis(btn, paksa) {
+  if (KB.aiBerjalan) return;
+  KB.aiBerjalan = true;
+  const asli = btn ? btn.innerText : '';
+  const st = $m('kbAiProgress');
+  const hari = kbPeriodeHari_() || 14;   // 'semua' -> 14 (analisis butuh jendela tetap)
+  if (btn) btn.disabled = true;
+  let putaran = 0, terakhir = null;
+  try {
+    while (putaran < 12) {
+      putaran++;
+      if (st) st.textContent = '⏳ Menganalisis...' + (terakhir ? ' ' + terakhir.selesai + '/' + terakhir.total : '');
+      const fd = new FormData();
+      fd.append('action', 'analisisRekomendasiKontenWeb');
+      fd.append('hari', String(hari));
+      if (paksa && putaran === 1) fd.append('force', 'true');
+      const res = await fetchJsonAman(scriptURL, { method: 'POST', body: fd });
+      if (!res || res.result !== 'success') { if (st) { st.style.color = '#b91c1c'; st.textContent = '❌ ' + ((res && res.message) || 'Gagal. Pastikan handler analisisRekomendasiKontenWeb sudah dipasang di Code.gs.'); } return; }
+      terakhir = res;
+      if (res.gagal && res.gagal.length) { if (st) { st.style.color = '#b91c1c'; st.textContent = '⚠️ Berhenti di ' + res.selesai + '/' + res.total + ': ' + res.gagal[0]; } break; }
+      if (res.sisa === 0) break;
+      if (res.dianalisis_run_ini === 0) break;   // tidak ada kemajuan: hindari loop tanpa akhir
+    }
+    KB.analisis = null; await kbMuatData(false); kbRender();
+    if (st && terakhir && !(terakhir.gagal && terakhir.gagal.length)) {
+      st.style.color = terakhir.sisa === 0 ? '#047857' : '#b45309';
+      st.textContent = (terakhir.sisa === 0 ? '✅ ' : '⚠️ ') + terakhir.selesai + '/' + terakhir.total + ' iklan selesai' + (terakhir.sisa ? ' (klik lagi untuk melanjutkan)' : '') + (terakhir.catatan ? ' · ' + terakhir.catatan : '');
+    }
+  } catch (e) {
+    if (st) { st.style.color = '#b91c1c'; st.textContent = '❌ Gagal koneksi: ' + e; }
+  } finally {
+    KB.aiBerjalan = false;
+    if (btn) { btn.disabled = false; btn.innerText = asli; }
+  }
+}
+
 async function kbGantiFilter(periodeBerubah) {
   kbRender();
   if (periodeBerubah) { await kbMuatData(false); kbRender(); }
@@ -213,7 +276,7 @@ function kbHitung_(f) {   // f (opsional): {campaign, hari, berjalan, cari} meng
     const adalahVideo = (m && m.tipe ? m.tipe : a.tipeRow).indexOf('VIDEO') !== -1 || a.v3s > 0;
     const cukup = a.spend >= minSpend && a.imp >= minImp;
     out.push({
-      id: a.id, nama: a.nama, campaign: a.campaign, m, at, aktif, statusMeta, cukup,
+      id: a.id, nama: a.nama, campaign: a.campaign, m, at, ai: (KB.analisis && KB.analisis[a.id]) || null, aktif, statusMeta, cukup,
       spend: a.spend, imp: a.imp, klik: a.klik, outbound: a.outbound, results: a.results,
       cpc: a.klik > 0 ? a.spend / a.klik : 0,
       ctr: a.imp > 0 ? a.klik / a.imp * 100 : 0,
@@ -282,10 +345,31 @@ function kbRoasHtml_(r) {
   const hijau = r.roas >= ambilThreshold_('roasSehat', 2), merah = r.roas < ambilThreshold_('roasTipisBawah', 1);
   return `<span style="color:${hijau ? '#047857' : merah ? '#b91c1c' : '#b45309'}; font-weight:700;">${r.roas.toFixed(2).replace('.', ',')}x</span>`;
 }
+const KB_REKOM = {
+  SCALE: ['#ecfdf5', '#047857', '🟢 SCALE'], PERTAHANKAN: ['#fffbeb', '#b45309', '🟡 PERTAHANKAN'],
+  REVISI: ['#fff7ed', '#c2410c', '🔧 REVISI'], MATIKAN: ['#fef2f2', '#b91c1c', '🔴 MATIKAN'], TUNGGU_DATA: ['#f1f5f9', '#64748b', '⚪ TUNGGU DATA']
+};
 function kbBadgeHtml_(r) {
+  if (r.ai && KB_REKOM[r.ai.rekom]) {
+    const k = KB_REKOM[r.ai.rekom];
+    return `<span style="background:${k[0]}; color:${k[1]}; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; white-space:nowrap;" title="Vonis aturan, dianalisis ${kbEsc(r.ai.waktu)} (periode ${kbEsc(r.ai.periode)})">${k[2]}</span>`;
+  }
   return r.cukup
     ? '<span style="background:#ecfdf5; color:#047857; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; white-space:nowrap;">✓ Cukup data</span>'
     : '<span style="background:#f1f5f9; color:#64748b; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; white-space:nowrap;">⚪ TUNGGU DATA</span>';
+}
+
+function kbAiHtml_(r) {
+  const ai = r.ai;
+  if (!ai) return '<div style="margin-top:10px; font-size:11.5px; color:#94a3b8;">Belum ada analisis AI. Klik "🤖 Analisis AI" di atas untuk membuatnya.</div>';
+  const k = KB_REKOM[ai.rekom] || KB_REKOM.TUNGGU_DATA;
+  const baris = (l, v) => v ? `<div style="margin-top:4px;"><span style="font-size:10.5px; color:#64748b;">${l}</span><div style="font-size:12.5px; color:#1e293b;">${kbEsc(v)}</div></div>` : '';
+  return `<div style="margin-top:10px; border-left:3px solid ${k[1]}; background:${k[0]}; padding:8px 10px; border-radius:0 8px 8px 0;">
+    <div style="font-weight:700; font-size:12.5px; color:${k[1]};">${k[2]}${ai.aspek ? ' · revisi: ' + kbEsc(ai.aspek) : ''}</div>
+    ${baris(ai.rekom === 'TUNGGU_DATA' ? 'Alasan (aturan)' : 'Alasan', ai.alasan)}${baris('Saran tes berikutnya', ai.saran)}
+    ${ai.promo.length ? baris('Promo terdeteksi', ai.promo.join(', ')) : ''}
+    <div style="margin-top:6px; font-size:10.5px; color:#94a3b8;">Vonis ditentukan aturan (bukan AI); AI hanya menjelaskan. Dianalisis ${kbEsc(ai.waktu)} · periode ${kbEsc(ai.periode)}. AI hanya membaca teks & angka, bukan gambar/video.</div>
+  </div>`;
 }
 
 function kbDetailHtml_(r) {
@@ -311,6 +395,7 @@ function kbDetailHtml_(r) {
       <div style="flex:1; min-width:240px;">
         <div style="display:flex; gap:14px 22px; flex-wrap:wrap;">${metrik}</div>
         ${teks('Headline', m.headline)}${teks('CTA', m.cta)}${teks('Caption', m.caption)}
+        ${kbAiHtml_(r)}
         ${!r.m ? '<div style="margin-top:8px; font-size:12px; color:#94a3b8;">Caption/headline belum tersedia (iklan belum ada di Ad_Creative_Master — jalankan syncCreativeMasterSemua()).</div>' : ''}
         <div style="margin-top:8px; font-size:10.5px; color:#94a3b8;">ad_id: ${kbEsc(r.id)}</div>
       </div>
@@ -377,6 +462,7 @@ function kbRender() {
     const p = [];
     if (KB.errMaster) p.push('⚠️ Master kreatif gagal dimuat (' + KB.errMaster + '). Status/thumbnail/caption belum tampil.');
     if (KB.errAtribusi) p.push('⚠️ Atribusi leads gagal dimuat (' + KB.errAtribusi + '). Kolom Leads/Closing/Terbayar kosong.');
+    if (KB.errAnalisis) p.push('ℹ️ Analisis AI belum tersedia (' + KB.errAnalisis + '). Pastikan sheet DB_AnalisisKonten dan endpoint sudah dipasang.');
     catatan.innerHTML = p.map(kbEsc).join('<br>');
     catatan.style.display = p.length ? 'block' : 'none';
   }

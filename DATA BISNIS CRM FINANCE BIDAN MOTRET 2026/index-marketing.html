@@ -699,6 +699,7 @@
 <div class="mkt-toolbar">
   <div><b class="mkt-toolbar-title">🎬 Konten Berjalan</b><span class="mkt-stamp"></span></div>
   <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="kbJalankanAnalisis(this, false)" title="Vonis dari aturan; AI menjelaskan alasan dan saran tes. Hanya iklan yang berubah/kedaluwarsa yang diproses.">🤖 Analisis AI</button>
     <button type="button" class="mkt-btn" onclick="kbRefresh(this)">🔄 Refresh data</button>
     <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_konten', 'Konten Berjalan', this)">📥 PDF</button>
   </div>
@@ -715,6 +716,7 @@
   <input id="kbCari" type="search" placeholder="Cari nama / caption..." oninput="kbGantiFilter(false)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px;">
   <label style="font-size:12.5px;"><input type="checkbox" id="kbBerjalan" checked onchange="kbGantiFilter(false)"> Hanya yang berjalan</label>
   <span id="kbStatusMuat" style="font-size:12px; color:#64748b;"></span>
+  <span id="kbAiProgress" style="font-size:12px; color:#64748b;"></span>
 </div>
 <div id="kbCatatan" style="display:none; background:#fef3c7; color:#92400e; padding:8px 12px; border-radius:8px; font-size:12px; margin-bottom:10px;"></div>
 <div id="kbRingkas" style="font-size:12.5px; font-weight:600; color:#334155; margin-bottom:6px;"></div>
