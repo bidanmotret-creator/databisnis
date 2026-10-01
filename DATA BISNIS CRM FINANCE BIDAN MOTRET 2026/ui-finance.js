@@ -1,31 +1,3 @@
-// Fungsi untuk sinkronisasi dropdown tipe aktivitas
-function updateTipeAktivitas() {
-    const inputAkun = document.getElementById('jAkun');
-    const tipeDropdown = document.getElementById('jTipe');
-    const katInput = document.getElementById('jKategori'); // Tambahkan ID ini di HTML jika mau
-    const options = document.getElementById('listAkun').options;
-    
-    // Cari apakah teks yang diketik user ada di dalam daftar akun
-    for (let i = 0; i < options.length; i++) {
-        if (options[i].value === inputAkun.value) {
-            tipeDropdown.value = options[i].getAttribute('data-tipe');
-            if (katInput) {
-                katInput.value = options[i].getAttribute('data-kategori');
-            }
-            break;
-        }
-    }
-}
-
-function resetFormJurnal() {
-    document.getElementById('jTgl').value = '';
-    document.getElementById('jDesc').value = '';
-    document.getElementById('jAkun').value = '';
-    document.getElementById('jDebit').value = '0';
-    document.getElementById('jKredit').value = '0';
-    document.getElementById('jTipe').value = 'Operasional'; // Reset ke default
-}
-
 function isiDropdownAkun(daftarAkun) {
     const list = document.getElementById('listAkun');
     list.innerHTML = ''; // Kosongkan dulu
@@ -450,25 +422,6 @@ function terapkanTahunIniKeuangan() {
     terapkanFilter();
 }
 
-
-function generateNewId(sheetJurnal) {
-    var lastRow = sheetJurnal.getLastRow();
-    var dateStr = Utilities.formatDate(new Date(), "GMT+7", "yyMMdd"); // YYMMDD
-    var newId = "BM-" + dateStr + "-001"; // Format default jika hari ini belum ada transaksi
-
-    if (lastRow > 1) {
-        var lastId = sheetJurnal.getRange(lastRow, 1).getValue(); // Ambil ID baris terakhir
-        // Pecah ID: BM-260527-001 menjadi bagian-bagian
-        var parts = lastId.split('-'); 
-        
-        // Jika tanggalnya sama dengan hari ini, tambah angka urutannya
-        if (parts[1] === dateStr) {
-            var counter = parseInt(parts[2], 10) + 1;
-            newId = "JV-" + dateStr + "-" + ("000" + counter).slice(-3);
-        }
-    }
-    return newId;
-}
 
 // =========================================================================
 // =========================================================================
@@ -1377,7 +1330,7 @@ async function exportSatuBagianKeuanganPDF(subTabId, judulBagian, btnEl) {
         const pdf = new jsPDF('p', 'mm', 'a4');
         await tambahkanElemenKePdf_(pdf, elemen, judulBagian, 10, false);
 
-        const namaFile = `Laporan_Keuangan_${judulBagian.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        const namaFile = `Laporan_Keuangan_${judulBagian.replace(/\s+/g, '_')}_${formatDateLocal_(new Date())}.pdf`;
         pdf.save(namaFile);
     } catch (err) {
         console.error('Gagal export PDF:', err);
@@ -1436,7 +1389,7 @@ async function exportLaporanKeuanganLengkapPDF() {
             halamanKe++;
         }
 
-        const namaFile = `Laporan_Keuangan_Lengkap_${new Date().toISOString().split('T')[0]}.pdf`;
+        const namaFile = `Laporan_Keuangan_Lengkap_${formatDateLocal_(new Date())}.pdf`;
         pdf.save(namaFile);
     } catch (err) {
         console.error('Gagal export PDF:', err);
@@ -1474,21 +1427,6 @@ const ROSETTA_SOP = [
   ["Transaksi ditandai Pribadi", "1xx/2xx berkategori 'Pribadi'", "111 Kas/Bank (kategori 'Pribadi')", "Dikecualikan dari P&L, Arus Kas & Neraca bisnis"],
   ["Setoran modal saham dari investor", "111 Kas/Bank", "310 Modal Saham + 311 Agio Saham (jika ada premium)", "Nominal setoran = jumlah lembar x harga per lembar"],
 ];
-
-function renderRosettaStone() {
-  const el = document.getElementById('rsBody');
-  if (!el) return;
-  const q = (document.getElementById('rsSearch')?.value || '').toLowerCase();
-  const rows = ROSETTA_SOP.filter(r => r.join(' ').toLowerCase().includes(q));
-  el.innerHTML = rows.map(r => `
-    <tr>
-      <td>${r[0]}</td>
-      <td class="rs-debit">${r[1]}</td>
-      <td class="rs-kredit">${r[2]}</td>
-      <td>${r[3]}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="4" style="text-align:center;padding:18px;color:#94a3b8;">Tidak ada skenario yang cocok.</td></tr>';
-}
 
 // =========================================================================
 // AUDIT SOP OTOMATIS
@@ -2208,7 +2146,7 @@ function dlTambahBaris() {
     if (!nama) { alert('Isi nama keputusan/aktivitas dulu.'); return; }
 
     const data = dlAmbilData_();
-    data.push({ id: Date.now(), tgl: new Date().toISOString().split('T')[0], nama, kategori, profit, cash });
+    data.push({ id: Date.now(), tgl: formatDateLocal_(new Date()), nama, kategori, profit, cash });
     dlSimpanData_(data);
 
     document.getElementById('dlInputNama').value = '';
@@ -2607,7 +2545,7 @@ function rwHitungRentangTanggal_() {
     if (rwPeriodeAktif === 'bulanan') {
         const d1 = new Date(rwTahunPilih, rwBulanPilih - 1, 1);
         const d2 = new Date(rwTahunPilih, rwBulanPilih, 0);
-        return { mulai: d1.toISOString().split('T')[0], selesai: d2.toISOString().split('T')[0] };
+        return { mulai: formatDateLocal_(d1), selesai: formatDateLocal_(d2) };
     }
     if (rwPeriodeAktif === 'mingguan') {
         const d1 = tanggalAwalIsoWeek_(rwTahunPilih, rwMingguPilih);
@@ -2868,8 +2806,9 @@ function panduanIsiKeFormJurnal() {
     if (!panduanSaranTerakhir) return;
     const nominal = document.getElementById('panduanNominalTransaksi').value || '0';
     const deskripsi = document.getElementById('panduanDeskripsiTransaksi').value || '';
-    const btnJurnal = Array.from(document.querySelectorAll('.sub-tab-btn')).find(b => b.getAttribute('onclick')?.includes("'subJurnal'"));
-    if (btnJurnal) btnJurnal.click();
+    pilihSubTabKeuangan('subJurnal');
+    const selSub = document.getElementById('keuanganSubTabSelect');
+    if (selSub) selSub.value = 'subJurnal';
     setTimeout(() => {
         const elUtama = document.getElementById('jAkunUtama');
         const elPasangan = document.getElementById('jAkunPasangan');
@@ -3222,7 +3161,7 @@ async function stokProsesPenjualan() {
     const customerVal = document.getElementById('prosesCustomer').value.trim();
     const namaPaket = document.getElementById('prosesNamaPaket').value.trim();
     const faktorQty = document.getElementById('prosesFaktorQty').value || 1;
-    const tgl = document.getElementById('prosesTanggal').value || new Date().toISOString().split('T')[0];
+    const tgl = document.getElementById('prosesTanggal').value || formatDateLocal_(new Date());
     const posJurnal = document.getElementById('prosesPosJurnal').checked;
     if (!namaPaket) { alert('Isi Nama Paket dulu (harus sama persis dengan yang ada di BOM).'); return; }
 
@@ -3271,7 +3210,7 @@ async function stokMutasiManual() {
 
     const fd = new FormData();
     fd.append('action', 'mutasiStokManual');
-    fd.append('tgl', document.getElementById('mutasiTgl').value || new Date().toISOString().split('T')[0]);
+    fd.append('tgl', document.getElementById('mutasiTgl').value || formatDateLocal_(new Date()));
     fd.append('idBarang', idBarang);
     fd.append('namaBarang', namaBarang);
     fd.append('jenis', document.getElementById('mutasiJenis').value);
@@ -3416,9 +3355,9 @@ async function tbBukaKembali(tahun, bulan) {
 
 document.addEventListener('DOMContentLoaded', () => {
     const tglInputStok = document.getElementById('mutasiTgl');
-    if (tglInputStok) tglInputStok.value = new Date().toISOString().split('T')[0];
+    if (tglInputStok) tglInputStok.value = formatDateLocal_(new Date());
     const tglProses = document.getElementById('prosesTanggal');
-    if (tglProses) tglProses.value = new Date().toISOString().split('T')[0];
+    if (tglProses) tglProses.value = formatDateLocal_(new Date());
     try { renderStokPersediaan(); } catch (e) {}
     try { renderTutupBuku(); } catch (e) {}
 });
