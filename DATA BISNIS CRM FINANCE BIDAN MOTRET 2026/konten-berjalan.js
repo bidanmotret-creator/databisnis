@@ -345,6 +345,21 @@ function kbCplHtml_(r) {
   const mahal = r.cpl > ambilThreshold_('cplMahalRp', 30000);
   return `<span style="color:${mahal ? '#b91c1c' : '#047857'}; font-weight:700;">${kbRp(r.cpl)}</span>`;
 }
+// Catatan status per iklan dari backend (status[] di per_iklan).
+const KB_LABEL_STATUS = {
+  tidak_terlacak: ['Chat tidak masuk CRM ini', '#7c3aed', '#f5f3ff'],
+  spend_belum_sync: ['Spend belum tersinkron', '#b45309', '#fffbeb'],
+  sampel_kecil: ['Sampel kecil', '#64748b', '#f1f5f9'],
+  belum_matang: ['Belum matang', '#b45309', '#fffbeb']
+};
+function kbChipStatus_(r) {
+  const s = (r.at && r.at.status) || [];
+  return s.map(x => {
+    const l = KB_LABEL_STATUS[x]; if (!l) return '';
+    return `<span style="display:inline-block;margin:2px 4px 0 0;padding:0 6px;border-radius:99px;font-size:10px;font-weight:700;color:${l[1]};background:${l[2]};">${l[0]}</span>`;
+  }).join('');
+}
+
 function kbAtrHtml_(v, fmt) {
   if (v === null || v === undefined) return '<span style="color:#cbd5e1;" title="Belum termuat, atau iklan ini belum punya chat CTWA">-</span>';
   return fmt(v);
@@ -395,7 +410,6 @@ function kbDetailHtml_(r) {
     sel('Results (Meta)', kbInt(r.results)),
     sel('Hook Rate (3 dtk ÷ impresi)', r.hook === null ? strip : kbPct(r.hook)),
     sel('Hold Rate (ThruPlay ÷ 3 dtk)', r.hold === null ? strip : kbPct(r.hold)),
-    sel('DP', r.dp === null ? strip : kbRp(r.dp)),
     sel('Leads CTWA', r.at ? kbInt(r.at.ctwa) : strip)
   ].join('');
   const teks = (l, v) => v ? `<div style="margin-top:8px;"><div style="font-size:10.5px; color:#64748b;">${l}</div><div style="font-size:12.5px; white-space:pre-wrap; color:#1e293b;">${kbEsc(v)}</div></div>` : '';
@@ -444,7 +458,7 @@ function kbRender() {
         <td style="text-align:left;"><div style="display:flex; gap:8px; align-items:center;">
           <span class="kb-thumb-col">${kbThumbHtml_(r.m, 48)}</span>
           <div style="min-width:0;"><div style="font-weight:600; font-size:12.5px;">${kbEsc(r.nama)}</div>
-          <div style="font-size:11px; color:#64748b;">${kbEsc(r.campaign)}</div></div></div></td>
+          <div style="font-size:11px; color:#64748b;">${kbEsc(r.campaign)}</div>${kbChipStatus_(r)}</div></div></td>
         <td>${kbStatusHtml_(r)}</td>
         <td>${kbRp(r.spend)}</td>
         <td>${kbInt(r.klik)}</td>

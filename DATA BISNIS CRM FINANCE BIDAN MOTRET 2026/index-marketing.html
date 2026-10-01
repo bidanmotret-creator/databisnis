@@ -217,7 +217,7 @@
 
 
 
-<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="konten" onclick="mktBukaSub('konten')">🎬 Konten Berjalan</button><button type="button" class="mkt-chip" data-sub="promo" onclick="mktBukaSub('promo')">🧪 Tes Promo</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down Iklan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
+<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="konten" onclick="mktBukaSub('konten')">🎬 Konten Berjalan</button><button type="button" class="mkt-chip" data-sub="promo" onclick="mktBukaSub('promo')">🧪 Tes Promo</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down Iklan</button><button type="button" class="mkt-chip" data-sub="keberatan" onclick="mktBukaSub('keberatan')">🚧 Keberatan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
 
 <div class="mkt-sub" id="mktSub_sync">
 <div class="mkt-toolbar">
@@ -354,6 +354,10 @@
   </div>
 </div>
 
+    <div class="funnel-legend" style="border-left:4px solid #f59e0b; background:#fffbeb; color:#78350f;">
+        ⚠️ <b>Angka KPI di bawah panel "Funnel Iklan — Real CPL" memakai metode lama:</b> semua lead CRM ÷ semua spend (termasuk lead organik dan lini yang chat-nya tidak masuk CRM ini). Karena itu boleh berbeda dari Real CPL. Untuk biaya per lead iklan, pakai panel Real CPL. CAC, ROAS, dan konversi belum layak dinilai final selama closing masih sedikit dan kohort belum berumur 30 hari.
+    </div>
+
     <div class="funnel-legend">
         📖 <b>Cara baca funnel ini:</b> iklan Meta dilihat orang (<b>Awareness</b>) → sebagian menghubungi via chat (<b>Leads</b>, dicatat sebagai "Leads Meta" mentah dari Meta dan "Leads CRM" yang sudah tercocokkan nomor HP-nya ke database) → sebagian bayar DP (<b>Closing</b>) → menghasilkan uang masuk (<b>Revenue</b>). Semakin ke bawah tahapnya, semakin sedikit orangnya — itu wajar, namanya juga funnel (corong).
     </div>
@@ -386,7 +390,7 @@
             <div class="kpi-card kpi-card-leads"><div class="kpi-label">Leads (Meta Ads)</div><div class="kpi-val" id="kpiLeadsMeta">-</div></div>
             <div class="kpi-card kpi-card-leads"><div class="kpi-label">Leads (CRM/Real)</div><div class="kpi-val" id="kpiLeads">-</div></div>
             <div class="kpi-card kpi-card-leads"><div class="kpi-label">Match Rate</div><div class="kpi-val" id="kpiMatchRate">-</div></div>
-            <div class="kpi-card kpi-card-leads"><div class="kpi-label">CPL / Lead</div><div class="kpi-val" id="kpiCPL">-</div></div>
+            <div class="kpi-card kpi-card-leads"><div class="kpi-label">CPL / Lead (metode lama)</div><div class="kpi-val" id="kpiCPL">-</div></div>
         </div>
     </div>
 
@@ -400,8 +404,8 @@
         </div>
         <div class="kpi-grid">
             <div class="kpi-card kpi-card-closing"><div class="kpi-label">Closing (DP+)</div><div class="kpi-val" id="kpiClosing">-</div></div>
-            <div class="kpi-card kpi-card-closing"><div class="kpi-label">Conv. Rate</div><div class="kpi-val" id="kpiCR">-</div></div>
-            <div class="kpi-card kpi-card-closing"><div class="kpi-label">CAC / Closing</div><div class="kpi-val" id="kpiCAC">-</div></div>
+            <div class="kpi-card kpi-card-closing"><div class="kpi-label">Conv. Rate (metode lama)</div><div class="kpi-val" id="kpiCR">-</div></div>
+            <div class="kpi-card kpi-card-closing"><div class="kpi-label">CAC / Closing (metode lama)</div><div class="kpi-val" id="kpiCAC">-</div></div>
             <div class="kpi-card kpi-card-closing"><div class="kpi-label">Avg. Waktu Closing</div><div class="kpi-val" id="kpiTime">-</div></div>
         </div>
     </div>
@@ -416,7 +420,7 @@
         </div>
         <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
             <div class="kpi-card kpi-card-revenue"><div class="kpi-label">Total Omzet</div><div class="kpi-val" id="kpiOmzet">-</div></div>
-            <div class="kpi-card kpi-card-revenue"><div class="kpi-label">ROAS</div><div class="kpi-val" id="kpiROAS">-</div></div>
+            <div class="kpi-card kpi-card-revenue"><div class="kpi-label">ROAS (metode lama)</div><div class="kpi-val" id="kpiROAS">-</div></div>
         </div>
     </div>
 
@@ -814,7 +818,7 @@
 
 <div class="mkt-sub" id="mktSub_drill">
 <div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🔎 Drill-down Iklan: Minat → Campaign → Adset → Ad</b><span class="mkt-stamp"></span></div>
+  <div><b class="mkt-toolbar-title">🔎 Drill-down Iklan: Minat → Promo → Campaign → Adset → Ad</b><span class="mkt-stamp"></span></div>
   <div class="mkt-toolbar-btns">
     <button type="button" class="mkt-btn" onclick="mktDrillBukaTutupSemua(true)">⬇️ Buka Semua</button>
     <button type="button" class="mkt-btn" onclick="mktDrillBukaTutupSemua(false)">⬆️ Tutup Semua</button>
@@ -823,7 +827,7 @@
   </div>
 </div>
 <p style="font-size:12px; color:#64748b; margin-top:-6px; margin-bottom:12px;">
-  Klik baris untuk membuka/tutup level di bawahnya. Filter tanggal & Nama Campaign (Meta Ads) di atas ikut berlaku di sini.
+  Klik baris untuk membuka/tutup level di bawahnya. Filter tanggal & Nama Campaign (Meta Ads) di atas ikut berlaku di sini. Level Promo mengelompokkan iklan per paket penawaran (aturan sama dengan Tes Promo). <b>Angka di sini adalah angka Meta (Results dan CPL Meta), bukan Real CPL;</b> untuk Real CPL per campaign dan iklan lihat panel Funnel Iklan.
   Level Minat mengikuti aturan Mapping Minat yang sedang aktif. Label 🟢/🟡/🔴 membandingkan CPL tiap node dengan rata-rata
   saudara sekelompoknya (di level yang sama), pakai ambang dari <code>tenant-config.js</code> (<code>cplMahalRp</code>, <code>efisienDariRataRataPersen</code>, <code>adsetBorosMinSpendRp</code>) — arahkan kursor ke label untuk lihat rekomendasinya.
 </p>
@@ -842,6 +846,17 @@
   <tbody id="bDrillIklan"></tbody>
 </table>
 </div>
+</div>
+
+<div class="mkt-sub" id="mktSub_keberatan">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">🚧 Keberatan Customer</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="kebrMuat(true)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_keberatan', 'Keberatan Customer', this)">📥 PDF</button>
+  </div>
+</div>
+<div id="kebrPanel" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;"><div style="color:#94a3b8;font-size:13px;">Buka tab ini untuk memuat data.</div></div>
 </div>
 
 <div id="tmModalSet" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
@@ -909,8 +924,11 @@
 <script src="mkt-extra.js"></script>
 <script src="konten-berjalan.js"></script>
 <script src="promo-tes.js"></script>
+<script src="promo-analisis.js"></script>
+<script src="drill-promo.js"></script>
 <script src="api-marketing.js"></script>
-   <script src="funnel-iklan.js"></script>
+<script src="funnel-iklan.js"></script>
+
 
 </body>
 </html>
