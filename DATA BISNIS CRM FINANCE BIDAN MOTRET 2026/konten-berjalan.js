@@ -71,19 +71,28 @@ function kbBacaMaster_(res) {
   });
   return peta;
 }
+
 function kbBacaAtribusi_(res) {
   const peta = {};
-  const sumber = (res && (res.perIklan || res.per_iklan || res.byAd || res.iklan)) ||
-                 (res && res.data && (res.data.perIklan || res.data.per_iklan || res.data.byAd)) || res;
-  kbDaftarDari_(sumber, ['data']).forEach(r => {
-    const id = String(kbAmbil(r, ['ad_id', 'adId', 'id'], '')).trim();
+  const daftar = (res && res.data && (res.data.per_iklan || res.data.perIklan)) ||
+                 (res && (res.per_iklan || res.perIklan)) || [];
+  (Array.isArray(daftar) ? daftar : []).forEach(r => {
+    const id = String(r.ad_id || '').trim();
     if (!id) return;
+    // Iklan yang chat-nya tidak masuk CRM ini (mis. Bento): tidak diberi entri,
+    // sehingga leads/closing/ROAS tampil "-" dan bukan 0 palsu.
+    if (r.terlacak === false) return;
     peta[id] = {
-      leads: kbNum(kbAmbil(r, ['leads_crm', 'leads', 'jml_leads'], 0)),
-      ctwa: kbNum(kbAmbil(r, ['chat_ctwa', 'leads_ctwa', 'ctwa'], 0)),
-      closing: kbNum(kbAmbil(r, ['closing', 'jml_closing'], 0)),
-      dp: kbNum(kbAmbil(r, ['dp', 'total_dp', 'nilai_dp'], 0)),
-      terbayar: kbNum(kbAmbil(r, ['terbayar', 'total_terbayar', 'nilai_terbayar'], 0))
+      leads: kbNum(r.leadA),
+      ctwa: kbNum(r.leadA),
+      closing: kbNum(r.closing),
+      dp: 0,
+      terbayar: kbNum(r.terbayar),
+      omzet: kbNum(r.omzet),
+      spend: kbNum(r.spend),          // spend pada periode atribusi yang sama
+      real_cpl: r.real_cpl === undefined ? null : r.real_cpl,
+      kebocoran: r.kebocoran === undefined ? null : r.kebocoran,
+      status: Array.isArray(r.status) ? r.status : []
     };
   });
   return peta;
@@ -127,7 +136,7 @@ async function kbMuatData(paksa) {
   try {
     const [m, a, g] = await Promise.allSettled([
       perluMaster ? kbFetchUlang_(scriptURL + '?action=getAdCreativeMaster') : Promise.resolve(null),
-      perluAtribusi ? kbFetchUlang_(scriptURL + '?action=getAtribusiLeads&since=' + encodeURIComponent(since)) : Promise.resolve(null),
+           perluAtribusi ? kbFetchUlang_(scriptURL + '?action=getFunnelMarketing&since=2000-01-01') : Promise.resolve(null),
       perluAnalisis ? kbFetchUlang_(scriptURL + '?action=getAnalisisKonten') : Promise.resolve(null)
     ]);
     if (perluMaster) {
@@ -147,6 +156,7 @@ async function kbMuatData(paksa) {
     kbSetStatus_('');
   }
 }
+
 function kbSetStatus_(t) { const el = $m('kbStatusMuat'); if (el) el.textContent = t; }
 
 async function kbBukaSub() {
@@ -286,7 +296,7 @@ function kbHitung_(f) {   // f (opsional): {campaign, hari, berjalan, cari} meng
       hold: adalahVideo && a.v3s > 0 ? a.thru / a.v3s * 100 : null,
       leads: at ? at.leads : null, closing: at ? at.closing : null,
       dp: at ? at.dp : null, terbayar: at ? at.terbayar : null,
-      roas: at && a.spendSemua > 0 ? at.terbayar / a.spendSemua : null
+           roas: at && at.spend > 0 ? at.terbayar / at.spend : null
     });
   });
   return out;
