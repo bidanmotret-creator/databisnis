@@ -205,35 +205,68 @@ function tutupChat() { document.getElementById('modalChat').style.display = 'non
 
 function renderChat(d, el) {
   let html = '';
+
   // Info iklan (CTWA)
   if (d.ctwa && d.ctwa.length) {
     const c = d.ctwa[d.ctwa.length - 1];
     html += `<div class="ai-card" style="background:#fffbeb;"><b>📣 Dari Iklan Meta (CTWA)</b><br>${esc(c.headline || '-')}
       <br><small style="color:#64748b;">${esc(c.body || '')} · masuk ${esc(c.waktu)}</small></div>`;
   }
-  // Analisis AI terbaru + riwayat
+
+  // Analisis AI terbaru
   if (d.analisis && d.analisis.length) {
     const a = d.analisis[d.analisis.length - 1];
-    html += `<div class="ai-card" style="background:#eef2ff;"><b>🧠 Analisis AI Terbaru</b> <small style="color:#64748b;">(${esc(a.waktu)})</small><br>
+
+    if (a.tipe_kontak && a.tipe_kontak !== 'Customer') {
+      html += `<div class="ai-card" style="background:#fef3c7; color:#92400e;"><b>⚠️ Bukan calon pelanggan:</b> ${esc(a.tipe_kontak)}</div>`;
+    }
+
+    html += `<div class="ai-card" style="background:#eef2ff;"><b>🧠 Analisis AI Terbaru</b> <small style="color:#64748b;">(${esc(a.waktu)})</small>
+      ${a.stage ? `<span class="fu-badge b-yellow" style="margin-left:6px;">${esc(a.stage)}</span>` : ''}<br>
       Produk: <b>${esc(a.produk || '-')}</b> · Timeline: ${esc(a.timeline || '-')} · Lokasi: ${esc(a.lokasi || '-')}<br>
-      Budget: ${esc(a.budget || '-')} · Intent: <b>${esc(a.intent || '-')}</b> ${a.booking ? '· 🔥 Siap booking' : ''} · Confidence: ${Math.round(a.confidence * 100)}%<br>
+      Budget: ${esc(a.budget || '-')} · Intent: <b>${esc(a.intent || '-')}</b> ${a.booking ? '· 🔥 Siap booking' : ''} · Confidence: ${Math.round((a.confidence || 0) * 100)}%
+      ${a.motivasi ? `<br>Motivasi: ${esc(a.motivasi)}` : ''}<br>
       <span style="color:#334155;">${esc(a.summary || '')}</span>
       ${d.analisis.length > 1 ? `<br><small style="color:#94a3b8;">${d.analisis.length} analisis tercatat total.</small>` : ''}</div>`;
+
+    // Keberatan
+    const keb = Array.isArray(a.keberatan) ? a.keberatan : [];
+    if (keb.length) {
+      html += `<div class="ai-card"><b>🚧 Keberatan Customer</b><div style="margin-top:6px;">` +
+        keb.map(k => {
+          const open = k.status !== 'resolved';
+          const bg = open ? '#fee2e2' : '#dcfce7', fg = open ? '#991b1b' : '#166534';
+          return `<div style="margin-bottom:6px;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:11.5px; font-weight:700; background:${bg}; color:${fg};">${open ? '● ' : '✓ '}${esc(k.kategori)}</span>
+            ${k.bukti ? `<br><small style="color:#475569;">“${esc(k.bukti)}”</small>` : ''}</div>`;
+        }).join('') + `</div></div>`;
+    }
+
+    // Next Action
+    if (a.next_action) {
+      html += `<div class="ai-card" style="background:#f0fdf4; border-color:#bbf7d0;"><b>🎯 Saran Tindak Lanjut</b><br><span style="color:#14532d;">${esc(a.next_action)}</span></div>`;
+    }
   } else {
     html += '<div class="ai-card" style="color:#94a3b8;">Belum ada analisis AI untuk nomor ini.</div>';
   }
+
   // Follow-up terakhir
   if (d.followup && d.followup.length) {
     const f = d.followup[d.followup.length - 1];
     html += `<div class="ai-card"><b>⚡ Follow-up:</b> ${esc(LABEL_STAGE[f.stage] || 'Stage ' + f.stage)} · ${esc(f.catatan)} <small style="color:#94a3b8;">(${esc(f.waktu)})</small></div>`;
   }
-  // Percakapan
+
+  // Percakapan: pelanggan, 🤖 Bot, 👤 CS
   html += '<div style="font-weight:800; font-size:13px; margin:12px 0 8px;">Percakapan (' + (d.timeline || []).length + ' pesan)</div>';
   html += '<div style="display:flex; flex-direction:column;">' + ((d.timeline || []).map(m => {
     const out = m.arah === 'keluar';
-    const label = out ? ('🤖 ' + esc(m.tipe || 'otomatis') + (m.ok === false ? ' · ❌ gagal' : '')) : '';
-    return `<div class="bub ${out ? 'bub-out' : 'bub-in'}">${esc(m.teks)}<small>${label} ${esc((m.waktu || '').substring(0, 16))}</small></div>`;
+    const cs = out && m.oleh === 'cs';
+    const label = !out ? ''
+      : cs ? '👤 CS'
+      : ('🤖 ' + esc(m.tipe && m.tipe !== 'text' ? m.tipe : 'otomatis') + (m.ok === false ? ' · ❌ gagal' : ''));
+    const gaya = cs ? ' style="background:#dbeafe;"' : '';
+    return `<div class="bub ${out ? 'bub-out' : 'bub-in'}"${gaya}>${esc(m.teks)}<small>${label} ${esc((m.waktu || '').substring(0, 16))}</small></div>`;
   }).join('') || '<p style="color:#94a3b8;">Belum ada pesan tercatat.</p>') + '</div>';
+
   el.innerHTML = html;
 }
 
