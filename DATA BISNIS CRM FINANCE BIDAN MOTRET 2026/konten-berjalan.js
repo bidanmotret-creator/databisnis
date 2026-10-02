@@ -5,7 +5,7 @@
 // Sumber data:
 //  - dataContent  (global, dari getData)  -> metrik harian per ad_id
 //  - getAdCreativeMaster (lazy)           -> caption, headline, CTA, status, thumbnail Drive
-//  - getAtribusiLeads    (lazy)           -> leads CRM, closing, DP, terbayar per ad_id
+//  - getFunnelMarketing  (lazy)           -> leads CRM, closing, terbayar, spend per ad_id (per_iklan); qualified bila backend mengirim
 //
 // Bentuk JSON dua endpoint di atas dibaca lewat ADAPTER di bagian atas
 // (kbBacaMaster_ / kbBacaAtribusi_). Kalau nama field di server berbeda,
@@ -86,6 +86,7 @@ function kbBacaAtribusi_(res) {
       leads: kbNum(r.leadA),
       ctwa: kbNum(r.leadA),
       closing: kbNum(r.closing),
+      qualified: (r.qualified === undefined || r.qualified === null) ? null : kbNum(r.qualified),   // lead berkualitas (backend, opsional)
       dp: 0,
       terbayar: kbNum(r.terbayar),
       omzet: kbNum(r.omzet),
@@ -344,7 +345,7 @@ function kbHitung_(f) {   // f (opsional): {berjalan, cari, semua}. Periode dan 
       frek: a.imp > 0 ? a.frekBobot / a.imp : 0,
       hook: adalahVideo && a.imp > 0 && a.v3s > 0 ? a.v3s / a.imp * 100 : null,
       hold: adalahVideo && a.v3s > 0 ? a.thru / a.v3s * 100 : null,
-      leads: at ? at.leads : null, closing: at ? at.closing : null,
+      leads: at ? at.leads : null, closing: at ? at.closing : null, qualified: at ? at.qualified : null,
       dp: at ? at.dp : null, terbayar: at ? at.terbayar : null,
            roas: at && at.spend > 0 ? at.terbayar / at.spend : null
     });

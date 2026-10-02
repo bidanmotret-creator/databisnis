@@ -54,7 +54,7 @@ function paKumpul_(hari) {
       paket: (typeof penPaketAtauAturan_ === 'function' ? penPaketAtauAturan_(r.id, r.nama, m.headline || '', m.caption || '') : paPaketDariTeks_(r.nama, m.headline || '', m.caption || '', PT.rules)),
       tipe: m.tipe || '', headline: m.headline || '', caption: m.caption || '', punyaTeks: !!(m.caption || m.headline),
       spend: r.spend, imp: r.imp, klik: r.klik, results: r.results,
-      leads: r.leads, closing: r.closing, terbayar: r.terbayar, atSpend: r.at ? r.at.spend : 0
+      leads: r.leads, closing: r.closing, terbayar: r.terbayar, qualified: (r.qualified === undefined ? null : r.qualified), atSpend: r.at ? r.at.spend : 0
     };
   }).filter(a => a.spend > 0);
 }
