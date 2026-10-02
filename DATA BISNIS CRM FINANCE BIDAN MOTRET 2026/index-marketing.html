@@ -4,904 +4,296 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Analisis Marketing — SentuhanMomen3D</title>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
-
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="marketing.css">
 <script src="nav.js"></script>
+<style>
+/* ===== RUANG RAPAT ===== */
+.rp-hero{background:linear-gradient(120deg,#4338ca,#db2777 55%,#f59e0b);color:#fff;border-radius:16px;padding:20px 22px;margin-bottom:16px;position:relative;overflow:hidden}
+.rp-hero:after{content:"📊";position:absolute;right:18px;top:6px;font-size:70px;opacity:.18}
+.rp-hero h2{margin:0 0 4px;font-size:20px}.rp-hero p{margin:0;font-size:12.5px;opacity:.95}
+.rp-verdict{display:inline-block;margin-top:10px;padding:6px 14px;border-radius:20px;font-weight:800;font-size:13px;background:rgba(255,255,255,.22)}
+.rp-story{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.rp-card{border-radius:14px;padding:14px;color:#fff;cursor:pointer;transition:.2s;position:relative}
+.rp-card:hover{transform:translateY(-4px);box-shadow:0 10px 22px rgba(0,0,0,.2)}
+.rp-card .ic{font-size:26px}.rp-card .bab{font-size:10px;letter-spacing:.6px;text-transform:uppercase;opacity:.9}
+.rp-card .big{font-size:24px;font-weight:900;margin:2px 0}.rp-card .kal{font-size:12px;line-height:1.5;opacity:.97}
+.rp-card .more{display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.35);font-size:11.5px}
+.rp-card.open .more{display:block}
+.rp-1{background:linear-gradient(145deg,#818cf8,#4338ca)}.rp-2{background:linear-gradient(145deg,#38bdf8,#0369a1)}
+.rp-3{background:linear-gradient(145deg,#fbbf24,#b45309)}.rp-4{background:linear-gradient(145deg,#34d399,#047857)}
+.rp-flow{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.rp-node{flex:1 1 120px;text-align:center;border-radius:12px;padding:12px 6px;color:#fff;font-weight:800}
+.rp-node small{display:block;font-weight:600;font-size:10.5px;opacity:.92}
+.rp-arrow{align-self:center;text-align:center;font-size:11px;font-weight:800;color:#475569;min-width:64px}
+.rp-arrow b{display:block;font-size:15px}.rp-leak{outline:3px dashed #ef4444;outline-offset:2px}
+.rp-dec{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:16px}
+.rp-col{border-radius:14px;padding:14px;border:2px solid}
+.rp-scale{background:#f0fdf4;border-color:#22c55e}.rp-fix{background:#fffbeb;border-color:#f59e0b}.rp-stop{background:#fef2f2;border-color:#ef4444}
+.rp-col h4{margin:0 0 8px;font-size:14px}.rp-col li{font-size:12.5px;line-height:1.6;margin-left:16px}
+.rp-todo{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:12px}
+.rp-todo label{display:flex;gap:8px;align-items:flex-start;font-size:13px;padding:6px 4px;border-radius:6px;cursor:pointer}
+.rp-todo label:hover{background:#eef2ff}.rp-todo input:checked+span{text-decoration:line-through;color:#94a3b8}
+.rp-btn{padding:10px 18px;border:none;border-radius:8px;background:#4338ca;color:#fff;font-weight:800;cursor:pointer;margin-right:8px}
+.rp-note{font-size:11.5px;background:#fef3c7;color:#92400e;border-radius:8px;padding:8px 12px;margin-bottom:12px}
+/* ===== widget .ms-filter & funnel (tetap) ===== */
+.ms-filter{position:relative}.ms-filter-btn{width:100%;text-align:left;padding:9px 12px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-size:12.5px;cursor:pointer;font-weight:600}
+.ms-filter-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;width:min(320px,90vw);max-height:320px;overflow-y:auto;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 10px 24px rgba(0,0,0,.14);padding:8px}
+.ms-filter-panel.open{display:block}.ms-filter-search{width:100%;padding:7px 10px;border-radius:6px;border:1px solid #e2e8f0;font-size:12px;margin-bottom:6px;box-sizing:border-box}
+.ms-filter-options{max-height:190px;overflow-y:auto}.ms-filter-option{display:flex;align-items:center;gap:8px;padding:6px;font-size:12.5px;cursor:pointer}
+.ms-filter-actions{display:flex;gap:6px;margin-top:6px;border-top:1px solid #f1f5f9;padding-top:6px}.ms-filter-actions button{flex:1;padding:6px;font-size:11px;font-weight:700;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;cursor:pointer}
+</style>
 </head>
 <body>
-
-<div id="globalLoadingOverlay" style="position:fixed; inset:0; z-index:9999; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
-    <div style="width:48px; height:48px; border:4px solid #e2e8f0; border-top-color:#4f46e5; border-radius:50%; animation:spinLoadingOverlay 0.8s linear infinite;"></div>
-    <div style="font-size:14px; font-weight:600; color:#475569;">Memuat data...</div>
+<div id="globalLoadingOverlay" style="position:fixed;inset:0;z-index:9999;background:#f8fafc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:48px;height:48px;border:4px solid #e2e8f0;border-top-color:#4f46e5;border-radius:50%;animation:spinLoadingOverlay .8s linear infinite"></div>
+  <div style="font-size:14px;font-weight:600;color:#475569">Memuat data...</div>
 </div>
-<style>@keyframes spinLoadingOverlay { to { transform: rotate(360deg); } }</style>
+<style>@keyframes spinLoadingOverlay{to{transform:rotate(360deg)}}</style>
 
 <div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-icon">📢</div>
-      <div class="brand-text"><strong>Analisis Marketing</strong><span>SentuhanMomen3D</span></div>
-    </div>
-   <nav class="sidebar-nav"></nav>
-    <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
-  </aside>
-
-  <main class="main-content">
-    <div class="topbar">
-      <button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
-      <div class="topbar-title" id="topbarTitle">Analisis Marketing</div>
-    </div>
-
-    <div class="content-inner">
-
+<aside class="sidebar">
+  <div class="sidebar-brand"><div class="brand-icon">📢</div><div class="brand-text"><strong>Analisis Marketing</strong><span>SentuhanMomen3D</span></div></div>
+  <nav class="sidebar-nav"></nav>
+  <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+</aside>
+<main class="main-content">
+<div class="topbar"><button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button><div class="topbar-title" id="topbarTitle">Analisis Marketing</div></div>
+<div class="content-inner">
 <div id="tabMarketing" class="tab-content active">
-    
-    
-    <h2>📢 Metrik Marketing & ROAS (Funnel Analysis)</h2>
-    <p style="color:var(--text-light); margin-top:-10px;">Perjalanan calon klien dari <strong>dilihat iklannya</strong> sampai <strong>bayar DP</strong> — empat tahap, empat warna.</p>
 
-    <style>
-        .funnel-stage-section { margin-bottom: 22px; }
-        .funnel-stage-header {
-            display: flex; align-items: center; gap: 10px;
-            margin-bottom: 10px; padding: 10px 14px;
-            border-radius: 8px; color: #fff;
-        }
-        .funnel-stage-header .stage-icon { font-size: 20px; }
-        .funnel-stage-header .stage-title { font-size: 13.5px; font-weight: 800; letter-spacing: 0.3px; }
-        .funnel-stage-header .stage-desc { font-size: 11px; opacity: 0.92; font-weight: 500; margin-top: 1px; }
+<h2>📢 Metrik Marketing & ROAS</h2>
+<p style="color:var(--text-light);margin-top:-10px">Dari <strong>dilihat iklannya</strong> sampai <strong>bayar DP</strong>, diceritakan bab demi bab.</p>
 
-        .stage-awareness { background: linear-gradient(135deg, #6366f1, #4338ca); }
-        .stage-leads { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
-        .stage-closing { background: linear-gradient(135deg, #f59e0b, #b45309); }
-        .stage-revenue { background: linear-gradient(135deg, #10b981, #047857); }
+<!-- FILTER (ID dipertahankan, dibaca renderMarketingTab) -->
+<div class="filter-panel" style="background:#e0e7ff;margin-bottom:18px"><div class="filter-grid">
+  <div class="form-group"><label>Minat Produk</label>
+    <div class="ms-filter" id="msFilterMktCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktCampaign')">Semua Minat ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari minat produk..." oninput="filterMsOptions('msFilterMktCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterMktCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterMktCampaign')">Bersihkan</button></div></div></div></div>
+  <div class="form-group"><label>Nama Campaign (Meta Ads)</label>
+    <div class="ms-filter" id="msFilterMktNamaMeta"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktNamaMeta')">Semua Campaign ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari campaign..." oninput="filterMsOptions('msFilterMktNamaMeta',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterMktNamaMeta')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterMktNamaMeta')">Bersihkan</button></div></div></div></div>
+  <div class="form-group" style="grid-column:1/-1"><label>Rentang Tgl Chat (Ads)</label>
+    <div class="preset-tgl-row" id="grupPresetTglMkt">
+      <button type="button" class="btn-preset-tgl" data-preset="hari_ini" onclick="terapkanRentangCepat('fMktStart','fMktEnd','hari_ini',renderMarketingTab,'grupPresetTglMkt')">Hari Ini</button>
+      <button type="button" class="btn-preset-tgl" data-preset="7_hari" onclick="terapkanRentangCepat('fMktStart','fMktEnd','7_hari',renderMarketingTab,'grupPresetTglMkt')">7 Hari</button>
+      <button type="button" class="btn-preset-tgl" data-preset="30_hari" onclick="terapkanRentangCepat('fMktStart','fMktEnd','30_hari',renderMarketingTab,'grupPresetTglMkt')">30 Hari</button>
+      <button type="button" class="btn-preset-tgl" data-preset="bulan_ini" onclick="terapkanRentangCepat('fMktStart','fMktEnd','bulan_ini',renderMarketingTab,'grupPresetTglMkt')">Bulan Ini</button>
+      <input type="month" class="input-bulan-preset" onchange="terapkanBulanPilihan('fMktStart','fMktEnd',this.value,renderMarketingTab,'grupPresetTglMkt')"></div>
+    <div style="display:flex;gap:5px"><input type="date" id="fMktStart" onchange="renderMarketingTab()"><input type="date" id="fMktEnd" onchange="renderMarketingTab()"></div></div>
+  <div class="form-group" style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
+    <button type="button" class="btn-submit" style="margin:0;background:#4338ca;width:auto;padding:10px 18px" onclick="tmBukaPengaturan()">⚙️ Atur Target Mingguan</button>
+    <button type="button" style="padding:10px 16px;background:#7c3aed;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700" onclick="msBukaModal()">🏷️ Mapping Minat</button>
+    <button type="button" id="btnRefreshMarketing" onclick="refreshDataMarketingManual()" style="padding:10px 16px;background:#059669;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700">🔄 Refresh</button>
+  </div></div></div>
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-        .kpi-card {
-            padding: 13px 10px; border-radius: 10px; color: #fff; text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-            position: relative; overflow: hidden;
-        }
-        .kpi-card::after {
-            content: ''; position: absolute; inset: 0;
-            background: radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent 60%);
-        }
-        .kpi-card-awareness { background: linear-gradient(160deg, #818cf8, #4f46e5); }
-        .kpi-card-leads { background: linear-gradient(160deg, #38bdf8, #0284c7); }
-        .kpi-card-closing { background: linear-gradient(160deg, #fbbf24, #d97706); }
-        .kpi-card-revenue { background: linear-gradient(160deg, #34d399, #059669); }
+<div class="mkt-subnav" id="mktSubNav">
+<button type="button" class="mkt-chip" data-sub="rapat" onclick="mktBukaSub('rapat')">🧭 Ruang Rapat</button>
+<button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="konten" onclick="mktBukaSub('konten')">🎬 Konten Berjalan</button><button type="button" class="mkt-chip" data-sub="promo" onclick="mktBukaSub('promo')">🧪 Tes Promo</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
 
-        .kpi-label { font-size: 10px; opacity: 0.92; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; position: relative; z-index: 1; }
-        .kpi-val { font-size: 16.5px; font-weight: 900; position: relative; z-index: 1; }
+<!-- ============ SUB BARU: RUANG RAPAT ============ -->
+<div class="mkt-sub" id="mktSub_rapat">
+<div class="rp-hero"><h2>🧭 Ruang Rapat: Cerita Iklan Periode Ini</h2><p id="rpPeriode">Pilih rentang tanggal di atas, lalu klik Refresh.</p><span class="rp-verdict" id="rpVerdict">Menunggu data…</span></div>
+<div class="rp-note" id="rpCatatan" style="display:none"></div>
+<div class="rp-story" id="rpStory"></div>
+<h3 class="mkt-section-title">🌊 Di tahap mana calon klien menghilang?</h3>
+<div class="rp-flow" id="rpFlow"></div>
+<h3 class="mkt-section-title">⚖️ Keputusan Rapat yang Disarankan</h3>
+<p style="font-size:11.5px;color:#64748b;margin-top:-4px">Disusun otomatis dari aturan sederhana (ambang bisa diubah di <code>RP_CFG</code>). Ini bahan diskusi, bukan vonis.</p>
+<div class="rp-dec">
+  <div class="rp-col rp-scale"><h4>🟢 Scale (tambah budget)</h4><ul id="rpScale"></ul></div>
+  <div class="rp-col rp-fix"><h4>🟡 Perbaiki (uji ulang)</h4><ul id="rpFix"></ul></div>
+  <div class="rp-col rp-stop"><h4>🔴 Hentikan / Evaluasi</h4><ul id="rpStop"></ul></div>
+</div>
+<div class="rp-todo"><b>✅ Checklist Rapat</b><div id="rpTodo"></div></div>
+<button class="rp-btn" onclick="rpSalin(this)">📋 Salin Ringkasan Rapat</button><button class="rp-btn" style="background:#db2777" onclick="mktBukaSub('funnel')">Lihat angka detail →</button>
+</div>
 
-        .funnel-container {
-            background: linear-gradient(180deg, #f8fafc, #eef2ff);
-            padding: 22px 16px; border-radius: 12px; border: 1px solid #e2e8f0;
-            margin-bottom: 24px; text-align: center;
-        }
-        .funnel-row { display: flex; flex-direction: column; align-items: center; margin-bottom: 4px; }
-        .funnel-bar {
-            height: 56px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            border-radius: 8px;
-            transition: width 0.6s ease;
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15), 0 3px 8px rgba(0,0,0,0.1);
-            min-width: 220px;
-            max-width: 680px;
-            width: 100%;
-            white-space: nowrap;
-            overflow: hidden;
-            line-height: 1.2;
-            margin: 0 auto;
-        }
-        .funnel-connector { font-size: 16px; color: #94a3b8; margin: 1px 0; }
-        #fnlAwareBar { background: linear-gradient(135deg, #818cf8, #4338ca); }
-        #fnlLeadsBar { background: linear-gradient(135deg, #38bdf8, #0369a1); }
-        #fnlClosingBar { background: linear-gradient(135deg, #fbbf24, #b45309); }
-        #fnlRevenueBar { background: linear-gradient(135deg, #34d399, #047857); }
-        .f-label { font-size: 11.5px; color: #475569; margin-top: 5px; margin-bottom: 8px; font-weight: 700; }
-
-        .funnel-legend {
-            background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-            padding: 12px 16px; margin-bottom: 18px; font-size: 12px; color: #475569; line-height: 1.6;
-        }
-        .funnel-legend b { color: #1e293b; }
-
-        /* ---- .ms-filter widget ---- */
-        .ms-filter { position: relative; }
-        .ms-filter-btn {
-            width: 100%; text-align: left; padding: 9px 12px; border-radius: 6px;
-            border: 1px solid #cbd5e1; background: #fff; color: #334155; font-size: 12.5px;
-            cursor: pointer; font-weight: 600;
-        }
-        .ms-filter-btn:hover { border-color: #6366f1; }
-        .ms-filter-panel {
-            display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 50;
-            width: min(320px, 90vw); max-height: 320px; overflow-y: auto;
-            background: #fff; border: 1px solid #cbd5e1; border-radius: 8px;
-            box-shadow: 0 10px 24px rgba(0,0,0,0.14); padding: 8px;
-        }
-        .ms-filter-panel.open { display: block; }
-        .ms-filter-search {
-            width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid #e2e8f0;
-            font-size: 12px; margin-bottom: 6px; box-sizing: border-box;
-        }
-        .ms-filter-options { max-height: 190px; overflow-y: auto; }
-        .ms-filter-option {
-            display: flex; align-items: center; gap: 8px; padding: 6px 6px;
-            font-size: 12.5px; color: #334155; cursor: pointer; border-radius: 4px;
-        }
-        .ms-filter-option:hover { background: #f1f5f9; }
-        .ms-filter-option input { width: 14px; height: 14px; cursor: pointer; }
-        .ms-filter-actions { display: flex; gap: 6px; margin-top: 6px; border-top: 1px solid #f1f5f9; padding-top: 6px; }
-        .ms-filter-actions button {
-            flex: 1; padding: 6px; font-size: 11px; font-weight: 700; border-radius: 6px;
-            border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; cursor: pointer;
-        }
-        .ms-filter-actions button:hover { background: #eef2ff; color: #4338ca; }
-
-        #tblAdsetPerformance thead tr,
-        #tblAdContentPerformance thead tr,
-        #tblMarketing thead tr {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            background: #f1f5f9;
-        }
-    </style>
-
-    <div class="filter-panel" style="background:#e0e7ff; margin-bottom: 18px;">
-        <div class="filter-grid">
-            <div class="form-group">
-                <label>Minat Produk</label>
-                <div class="ms-filter" id="msFilterMktCampaign">
-                    <button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktCampaign')">Semua Minat ▾</button>
-                    <div class="ms-filter-panel">
-                        <input type="text" class="ms-filter-search" placeholder="Cari minat produk..." oninput="filterMsOptions('msFilterMktCampaign', this.value)">
-                        <div class="ms-filter-options"></div>
-                        <div class="ms-filter-actions">
-                            <button type="button" onclick="msFilterSelectAll('msFilterMktCampaign')">Pilih Semua</button>
-                            <button type="button" onclick="msFilterClearAll('msFilterMktCampaign')">Bersihkan</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Nama Campaign (Meta Ads)</label>
-                <div class="ms-filter" id="msFilterMktNamaMeta">
-                    <button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktNamaMeta')">Semua Campaign ▾</button>
-                    <div class="ms-filter-panel">
-                        <input type="text" class="ms-filter-search" placeholder="Cari nama campaign Meta..." oninput="filterMsOptions('msFilterMktNamaMeta', this.value)">
-                        <div class="ms-filter-options"></div>
-                        <div class="ms-filter-actions">
-                            <button type="button" onclick="msFilterSelectAll('msFilterMktNamaMeta')">Pilih Semua</button>
-                            <button type="button" onclick="msFilterClearAll('msFilterMktNamaMeta')">Bersihkan</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Rentang Tgl Chat (Ads)</label>
-                <div class="preset-tgl-row" id="grupPresetTglMkt">
-                    <button type="button" class="btn-preset-tgl" data-preset="hari_ini" onclick="terapkanRentangCepat('fMktStart','fMktEnd','hari_ini', renderMarketingTab, 'grupPresetTglMkt')">Hari Ini</button>
-                    <button type="button" class="btn-preset-tgl" data-preset="7_hari" onclick="terapkanRentangCepat('fMktStart','fMktEnd','7_hari', renderMarketingTab, 'grupPresetTglMkt')">7 Hari</button>
-                    <button type="button" class="btn-preset-tgl" data-preset="30_hari" onclick="terapkanRentangCepat('fMktStart','fMktEnd','30_hari', renderMarketingTab, 'grupPresetTglMkt')">30 Hari</button>
-                    <button type="button" class="btn-preset-tgl" data-preset="bulan_ini" onclick="terapkanRentangCepat('fMktStart','fMktEnd','bulan_ini', renderMarketingTab, 'grupPresetTglMkt')">Bulan Ini</button>
-                    <input type="month" class="input-bulan-preset" onchange="terapkanBulanPilihan('fMktStart','fMktEnd', this.value, renderMarketingTab, 'grupPresetTglMkt')">
-                </div>
-                <div style="display:flex; gap:5px;">
-                    <input type="date" id="fMktStart" onchange="renderMarketingTab()">
-                    <input type="date" id="fMktEnd" onchange="renderMarketingTab()">
-                </div>
-            </div>
-
-              <div class="form-group" style="display:flex; align-items:flex-end; gap:8px;">
-                <button type="button" class="btn-submit" style="margin:0; background:#4338ca; width:auto; padding:10px 18px;" onclick="tmBukaPengaturan()">
-                    ⚙️ Atur Target Mingguan
-                </button>
-                <button type="button" style="padding:10px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;" onclick="msBukaModal()" title="Atur mapping keyword campaign ke kategori minat/produk">🏷️ Mapping Minat</button>
-                <button type="button" id="btnRefreshMarketing" onclick="refreshDataMarketingManual()" style="padding:10px 16px; background:#059669; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;" title="Tarik ulang data terbaru tanpa reload halaman">🔄 Refresh</button>
-            </div>
-        </div>
-    </div>
-
-
-
-<div class="mkt-subnav" id="mktSubNav"><button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="konten" onclick="mktBukaSub('konten')">🎬 Konten Berjalan</button><button type="button" class="mkt-chip" data-sub="promo" onclick="mktBukaSub('promo')">🧪 Tes Promo</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down Iklan</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
-
-<div class="mkt-sub" id="mktSub_sync">
+<script src="gabung-lama.js"></script>
+<!-- TEMPEL di marketing.html, tepat SEBELUM <div class="mkt-sub" id="mktSub_sync"> -->
+<div class="mkt-sub" id="mktSub_audience">
 <div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🔗 Sinkronisasi Meta Ads</b><span class="mkt-stamp"></span></div>
+  <div><b class="mkt-toolbar-title">👥 Audience: Siapa, Di Mana, Lewat Mana</b><span class="mkt-stamp"></span></div>
   <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('sync', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_sync', 'Sinkronisasi Meta Ads', this)">📥 PDF</button>
+    <button type="button" class="mkt-btn" onclick="muatDataAudience(this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_audience','Audience',this)">📥 PDF</button>
   </div>
 </div>
+<style>
+.au-ch{display:flex;gap:10px;align-items:center;color:#fff;border-radius:10px;padding:10px 14px;margin:22px 0 10px}
+.au-ch .n{background:rgba(255,255,255,.25);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900}
+.au-ch b{font-size:14px}.au-ch small{display:block;font-size:11px;opacity:.92}
+.au-c1{background:linear-gradient(135deg,#6366f1,#4338ca)}.au-c2{background:linear-gradient(135deg,#0ea5e9,#0369a1)}
+.au-c3{background:linear-gradient(135deg,#db2777,#9d174d)}.au-c4{background:linear-gradient(135deg,#f59e0b,#b45309)}
+.au-c5{background:linear-gradient(135deg,#10b981,#047857)}
+.au-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.au-kpi div{background:#eef2ff;border-radius:10px;padding:12px;text-align:center}
+.au-kpi span{display:block;font-size:10px;color:#64748b;text-transform:uppercase}.au-kpi strong{font-size:16px;color:#4338ca}
+.au-2col{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:12px}
+.au-box{border-radius:10px;padding:12px;border:1px solid #e2e8f0}
+.au-good{background:#f0fdf4;border-color:#86efac}.au-bad{background:#fef2f2;border-color:#fca5a5}
+.rekomendasi-item{padding:8px 0;border-bottom:1px dashed #cbd5e1;font-size:12.5px}.rekomendasi-item .judul{font-weight:800}
+.rekomendasi-item .detail{color:#475569;font-size:11.5px}.skor{font-size:10px;padding:2px 8px;border-radius:10px;color:#fff}
+.skor-tinggi{background:#16a34a}.skor-rendah{background:#dc2626}
+.empty-state{text-align:center;color:#94a3b8;padding:14px}
+.au-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.au-hint{font-size:12px;color:#64748b;margin:-4px 0 10px}
+.au-final{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:18px;font-size:13.5px;line-height:1.6}
+</style>
 
-    <div class="funnel-legend" style="border-left:4px solid #0ea5e9; background:#f0f9ff;">
-        <h3 style="margin-top:0; font-size:14.5px; color:#0369a1;">🔗 Sinkronisasi Meta Ads</h3>
-        <p style="font-size:11.5px; color:#0369a1; margin:4px 0 14px;">Tarik data terbaru langsung dari Meta Ads API ke Google Sheets, tanpa perlu buka Apps Script editor.</p>
-
-        <div style="font-size:10.5px; font-weight:800; color:#0369a1; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">📥 1. Input — Pilih Jenis & Rentang Data</div>
-        <div id="panelSyncMeta"></div>
-
-        <div style="font-size:10.5px; font-weight:800; color:#0369a1; text-transform:uppercase; letter-spacing:0.5px; margin:16px 0 6px; padding-top:12px; border-top:1px dashed #bae6fd;">⚙️ 2. Proses & 📤 3. Output</div>
-        <div id="hasilSyncMetaAds" style="display:none; margin-top:4px; padding:10px 14px; border-radius:8px; font-size:12px;"></div>
-
-        <div style="margin-top:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:11px; font-weight:700; color:#0369a1;">🕘 Riwayat Sync Terakhir (5 terbaru, tersimpan di browser ini)</span>
-                <button type="button" onclick="bersihkanRiwayatSyncMeta()" style="font-size:10px; padding:3px 8px; border-radius:6px; border:1px solid #bae6fd; background:#fff; color:#0369a1; cursor:pointer;">Bersihkan</button>
-            </div>
-            <div id="riwayatSyncMetaList" style="margin-top:6px; font-size:11px; color:#475569;"></div>
-        </div>
-    </div>
-
-
+<!-- BAB 1: SIAPA -->
+<div class="au-ch au-c1"><div class="n">1</div><div><b>Siapa yang paling responsif?</b><small>Profil audience (usia, gender, interest) diberi skor: CTR 30% · CPL 40% · Volume 30%</small></div></div>
+<div class="au-kpi">
+  <div><span>Profil Aktif</span><strong id="aiTotalProfile">-</strong></div>
+  <div><span>Rata-rata CPL</span><strong id="aiAvgCPL">-</strong></div>
+  <div><span>Rata-rata CTR</span><strong id="aiAvgCTR">-</strong></div>
+  <div><span>Total Spend</span><strong id="aiTotalSpend">-</strong></div>
 </div>
-
-<div class="mkt-sub" id="mktSub_capi">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">👥 CAPI & Audience</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('capi', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_capi', 'CAPI & Audience', this)">📥 PDF</button>
-  </div>
+<div class="au-2col">
+  <div class="au-box au-good"><b style="color:#166534">🏆 Layak di-Scale</b><div id="aiRekomendasiTerbaik"></div></div>
+  <div class="au-box au-bad"><b style="color:#991b1b">⚠️ Pertimbangkan Dihentikan</b><div id="aiRekomendasiHentikan"></div></div>
 </div>
+<div class="au-2col" id="aiClusterGrid"></div>
+<div class="table-responsive table-compact-wrap" style="max-height:340px">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Profil</th><th>Usia</th><th>Gender</th><th>Interest</th><th>Platform</th><th>Adset</th><th>Spend</th><th>Impresi</th><th>CTR</th><th>Leads</th><th>CPL</th><th>Video 100%</th><th>Skor</th><th>Aksi</th></tr></thead>
+<tbody id="bAudienceProfile"></tbody></table></div>
 
-    <div class="funnel-legend" style="border-left:4px solid #db2777; background:#fdf2f8;">
-        <h3 style="margin-top:0; font-size:14.5px; color:#9d174d;">👥 Custom Audience & Conversions API (CAPI)</h3>
-        <p style="font-size:11.5px; color:#9d174d; margin:4px 0 10px;">Sinkronkan Leads ke Custom Audience Meta (segmentasi per Minat × Status Pembayaran) dan kirim event Lead/Purchase ke Pixel via Conversions API — supaya iklan bisa targeting ulang & optimasi konversi lebih akurat.</p>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button type="button" id="btnSyncAudienceCapi" onclick="jalankanSyncMetaAds('audiencecapi')" style="padding:9px 16px; background:#db2777; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">👥 Sync Audience & CAPI</button>
-            <button type="button" id="btnBuatAudienceSaja" onclick="jalankanSyncMetaAds('buataudience')" style="padding:9px 16px; background:#be185d; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🆕 Buat Audience Saja</button>
-            <button type="button" id="btnShareUlangAudience" onclick="jalankanSyncMetaAds('shareaudience')" style="padding:9px 16px; background:#9d174d; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🔗 Share Ulang Audience</button>
-        </div>
-        <p style="font-size:10.5px; color:#9d174d; margin:10px 0 0;">💡 <b>Sync Audience & CAPI</b> = jalankan rutin (proses utama, ambil semua Leads baru/berubah). <b>Buat Audience Saja</b> = cuma bikin audience kosong per kategori Minat kalau belum ada (jarang perlu). <b>Share Ulang Audience</b> = kirim ulang permintaan share ke akun WL319/WL319A kalau share sebelumnya gagal/belum di-approve.</p>
-        <div id="hasilSyncAudienceCapi" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:12px;"></div>
-    </div>
-
-    <div class="funnel-legend" style="border-left:4px solid #7c3aed; background:#f5f3ff;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <div>
-                <h3 style="margin-top:0; font-size:14.5px; color:#5b21b6;">🕵️ Audit Proses CAPI & Custom Audience</h3>
-                <p style="font-size:11.5px; color:#5b21b6; margin:4px 0 0;">Lihat riwayat: audience apa saja yang sudah dibuat, berapa event terkirim, dan status sync terakhir — dari sheet <code>Meta_Audience_Config</code> & <code>Meta_Sync_Log</code>.</p>
-            </div>
-            <button type="button" id="btnMuatAuditCapi" onclick="muatAuditCapiAudience()" style="padding:9px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px; white-space:nowrap;">🔄 Muat Log Audit</button>
-        </div>
-
-        <div id="auditCapiKpiGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px;"></div>
-
-        <div style="margin-top:16px;">
-            <h4 style="font-size:13px; color:#5b21b6; margin-bottom:6px;">📋 Custom Audience yang Sudah Dibuat</h4>
-            <div class="table-responsive table-compact-wrap" style="max-height:280px;">
-                <table style="width:100%; font-size:12px;">
-                    <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Minat</th><th style="padding:8px; text-align:left;">Kategori</th><th style="padding:8px; text-align:left;">Audience ID</th><th style="padding:8px; text-align:left;">Akun Pemilik</th><th style="padding:8px; text-align:left;">Terakhir Sync</th></tr></thead>
-                    <tbody id="auditCapiAudienceTable"><tr><td colspan="5" style="text-align:center; padding:14px; color:#94a3b8;">Klik "Muat Log Audit" untuk menampilkan data.</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div style="margin-top:16px;">
-            <h4 style="font-size:13px; color:#5b21b6; margin-bottom:6px;">📨 Riwayat Event Terkirim per Lead (20 Terbaru)</h4>
-            <div class="table-responsive table-compact-wrap" style="max-height:280px;">
-                <table style="width:100%; font-size:12px;">
-                    <thead><tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Kode Leads</th><th style="padding:8px; text-align:left;">Sumber</th><th style="padding:8px; text-align:left;">Minat</th><th style="padding:8px; text-align:left;">Kategori</th><th style="padding:8px; text-align:center;">Purchase Terkirim?</th><th style="padding:8px; text-align:left;">Terakhir Sync</th></tr></thead>
-                    <tbody id="auditCapiEventTable"><tr><td colspan="6" style="text-align:center; padding:14px; color:#94a3b8;">Klik "Muat Log Audit" untuk menampilkan data.</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-        <p style="font-size:10.5px; color:#5b21b6; margin-top:10px;">📘 <b>Input → Proses → Output:</b> Input = data Leads (CRM) yang statusnya berubah. Proses = dicocokkan ke kategori Minat×Status, di-hash (SHA-256), dikirim ke Custom Audience & Pixel Meta. Output = baris log di atas (audience_id yang dipakai + status pengiriman event Purchase).</p>
-    
-        <div style="margin-top:22px; padding-top:14px; border-top:2px solid #6b21a8;">
-            <h4 style="font-size:14px; color:#3b0764; margin:0 0 4px;">🧾 Status CAPI per Lead</h4>
-            <p style="font-size:11.5px; color:#1f2937; margin:0 0 8px;">Setiap lead di CRM dicocokkan dengan log sinkronisasi (<code>Meta_Sync_Log</code>) lewat Kode Leads. <b>✔ Lead</b> = lead sudah tercatat di log sync (masuk audience &amp; event Lead). <b>Purchase</b> = flag <i>sudah_kirim_purchase</i> di log; <b>⚠</b> berarti lead sudah punya pembayaran tetapi event Purchase belum tercatat terkirim.</p>
-            <div id="capiLeadRingkas" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:10px;"></div>
-            <div class="capi-filter mkt-noprint">
-                <input type="text" id="capiCari" placeholder="Cari nama / no HP / kode / minat" oninput="renderCapiPerLead()">
-                <select id="capiFilter" onchange="renderCapiPerLead()">
-                    <option value="">Semua lead</option><option value="sinkron">Sudah tersinkron</option><option value="belum">Belum tersinkron</option>
-                    <option value="perlu">Sudah bayar, Purchase belum terkirim</option><option value="purchase">Purchase terkirim</option>
-                </select>
-            </div>
-            <div id="capiLeadCount" style="font-size:11.5px; color:#374151; margin-bottom:6px;"></div>
-            <div class="table-responsive table-compact-wrap">
-                <table style="width:100%; font-size:12px;">
-                    <thead><tr><th style="padding:8px; text-align:left;">Lead</th><th style="padding:8px; text-align:left;">Minat / Status CRM</th><th style="padding:8px; text-align:left;">Tgl Chat</th><th style="padding:8px; text-align:left;">Event CAPI</th><th style="padding:8px; text-align:left;">Audience</th><th style="padding:8px; text-align:left;">Audience ID</th><th style="padding:8px; text-align:left;">Sync Terakhir</th></tr></thead>
-                    <tbody id="capiLeadBody"><tr><td colspan="7" style="text-align:center; padding:16px; color:#4b5563;">Klik <b>Muat Log Audit</b> dulu untuk melihat status CAPI tiap lead.</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<div class="mkt-sub" id="mktSub_funnel">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🎯 Funnel & Insight</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('funnel', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_funnel', 'Funnel & Insight', this)">📥 PDF</button>
-  </div>
-</div>
-
-    <div class="funnel-legend" style="border-left:4px solid #f59e0b; background:#fffbeb; color:#78350f;">
-        ⚠️ <b>Angka KPI di bawah panel "Funnel Iklan — Real CPL" memakai metode lama:</b> semua lead CRM ÷ semua spend (termasuk lead organik dan lini yang chat-nya tidak masuk CRM ini). Karena itu boleh berbeda dari Real CPL. Untuk biaya per lead iklan, pakai panel Real CPL. CAC, ROAS, dan konversi belum layak dinilai final selama closing masih sedikit dan kohort belum berumur 30 hari.
-    </div>
-
-    <div class="funnel-legend">
-        📖 <b>Cara baca funnel ini:</b> iklan Meta dilihat orang (<b>Awareness</b>) → sebagian menghubungi via chat (<b>Leads</b>, dicatat sebagai "Leads Meta" mentah dari Meta dan "Leads CRM" yang sudah tercocokkan nomor HP-nya ke database) → sebagian bayar DP (<b>Closing</b>) → menghasilkan uang masuk (<b>Revenue</b>). Semakin ke bawah tahapnya, semakin sedikit orangnya — itu wajar, namanya juga funnel (corong).
-    </div>
-
-    <div class="funnel-stage-section">
-        <div class="funnel-stage-header stage-awareness">
-            <div class="stage-icon">👁️</div>
-            <div>
-                <div class="stage-title">TAHAP 1 · AWARENESS — Seberapa Luas Iklan Dilihat</div>
-                <div class="stage-desc">Data mentah langsung dari Meta: berapa orang & berapa kali iklan tayang, dan seberapa menarik iklannya (CTR)</div>
-            </div>
-        </div>
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-card-awareness"><div class="kpi-label">Ad Spend</div><div class="kpi-val" id="kpiSpendAwareness">-</div></div>
-            <div class="kpi-card kpi-card-awareness"><div class="kpi-label">Reach (Org Unik)</div><div class="kpi-val" id="kpiReach">-</div></div>
-            <div class="kpi-card kpi-card-awareness"><div class="kpi-label">Impresi (Tayang)</div><div class="kpi-val" id="kpiImpresi">-</div></div>
-            <div class="kpi-card kpi-card-awareness"><div class="kpi-label">CTR Meta</div><div class="kpi-val" id="kpiCTR">-</div></div>
-        </div>
-    </div>
-
-    <div class="funnel-stage-section">
-        <div class="funnel-stage-header stage-leads">
-            <div class="stage-icon">💬</div>
-            <div>
-                <div class="stage-title">TAHAP 2 · LEADS — Yang Mulai Chat</div>
-                <div class="stage-desc">"Leads Meta" = jumlah chat yang tercatat Meta (belum tentu masuk database). "Leads CRM" = yang sudah tercocokkan nomor HP-nya ke database Leads — inilah angka leads yang REAL</div>
-            </div>
-        </div>
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-card-leads"><div class="kpi-label">Leads (Meta Ads)</div><div class="kpi-val" id="kpiLeadsMeta">-</div></div>
-            <div class="kpi-card kpi-card-leads"><div class="kpi-label">Leads (CRM/Real)</div><div class="kpi-val" id="kpiLeads">-</div></div>
-            <div class="kpi-card kpi-card-leads"><div class="kpi-label">Match Rate</div><div class="kpi-val" id="kpiMatchRate">-</div></div>
-            <div class="kpi-card kpi-card-leads"><div class="kpi-label">CPL / Lead (metode lama)</div><div class="kpi-val" id="kpiCPL">-</div></div>
-        </div>
-    </div>
-
-    <div class="funnel-stage-section">
-        <div class="funnel-stage-header stage-closing">
-            <div class="stage-icon">🤝</div>
-            <div>
-                <div class="stage-title">TAHAP 3 · CLOSING — Yang Jadi Bayar</div>
-                <div class="stage-desc">Dari leads yang chat, berapa yang benar-benar DP/booking, seberapa cepat mereka closing, dan berapa biaya iklan per 1 closing (CAC)</div>
-            </div>
-        </div>
-        <div class="kpi-grid">
-            <div class="kpi-card kpi-card-closing"><div class="kpi-label">Closing (DP+)</div><div class="kpi-val" id="kpiClosing">-</div></div>
-            <div class="kpi-card kpi-card-closing"><div class="kpi-label">Conv. Rate (metode lama)</div><div class="kpi-val" id="kpiCR">-</div></div>
-            <div class="kpi-card kpi-card-closing"><div class="kpi-label">CAC / Closing (metode lama)</div><div class="kpi-val" id="kpiCAC">-</div></div>
-            <div class="kpi-card kpi-card-closing"><div class="kpi-label">Avg. Waktu Closing</div><div class="kpi-val" id="kpiTime">-</div></div>
-        </div>
-    </div>
-
-    <div class="funnel-stage-section">
-        <div class="funnel-stage-header stage-revenue">
-            <div class="stage-icon">💰</div>
-            <div>
-                <div class="stage-title">TAHAP 4 · REVENUE — Hasil Akhirnya</div>
-                <div class="stage-desc">Uang yang benar-benar masuk, dan ROAS (tiap Rp 1 iklan menghasilkan berapa Rp omzet)</div>
-            </div>
-        </div>
-        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-            <div class="kpi-card kpi-card-revenue"><div class="kpi-label">Total Omzet</div><div class="kpi-val" id="kpiOmzet">-</div></div>
-            <div class="kpi-card kpi-card-revenue"><div class="kpi-label">ROAS (metode lama)</div><div class="kpi-val" id="kpiROAS">-</div></div>
-        </div>
-    </div>
-
-    <div class="funnel-container">
-        <h3 style="margin-top:0; color:#1e293b; font-size:15px;">📈 Visualisasi Funnel Konversi</h3>
-        <div class="funnel-row">
-            <div class="funnel-bar" id="fnlAwareBar" style="width: 100%;"></div>
-            <div class="f-label">👁️ AWARENESS — Iklan Dilihat</div>
-        </div>
-        <div class="funnel-connector">⬇</div>
-        <div class="funnel-row">
-            <div class="funnel-bar" id="fnlLeadsBar" style="width: 70%;"></div>
-            <div class="f-label">💬 LEADS — Mulai Chat</div>
-        </div>
-        <div class="funnel-connector">⬇</div>
-        <div class="funnel-row">
-            <div class="funnel-bar" id="fnlClosingBar" style="width: 40%;"></div>
-            <div class="f-label">🤝 CLOSING — Bayar DP</div>
-        </div>
-        <div class="funnel-connector">⬇</div>
-        <div class="funnel-row">
-            <div class="funnel-bar" id="fnlRevenueBar" style="width: 30%;"></div>
-            <div class="f-label">💰 REVENUE — Uang Masuk</div>
-        </div>
-    </div>
-
-    <div class="funnel-legend" id="cardInsightMarketing" style="border-left:4px solid #6366f1; background:#fafafe;">
-        <h3 style="margin-top:0; font-size:14.5px; color:#1e293b;">🧭 Insight Otomatis</h3>
-        <ul id="listInsightMarketing" style="margin:8px 0 14px 18px; padding:0; line-height:1.7;"></ul>
-        <h3 style="margin-top:12px; font-size:14.5px; color:#1e293b;">✅ To-Do Evaluasi (untuk rapat/checklist)</h3>
-        <ul id="listTodoMarketing" style="margin:8px 0 0 18px; padding:0; line-height:1.7;"></ul>
-        <div style="margin-top:14px; padding-top:12px; border-top:1px dashed #c7d2fe;">
-            <button type="button" id="btnAiFunnel" onclick="jalankanAnalisisMarketingAI('funnel')" style="padding:9px 16px; background:#4338ca; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">✨ Analisis AI — Ringkasan Funnel</button>
-            <div id="aiFunnelLoading" style="display:none; margin-top:8px; font-size:12px; color:#64748b;">⏳ Menganalisis dengan Gemini...</div>
-            <div id="aiFunnelOutput" style="display:none; white-space:pre-wrap; font-size:13px; line-height:1.7; background:#f1f5f9; border-radius:8px; padding:14px; margin-top:10px;"></div>
-        </div>
-    </div>
-
-
-</div>
-
-<div class="mkt-sub" id="mktSub_produk">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🏆 Performa per Produk</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('produk', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_produk', 'Performa per Produk', this)">📥 PDF</button>
-  </div>
-</div>
-
-    <h3 class="mkt-section-title">🏆 Performa per Produk</h3>
-    <div class="chart-container" style="height: 300px; margin-bottom: 18px;">
-        <canvas id="chartMarketingProduk"></canvas>
-    </div>
-
-    <h3 class="mkt-section-title">📊 Total Performa per Produk</h3>
-    <div class="table-responsive table-compact-wrap">
-        <table id="tblMarketingSummary">
-            <thead>
-                  <tr style="background: #f1f5f9;">
-                      <th style="text-align: left;">Campaign (Minat)</th>
-                      <th style="color:#ef4444;">Ad Spend</th>
-                      <th style="color:#6366f1;">Reach</th>
-                      <th style="color:#6366f1;">Impresi</th>
-                      <th style="color:#6366f1;">CTR Meta</th>
-                      <th style="color:#0ea5e9;">Leads (Meta)</th>
-                      <th style="color:#2563eb;">Leads (CRM)</th>
-                      <th style="color:#2563eb;">CPL (Rp)</th>
-                      <th style="color:#d97706;">Closing</th>
-                      <th style="color:#d97706;">Conv. Rate</th>
-                      <th style="color:#1fcc00;">CAC (Rp)</th>
-                      <th style="color:#10b981;">Omzet (Rp)</th>
-                      <th style="color:#059669;">ROAS</th>
-                      <th style="color:#64748b;">Avg Time</th>
-                  </tr>
-              </thead>
-            <tbody id="bMarketingSummary"></tbody>
-        </table>
-    </div>
-
-    <div class="funnel-legend" style="border-left:4px solid #059669; margin-top:14px;">
-        <button type="button" id="btnAiProduk" onclick="jalankanAnalisisMarketingAI('produk')" style="padding:9px 16px; background:#059669; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">✨ Analisis AI — Performa per Produk</button>
-        <div id="aiProdukLoading" style="display:none; margin-top:8px; font-size:12px; color:#64748b;">⏳ Menganalisis dengan Gemini...</div>
-        <div id="aiProdukOutput" style="display:none; white-space:pre-wrap; font-size:13px; line-height:1.7; background:#f0fdf4; border-radius:8px; padding:14px; margin-top:10px;"></div>
-    </div>
-
-
-</div>
-
-<div class="mkt-sub" id="mktSub_tren">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">📈 Tren Bulanan, Mingguan & Harian</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('tren', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_tren', 'Tren Bulanan, Mingguan & Harian', this)">📥 PDF</button>
-  </div>
-</div>
-
-<div id="bannerTargetMingguan"></div>
-    <h3 class="mkt-section-title">📊 Tren Perbandingan Bulanan</h3>
-    <div class="chart-container" style="height: 300px; margin-bottom: 18px;">
-        <canvas id="chartMarketingBulanan"></canvas>
-    </div>
-
-     <h3 class="mkt-section-title">📅 Perbandingan Mingguan (EOS L10 Scorecard)</h3>
-    <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
-        Format siap pakai untuk meeting L10 mingguan — baris = metrik, kolom = minggu (Senin-Minggu).
-        Warna otomatis: 🟢 sehat, 🟡 perlu perhatian, 🔴 off-track.
-    </p>
-    <div class="chart-container" style="height: 260px; margin-bottom: 14px;">
-        <canvas id="chartMarketingMingguan"></canvas>
-    </div>
-    <div id="containerScorecardMingguan" class="scorecard-scroll-wrap"></div>
-
-    <div class="funnel-legend" style="border-left:4px solid #0369a1; margin-top:14px;">
-        <button type="button" id="btnAiTrenMarketing" onclick="jalankanAnalisisMarketingAI('tren')" style="padding:9px 16px; background:#0369a1; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">✨ Analisis AI — Tren Bulanan (Tahun Berjalan)</button>
-        <div id="aiTrenMarketingLoading" style="display:none; margin-top:8px; font-size:12px; color:#64748b;">⏳ Menganalisis dengan Gemini...</div>
-        <div id="aiTrenMarketingOutput" style="display:none; white-space:pre-wrap; font-size:13px; line-height:1.7; background:#f0f9ff; border-radius:8px; padding:14px; margin-top:10px;"></div>
-    </div>
-
-
-    <h3 class="mkt-section-title">📊 Tren Perbandingan Harian</h3>
-    <div class="chart-container" style="height: 280px; margin-bottom: 18px;">
-        <canvas id="chartMarketingHarian"></canvas>
-    </div>
-
-
-       <h3 class="mkt-section-title">📅 Rincian Performa Harian</h3>
-   <div class="table-responsive table-compact-wrap">
-        <table id="tblMarketing" style="width:100%;">
-            <thead>
-                    <tr style="background: #f1f5f9;">
-                        <th>Tanggal</th>
-                        <th style="text-align: left;">Campaign (Minat)</th>
-                        <th style="color:#ef4444;">Ad Spend</th>
-                        <th style="color:#6366f1;">Reach</th>
-                        <th style="color:#6366f1;">Impresi</th>
-                        <th style="color:#6366f1;">CTR Meta</th>
-                        <th style="color:#0ea5e9;">Leads (Meta)</th>
-                        <th style="color:#2563eb;">Leads (CRM)</th>
-                        <th style="color:#2563eb;">CPL (Rp)</th>
-                        <th style="color:#d97706;">Closing</th>
-                        <th style="color:#d97706;">Conv. Rate</th>
-                        <th style="color:#10b981;">CAC (Rp)</th>
-                        <th style="color:#10b981;">Omzet (Rp)</th>
-                        <th style="color:#059669;">ROAS</th>
-                        <th style="color:#64748b;">Avg Time</th>
-                    </tr>
-                </thead>
-            <tbody id="bMarketing"></tbody>
-        </table>
-            </div>
-
-
-</div>
-
-<div class="mkt-sub" id="mktSub_adset">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🧩 Breakdown Adset</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('adset', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_adset', 'Breakdown Adset', this)">📥 PDF</button>
-  </div>
-</div>
-<div class="mkt-groupbtns"><button type="button" onclick="mktToggleSemuaGrup('adset', true)">▼ Buka semua campaign</button><button type="button" onclick="mktToggleSemuaGrup('adset', false)">▶ Tutup semua campaign</button></div>
-    <h3 class="mkt-section-title">🔍 Breakdown per Adset (Level Lebih Detail dari Campaign)</h3>
-    <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
-        Kalau di "Performa per Produk" ada campaign yang ROAS-nya rendah, cek di sini <b>adset mana</b> yang jadi biang keroknya —
-        supaya bisa dimatikan/direvisi 1 adset saja tanpa mematikan seluruh campaign.
-    </p>
-     <div style="position:relative; display:inline-block; margin-bottom:8px;">
-       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAdsetPerformance_kolomPanel')">⚙️ Kolom</button>
-       <div id="tblAdsetPerformance_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
-         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 1, this.checked)"> Spend</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 2, this.checked)"> Results</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 3, this.checked)"> CPL</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 4, this.checked)"> Purchases</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 5, this.checked)"> CTR</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdsetPerformance', 6, this.checked)"> Periode</label>
-       </div>
-     </div>
-     <div class="table-responsive table-compact-wrap">
-        <table id="tblAdsetPerformance" style="width:100%;">
-            <thead><tr id="theadAdsetPerformance" style="background:#f1f5f9;"></tr></thead>
-            <tbody id="bAdsetPerformance"></tbody>
-        </table>
-    </div>
-
-<h3 class="mkt-section-title">📛 Performa per Nama Adset (Gabungan Lintas Campaign)</h3>
-    <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
-        Kalau nama adset SAMA PERSIS muncul di beberapa campaign berbeda, itu biasanya template/targeting
-        yang di-copy-paste. Tabel ini gabungkan semua instance-nya jadi satu baris — supaya kelihatan pola:
-        apakah setting ini konsisten bagus (layak direplikasi lebih banyak) atau konsisten boros
-        (harus dihentikan dari template-nya, bukan cuma di-pause satu-satu).
-    </p>
-    <div style="position:relative; display:inline-block; margin-bottom:8px;">
-       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAgregasiAdset_kolomPanel')">⚙️ Kolom</button>
-       <div id="tblAgregasiAdset_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
-         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 1, this.checked)"> Muncul (x)</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 2, this.checked)"> Jml Campaign</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 3, this.checked)"> Total Spend</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 4, this.checked)"> Total Results</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 5, this.checked)"> CPL Gabungan</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiAdset', 6, this.checked)"> Status/Rekomendasi</label>
-       </div>
-     </div>
-    <div class="table-responsive table-compact-wrap">
-        <table id="tblAgregasiAdset" style="width:100%;">
-            <thead><tr id="theadAgregasiAdset" style="background:#f1f5f9;"></tr></thead>
-            <tbody id="bAgregasiAdset"></tbody>
-        </table>
-    </div>
-
-
-</div>
-
-<div class="mkt-sub" id="mktSub_creative">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🎨 Breakdown Creative</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('creative', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_creative', 'Breakdown Creative', this)">📥 PDF</button>
-  </div>
-</div>
-<div class="mkt-groupbtns"><button type="button" onclick="mktToggleSemuaGrup('content', true)">▼ Buka semua campaign</button><button type="button" onclick="mktToggleSemuaGrup('content', false)">▶ Tutup semua campaign</button></div>
-    <h3 class="mkt-section-title">🎨 Breakdown per Creative/Konten Iklan</h3>
-    <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
-        Kreatif (foto/video/copy) mana yang paling menarik perhatian & paling menghasilkan closing.
-    </p>
-   <div style="position:relative; display:inline-block; margin-bottom:8px;">
-       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAdContentPerformance_kolomPanel')">⚙️ Kolom</button>
-       <div id="tblAdContentPerformance_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
-         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 1, this.checked)"> Tipe</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 2, this.checked)"> Spend</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 3, this.checked)"> Results</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 4, this.checked)"> CPL</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 5, this.checked)"> Purchases</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 6, this.checked)"> CTR</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAdContentPerformance', 7, this.checked)"> Periode</label>
-       </div>
-     </div>
-   <div class="table-responsive table-compact-wrap">
-        <table id="tblAdContentPerformance" style="width:100%;">
-            <thead><tr id="theadAdContentPerformance" style="background:#f1f5f9;"></tr></thead>
-            <tbody id="bAdContentPerformance"></tbody>
-        </table>
-    </div>
-
-     <h3 class="mkt-section-title">📛 Performa per Nama Creative (Gabungan Lintas Campaign)</h3>
-    <p style="color:var(--text-light); font-size:12px; margin-top:-6px; margin-bottom:10px;">
-        Sama seperti di atas, tapi untuk creative/konten iklan — kreatif yang sama dipakai berulang
-        di banyak campaign, dilihat performa gabungannya.
-    </p>
-    <div style="position:relative; display:inline-block; margin-bottom:8px;">
-       <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAgregasiContent_kolomPanel')">⚙️ Kolom</button>
-       <div id="tblAgregasiContent_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
-         <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 1, this.checked)"> Muncul (x)</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 2, this.checked)"> Jml Campaign</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 3, this.checked)"> Total Spend</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 4, this.checked)"> Total Results</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 5, this.checked)"> CPL Gabungan</label>
-         <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAgregasiContent', 6, this.checked)"> Status/Rekomendasi</label>
-       </div>
-     </div>
-    <div class="table-responsive table-compact-wrap">
-        <table id="tblAgregasiContent" style="width:100%;">
-            <thead><tr id="theadAgregasiContent" style="background:#f1f5f9;"></tr></thead>
-            <tbody id="bAgregasiContent"></tbody>
-        </table>
-    </div>
-
-
-</div>
-
-<div class="mkt-sub" id="mktSub_konten">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🎬 Konten Berjalan</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="kbJalankanAnalisis(this, false)" title="Vonis dari aturan; AI menjelaskan alasan dan saran tes. Hanya iklan yang berubah/kedaluwarsa yang diproses.">🤖 Analisis AI</button>
-    <button type="button" class="mkt-btn" onclick="kbRefresh(this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_konten', 'Konten Berjalan', this)">📥 PDF</button>
-  </div>
-</div>
-<p style="color:var(--text-light); font-size:12px; margin:0 0 10px;">
-  Iklan yang sedang tayang beserta hasil riilnya di CRM (leads, closing, terbayar). "Berjalan" = ada spend dalam 3 hari terakhir dan status Meta ACTIVE.
-  Atribusi first-touch via chat CTWA; data CTWA baru ada sejak 16 Sep 2026, jadi angka lead/closing masih sampel kecil.
-</p>
-<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-  <select id="kbCampaign" onchange="kbGantiFilter(false)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px; max-width:260px;"><option value="">Semua campaign</option></select>
-  <select id="kbPeriode" onchange="kbGantiFilter(true)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px;">
-    <option value="7">7 hari</option><option value="14" selected>14 hari</option><option value="30">30 hari</option><option value="60">60 hari</option><option value="semua">Semua</option>
-  </select>
-  <input id="kbCari" type="search" placeholder="Cari nama / caption..." oninput="kbGantiFilter(false)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px;">
-  <label style="font-size:12.5px;"><input type="checkbox" id="kbBerjalan" checked onchange="kbGantiFilter(false)"> Hanya yang berjalan</label>
-  <span id="kbStatusMuat" style="font-size:12px; color:#64748b;"></span>
-  <span id="kbAiProgress" style="font-size:12px; color:#64748b;"></span>
-</div>
-<div id="kbCatatan" style="display:none; background:#fef3c7; color:#92400e; padding:8px 12px; border-radius:8px; font-size:12px; margin-bottom:10px;"></div>
-<div id="kbRingkas" style="font-size:12.5px; font-weight:600; color:#334155; margin-bottom:6px;"></div>
+<!-- BAB 2: TIPE TARGETING -->
+<div class="au-ch au-c2"><div class="n">2</div><div><b>Pakai Custom Audience atau Lookalike?</b><small>Ringkasan 4 kategori, lalu detail kombinasi persis</small></div></div>
 <div class="table-responsive table-compact-wrap">
-  <table id="tblKonten" style="width:100%;">
-    <thead><tr id="theadKonten" style="background:#f1f5f9;"></tr></thead>
-    <tbody id="bKonten"></tbody>
-  </table>
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Kategori</th><th>Adset</th><th>Spend</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead><tbody id="bAudTypeSimple"></tbody></table></div>
+<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:#0369a1">Lihat detail kombinasi audience & exclusion</summary>
+<div class="table-responsive table-compact-wrap"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Custom Audience</th><th>Exclusion</th><th>Adset</th><th>Spend</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead><tbody id="bAudType"></tbody></table></div></details>
+
+<!-- BAB 3: DI MANA -->
+<div class="au-ch au-c3"><div class="n">3</div><div><b>Di mana mereka berada?</b><small>Provinsi (data delivery asli Meta) dan kota (estimasi dari targeting)</small></div></div>
+<div class="au-2col">
+ <div><label style="font-size:11px;font-weight:700">Campaign (Provinsi)</label>
+  <div class="ms-filter" id="msFilterRegionCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterRegionCampaign')">Semua ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari..." oninput="filterMsOptions('msFilterRegionCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterRegionCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterRegionCampaign')">Bersihkan</button></div></div></div>
+  <div style="display:flex;gap:5px;margin-top:6px"><input type="date" id="fRegionStart" onchange="renderRegionTab()"><input type="date" id="fRegionEnd" onchange="renderRegionTab()"></div></div>
+ <div><label style="font-size:11px;font-weight:700">Campaign (Kota)</label>
+  <div class="ms-filter" id="msFilterCityCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterCityCampaign')">Semua ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari..." oninput="filterMsOptions('msFilterCityCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterCityCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterCityCampaign')">Bersihkan</button></div></div></div>
+  <div style="display:flex;gap:5px;margin-top:6px"><input type="date" id="fCityStart" onchange="renderCityEstimateTab()"><input type="date" id="fCityEnd" onchange="renderCityEstimateTab()"></div></div>
 </div>
+<div class="au-2col">
+ <div class="chart-container" style="height:300px"><canvas id="chartRegionReach"></canvas></div>
+ <div class="chart-container" style="height:300px"><canvas id="chartCityReach"></canvas></div>
+</div>
+<div class="au-2col">
+ <div class="table-responsive table-compact-wrap" style="max-height:300px"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Negara</th><th>Provinsi</th><th>Reach</th><th>Impresi</th><th>Spend</th><th>CTR</th><th>Results</th><th>Cost/Result</th></tr></thead><tbody id="bRegion"></tbody></table></div>
+ <div class="table-responsive table-compact-wrap" style="max-height:300px"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Kota/Kab</th><th>Adset</th><th>Spend</th><th>Impresi</th><th>Reach</th><th>Results</th><th>Cost/Result</th></tr></thead><tbody id="bCity"></tbody></table></div>
 </div>
 
-<div class="mkt-sub" id="mktSub_promo">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🧪 Papan Tes Promo</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="ptBukaKamus()">📚 Kamus Promo</button>
-    <button type="button" class="mkt-btn" onclick="ptRefresh(this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_promo', 'Tes Promo', this)">📥 PDF</button>
-  </div>
-</div>
-<p style="color:var(--text-light); font-size:12px; margin:0 0 10px;">
-  Iklan dikelompokkan per label promo yang terdeteksi dari headline dan caption (format kreatif dari nama iklan). Satu iklan bisa masuk beberapa baris, jadi baris tidak boleh dijumlahkan.
-  <b>Ini indikasi, bukan A/B murni</b>: audiens, adset, dan placement bisa berbeda antar iklan. Vonis baru keluar bila spend, impresi, dan results cukup.
-</p>
-<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-  <select id="ptCampaign" onchange="ptRender()" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px; max-width:260px;"><option value="">Semua campaign</option></select>
-  <select id="ptPeriode" onchange="ptRender()" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px;">
-    <option value="7">7 hari</option><option value="14" selected>14 hari</option><option value="30">30 hari</option><option value="60">60 hari</option><option value="semua">Semua</option>
-  </select>
-  <label style="font-size:12.5px;"><input type="checkbox" id="ptBerjalan" checked onchange="ptRender()"> Hanya yang berjalan</label>
-</div>
-<div id="ptCatatan" style="display:none; background:#fef3c7; color:#92400e; padding:8px 12px; border-radius:8px; font-size:12px; margin-bottom:10px;"></div>
-<div id="ptRingkas" style="font-size:12.5px; font-weight:600; color:#334155; margin-bottom:6px;"></div>
+<!-- BAB 4: LEWAT MANA (PLACEMENT) -->
+<div class="au-ch au-c4"><div class="n">4</div><div><b>Lewat mana iklan paling efektif?</b><small>Placement asli dari sheet Placement_Performance (Feed, Reels, Stories, dst)</small></div></div>
+<div class="au-2col" id="plCards"></div>
+<div class="chart-container" style="height:300px;margin-bottom:12px"><canvas id="chartPlacement"></canvas></div>
+<div class="table-responsive table-compact-wrap" style="max-height:320px">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Platform</th><th>Posisi</th><th>Spend</th><th>% Spend</th><th>Impresi</th><th>CTR</th><th>Results</th><th>CPL</th><th>Status</th></tr></thead><tbody id="bPlacement"></tbody></table></div>
+<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:#b45309">Placement versi estimasi dari profil audience</summary>
+<div class="table-responsive table-compact-wrap"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Placement</th><th>Profil</th><th>Spend</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead><tbody id="bPlacementAudience"></tbody></table></div></details>
+
+<!-- BAB 5: PAKAI APA -->
+<div class="au-ch au-c5"><div class="n">5</div><div><b>Pakai konten apa?</b><small>Jenis konten dulu, lalu kartu per iklan</small></div></div>
 <div class="table-responsive table-compact-wrap">
-  <table id="tblPromoTes" style="width:100%;">
-    <thead><tr id="theadPromoTes" style="background:#f1f5f9;"></tr></thead>
-    <tbody id="bPromoTes"></tbody>
-  </table>
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Jenis</th><th>Jml Konten</th><th>Spend</th><th>CTR</th><th>Results</th><th>CPL</th><th>Video Completion</th></tr></thead><tbody id="bCreativeType"></tbody></table></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin:12px 0">
+ <div><label style="font-size:11px;font-weight:700">Campaign</label>
+  <div class="ms-filter" id="msFilterContentCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterContentCampaign')">Semua ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari..." oninput="filterMsOptions('msFilterContentCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterContentCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterContentCampaign')">Bersihkan</button></div></div></div></div>
+ <select id="fContentSort" onchange="renderContentTab()" style="padding:8px;border-radius:6px;border:1px solid #cbd5e1"><option value="results_desc">Results terbanyak</option><option value="cost_asc">Cost/Result termurah</option><option value="ctr_desc">CTR tertinggi</option><option value="spend_desc">Spend terbesar</option></select>
 </div>
-<p style="font-size:11.5px; color:#94a3b8; margin-top:6px;">† Leads, closing, terbayar = kumulatif sejak chat CTWA pertama (tidak mengikuti filter periode).</p>
+<div class="au-grid" id="grid-konten-cards"></div>
+
+<!-- BAB 6: SISTEM -->
+<div class="au-ch au-c1"><div class="n">6</div><div><b>Kelelahan Iklan & Racikan Optimal</b><small>Deteksi fatigue, lalu gabungan faktor terbaik untuk campaign berikutnya</small></div></div>
+<div class="table-responsive table-compact-wrap" style="max-height:280px">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Adset</th><th>Campaign</th><th>Freq Lalu</th><th>Freq Kini</th><th>CTR Lalu</th><th>CTR Kini</th><th>Status</th></tr></thead><tbody id="bFatigue"></tbody></table></div>
+<div class="au-final" style="margin-top:14px"><b style="font-size:15px">🧪 Rekomendasi Kombinasi Optimal</b><div id="aiRekomendasiOptimalIsi" style="margin-top:10px"></div></div>
 </div>
 
-<div class="mkt-sub" id="mktSub_iklan">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🔍 Analisis Iklan</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('iklan', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_iklan', 'Analisis Iklan', this)">📥 PDF</button>
-  </div>
-</div>
 
-<div class="ik-controls">
-  <div><label>Breakdown (kelompok bar)</label><select id="ikBreak" onchange="renderAnalisisIklan()"><option value="ad">Ad name</option><option value="adset">Ad set name</option><option value="campaign">Campaign name</option></select></div>
-  <div><label>Urutkan berdasarkan</label><select id="ikSort" onchange="renderAnalisisIklan()"><option value="results">Messaging conversations (Results)</option><option value="spend">Amount spent</option><option value="cpl">CPL (Cost per Result)</option><option value="purchases">Purchases</option></select></div>
-  <div><label>Arah</label><select id="ikDir" onchange="renderAnalisisIklan()"><option value="desc">Terbesar → terkecil</option><option value="asc">Terkecil → terbesar</option></select></div>
-  <div><label>Jumlah bar</label><select id="ikN" onchange="renderAnalisisIklan()"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="50">50</option><option value="9999">Semua</option></select></div>
-  <div><label class="chk"><input type="checkbox" id="ikAdaResults" onchange="renderAnalisisIklan()"> Hanya yang punya Results</label></div>
-</div>
-<p style="font-size:11.5px; color:#64748b; margin:0 0 8px;">Mengikuti filter tanggal &amp; campaign di atas. Grafik menampilkan maksimal 15 bar teratas; tabel di bawahnya menampilkan sesuai “Jumlah bar”.</p>
-<div id="ikRingkas" class="ik-summary"></div>
-<div class="ik-chartwrap"><canvas id="chartAnalisisIklan"></canvas></div>
-<div style="position:relative; display:inline-block; margin-bottom:8px;">
-  <button type="button" class="mkt-btn" onclick="mktKolomTogglePanel('tblAnalisisIklan_kolomPanel')">⚙️ Kolom</button>
-  <div id="tblAnalisisIklan_kolomPanel" style="display:none; position:absolute; z-index:20; top:36px; left:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; box-shadow:0 8px 20px rgba(0,0,0,.12); white-space:nowrap;">
-    <div style="font-size:11px; font-weight:700; color:#475569; margin-bottom:6px;">Tampilkan kolom:</div>
-    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 2, this.checked)"> Results</label>
-    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 3, this.checked)"> Amount spent</label>
-    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 4, this.checked)"> CPL</label>
-    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 5, this.checked)"> Purchases</label>
-    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 6, this.checked)"> CTR</label>
-    <label style="display:block; font-size:12.5px; padding:3px 0;"><input type="checkbox" checked onchange="mktKolomToggle('tblAnalisisIklan', 7, this.checked)"> % Spend</label>
-  </div>
-</div>
-<div class="table-responsive table-compact-wrap">
-  <table id="tblAnalisisIklan" style="width:100%;">
-    <thead><tr style="background:#f1f5f9;"><th>#</th><th>Nama</th><th class="num">Results</th><th class="num">Amount spent</th><th class="num">CPL</th><th class="num">Purchases</th><th class="num">CTR</th><th class="num">% Spend</th></tr></thead>
-    <tbody id="bAnalisisIklan"><tr><td colspan="8" style="text-align:center; padding:18px; color:#94a3b8;">Memuat...</td></tr></tbody>
-  </table>
-</div>
-     <div class="funnel-legend" id="cardKandidatAdsetContent" style="border-left:4px solid #f59e0b; margin-top:18px;">
-        <h3 style="margin-top:0; font-size:14.5px; color:#1e293b;">🏅 Kandidat Terbaik & Terburuk</h3>
-        <p style="font-size:11.5px; color:#64748b; margin:4px 0 6px;">Berdasarkan efisiensi CPL (Cost per Lead) — dipakai sebagai bahan cepat ambil keputusan mana yang di-scale, mana yang dimatikan.</p>
-        <div id="badgeFilterKandidat" style="display:inline-block; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom:10px;"></div>
-        <div id="isiKandidatAdsetContent" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px;"></div>
-        <div style="margin-top:14px; padding-top:12px; border-top:1px dashed #fde68a;">
-            <button type="button" id="btnAiAdsetContent" onclick="jalankanAnalisisMarketingAI('adset')" style="padding:9px 16px; background:#b45309; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">✨ Analisis AI — Adset & Creative</button>
-            <div id="aiAdsetContentLoading" style="display:none; margin-top:8px; font-size:12px; color:#64748b;">⏳ Menganalisis dengan Gemini...</div>
-            <div id="aiAdsetContentOutput" style="display:none; white-space:pre-wrap; font-size:13px; line-height:1.7; background:#fff7ed; border-radius:8px; padding:14px; margin-top:10px;"></div>
-        </div>
-    </div>
-
-
-
-</div>
-
-<div class="mkt-sub" id="mktSub_drill">
-<div class="mkt-toolbar">
-  <div><b class="mkt-toolbar-title">🔎 Drill-down Iklan: Minat → Promo → Campaign → Adset → Ad</b><span class="mkt-stamp"></span></div>
-  <div class="mkt-toolbar-btns">
-    <button type="button" class="mkt-btn" onclick="mktDrillBukaTutupSemua(true)">⬇️ Buka Semua</button>
-    <button type="button" class="mkt-btn" onclick="mktDrillBukaTutupSemua(false)">⬆️ Tutup Semua</button>
-    <button type="button" class="mkt-btn" onclick="mktRefreshSub('drill', this)">🔄 Refresh data</button>
-    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_drill', 'Drill-down Iklan', this)">📥 PDF</button>
-  </div>
-</div>
-<p style="font-size:12px; color:#64748b; margin-top:-6px; margin-bottom:12px;">
-  Klik baris untuk membuka/tutup level di bawahnya. Filter tanggal & Nama Campaign (Meta Ads) di atas ikut berlaku di sini. Level Promo mengelompokkan iklan per paket penawaran (aturan sama dengan Tes Promo). <b>Angka di sini adalah angka Meta (Results dan CPL Meta), bukan Real CPL;</b> untuk Real CPL per campaign dan iklan lihat panel Funnel Iklan.
-  Level Minat mengikuti aturan Mapping Minat yang sedang aktif. Label 🟢/🟡/🔴 membandingkan CPL tiap node dengan rata-rata
-  saudara sekelompoknya (di level yang sama), pakai ambang dari <code>tenant-config.js</code> (<code>cplMahalRp</code>, <code>efisienDariRataRataPersen</code>, <code>adsetBorosMinSpendRp</code>) — arahkan kursor ke label untuk lihat rekomendasinya.
-</p>
-<div class="table-responsive">
-<table style="width:100%; border-collapse:collapse; font-size:12.5px;">
-  <thead>
-    <tr style="background:#1e1b4b; color:#fff;">
-      <th style="padding:8px; text-align:left;">Nama / Headline &amp; Body</th>
-      <th class="num" style="padding:8px;">CTR</th>
-      <th class="num" style="padding:8px;">Spend</th>
-      <th class="num" style="padding:8px;">Results</th>
-      <th class="num" style="padding:8px;">CPL</th>
-      <th class="num" style="padding:8px;">Purchases</th>
-    </tr>
-  </thead>
-  <tbody id="bDrillIklan"></tbody>
-</table>
-</div>
-</div>
-
-<div id="tmModalSet" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:14px; padding:24px; max-width:720px; width:92%; max-height:85vh; overflow-y:auto;">
-        <div style="font-size:16px; font-weight:800; color:#1e293b; margin-bottom:4px;">⚙️ Atur Target Mingguan</div>
-        <p style="font-size:12px; color:#64748b; margin-top:0; margin-bottom:16px;">
-            Target Global dipakai kalau kamu tidak memfilter ke 1 produk spesifik (atau filter "Semua Campaign").
-            Target per Produk (opsional) akan otomatis dipakai kalau kamu filter Marketing Tab ke tepat 1 Minat Produk itu.
-            Kosongkan field per produk kalau tidak ingin override target global untuk produk tersebut.
-        </p>
-
-        <div style="background:#eef2ff; border-radius:10px; padding:14px 16px; margin-bottom:16px;">
-            <div style="font-size:13px; font-weight:800; color:#4338ca; margin-bottom:10px;">🌐 Target Global (Semua Produk)</div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;">
-                <div>
-                    <label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Closing Min (trx)</label>
-                    <input type="number" id="tmGlobalClosing" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
-                </div>
-                <div>
-                    <label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Omzet Min (Rp)</label>
-                    <input type="number" id="tmGlobalOmzet" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
-                </div>
-                <div>
-                    <label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">ROAS Min (x)</label>
-                    <input type="number" step="0.1" id="tmGlobalRoas" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
-                </div>
-                <div>
-                    <label style="font-size:11px; color:#475569; font-weight:700; display:block; margin-bottom:4px;">Creative Baru Min</label>
-                    <input type="number" id="tmGlobalCreative" style="width:100%; padding:8px; border-radius:6px; border:1px solid #cbd5e1;">
-                </div>
-            </div>
-        </div>
-
-        <div style="font-size:13px; font-weight:800; color:#1e293b; margin-bottom:10px;">📦 Target per Produk (opsional)</div>
-        <div id="tmPerProdukContainer" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
-
-        <div style="display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #e2e8f0; padding-top:16px;">
-            <button type="button" style="padding:10px 20px; background:#f1f5f9; color:#475569; border:none; border-radius:6px; cursor:pointer; font-weight:700;" onclick="tmTutupPengaturan()">Batal</button>
-            <button type="button" id="tmBtnSimpan" style="padding:10px 20px; background:#166534; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;" onclick="tmSimpanPengaturan()">💾 Simpan Target</button>
-        </div>
-    </div>
-</div>
-
-</div>
-
-    </div>
-  </main>
-</div>
+</div></div></main></div>
 
 <script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
-  let dataGlobal = [];
-  let dataMarketing = [];
-  let STUDIO_CONFIG = { sumber: [], minat: [], lokasi: [], promo: [], paketMap: {}, varianMap: {}, waTemplate: '' };
-  let dataAdsetPerformance = [];
-  let dataAdsetCityTargeting = [];
-  let dataContent = [];
-  let dataTargetMingguanMarketing = { global: null, perProduk: {} };
+const scriptURL='https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+let dataGlobal=[],dataMarketing=[],dataAdsetPerformance=[],dataAdsetCityTargeting=[],dataContent=[];
+let STUDIO_CONFIG={sumber:[],minat:[],lokasi:[],promo:[],paketMap:{},varianMap:{},waTemplate:''};
+let dataTargetMingguanMarketing={global:null,perProduk:{}};
 </script>
+<script src="tenant-config.js"></script><script src="ambang-ui.js"></script><script src="utils.js"></script>
+<script src="ui-marketing.js"></script><script src="minat-settings-ui.js"></script><script src="mkt-extra.js"></script>
+<script src="konten-berjalan.js"></script><script src="promo-tes.js"></script><script src="promo-analisis.js"></script>
+<script src="drill-promo.js"></script><script src="penawaran-ai.js"></script><script src="tes-penawaran.js"></script>
+<script src="keputusan.js"></script><script src="api-marketing.js"></script><script src="funnel-iklan.js"></script>
+<script src="audience-render.js"></script><script src="audience-story.js"></script><script src="story-rapat.js"></script>
 
-<script src="tenant-config.js"></script>
-<script src="ambang-ui.js"></script>
-<script src="utils.js"></script>
-<script src="ui-marketing.js"></script>
-<script src="minat-settings-ui.js"></script>
-<script src="mkt-extra.js"></script>
-<script src="konten-berjalan.js"></script>
-<script src="promo-tes.js"></script>
-<script src="promo-analisis.js"></script>
-<script src="drill-promo.js"></script>
-<script src="penawaran-ai.js"></script>
-<script src="tes-penawaran.js"></script>
-<script src="keputusan.js"></script>
-<script src="api-marketing.js"></script>
-<script src="funnel-iklan.js"></script>
+<script>
+/* ===== RUANG RAPAT: membaca angka dari KPI funnel yang sudah dirender ===== */
+const RP_CFG={roasBagus:3,roasMin:1.5,matchMin:70,closingRateMin:10,closingCukup:10};
+const rpInt=id=>{const t=(document.getElementById(id)||{}).textContent||'';return parseInt(t.replace(/[^\d]/g,''),10)||0};
+const rpDec=id=>{const t=(document.getElementById(id)||{}).textContent||'';const m=t.match(/\d+(\.\d+)?/);return m?parseFloat(m[0]):0}; /* ui-marketing.js memakai titik desimal (toFixed) */
+const rpRp=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
+const rpFmt=n=>Math.round(n).toLocaleString('id-ID');
+let RP_RINGKAS='';
 
+function renderRapat(){
+  const spend=rpInt('kpiSpendAwareness'),reach=rpInt('kpiReach'),imp=rpInt('kpiImpresi'),ctr=rpDec('kpiCTR'),
+    lm=rpInt('kpiLeadsMeta'),lc=rpInt('kpiLeads'),match=rpDec('kpiMatchRate'),cl=rpInt('kpiClosing'),
+    cac=rpInt('kpiCAC'),omzet=rpInt('kpiOmzet'),roas=rpDec('kpiROAS');
+  if(!spend&&!lc){document.getElementById('rpVerdict').textContent='Belum ada data. Klik 🔄 Refresh dulu.';return}
+  const crClose=lc?cl/lc*100:0,crLead=reach?lc/reach*100:0;
+  const f=document.getElementById('fMktStart'),g=document.getElementById('fMktEnd');
+  document.getElementById('rpPeriode').textContent='Periode chat: '+((f&&f.value)||'awal')+' s/d '+((g&&g.value)||'sekarang');
+
+  const roasOk=roas>=RP_CFG.roasBagus,roasMid=roas>=RP_CFG.roasMin;
+  const v=document.getElementById('rpVerdict');
+  v.textContent=roasOk?'🟢 Iklan menghasilkan: ROAS '+roas.toFixed(1)+'x':roasMid?'🟡 Tipis: ROAS '+roas.toFixed(1)+'x, perlu diperbaiki':'🔴 Boros: ROAS '+roas.toFixed(1)+'x';
+  const cat=document.getElementById('rpCatatan');
+  cat.style.display=cl<RP_CFG.closingCukup?'block':'none';
+  cat.textContent='⚠️ Closing baru '+cl+'. Sampel kecil: CAC, ROAS, dan konversi belum layak jadi vonis final.';
+
+  const kartu=[
+   ['rp-1','👁️','Bab 1 · Dilihat',rpFmt(reach)+' orang','Iklan tayang '+rpFmt(imp)+' kali dengan modal '+rpRp(spend)+'. Daya tarik (CTR) '+ctr.toFixed(2)+'%.','Reach = orang unik. Impresi = total tayang, satu orang bisa melihat berkali-kali.'],
+   ['rp-2','💬','Bab 2 · Chat',rpFmt(lc)+' leads','Dari '+rpFmt(lm)+' chat versi Meta, '+rpFmt(lc)+' berhasil dicocokkan ke CRM (match '+match.toFixed(0)+'%).',match<RP_CFG.matchMin?'Match rendah: banyak chat tidak masuk CRM. Cek pencatatan nomor HP.':'Pencocokan data sehat.'],
+   ['rp-3','🤝','Bab 3 · Bayar DP',cl+' closing','Hanya '+crClose.toFixed(1)+'% leads yang bayar. Biaya iklan per closing '+(cac?rpRp(cac):'-')+'.','CAC memakai metode lama (semua spend ÷ closing).'],
+   ['rp-4','💰','Bab 4 · Uang masuk',rpRp(omzet),'Tiap Rp 1 iklan kembali Rp '+roas.toFixed(1)+' omzet.',roasOk?'Di atas target '+RP_CFG.roasBagus+'x.':'Target sehat: ≥ '+RP_CFG.roasBagus+'x.']];
+  document.getElementById('rpStory').innerHTML=kartu.map(k=>`<div class="rp-card ${k[0]}" onclick="this.classList.toggle('open')"><div class="ic">${k[1]}</div><div class="bab">${k[2]}</div><div class="big">${k[3]}</div><div class="kal">${k[4]}</div><div class="more">${k[5]}</div></div>`).join('');
+
+  const bocorClosing=crClose<RP_CFG.closingRateMin, bocorMatch=match<RP_CFG.matchMin;
+  document.getElementById('rpFlow').innerHTML=
+   `<div class="rp-node rp-1" style="background:#4338ca">👁️ ${rpFmt(reach)}<small>dilihat</small></div><div class="rp-arrow"><b>${crLead.toFixed(2)}%</b>jadi chat</div>`+
+   `<div class="rp-node ${bocorMatch?'rp-leak':''}" style="background:#0369a1">💬 ${rpFmt(lc)}<small>leads CRM</small></div><div class="rp-arrow"><b>${crClose.toFixed(1)}%</b>jadi bayar</div>`+
+   `<div class="rp-node ${bocorClosing?'rp-leak':''}" style="background:#b45309">🤝 ${cl}<small>closing</small></div><div class="rp-arrow"><b>${roas.toFixed(1)}x</b>ROAS</div>`+
+   `<div class="rp-node" style="background:#047857">💰 ${rpRp(omzet)}<small>omzet</small></div>`;
+
+  const aud=(window._audienceScored||[]),sc=[],fx=[],st=[];
+  aud.filter(a=>a.skor>=65).slice(0,3).forEach(a=>sc.push(`Audience <b>${a.profile_id}</b> (skor ${a.skor}, CPL ${rpRp(a.cpl)})`));
+  aud.filter(a=>a.skor<35&&a.total_spend>0).slice(0,3).forEach(a=>st.push(`Audience <b>${a.profile_id}</b> (skor ${a.skor}, spend ${rpRp(a.total_spend)})`));
+  if(window._placementBest)sc.push('Placement <b>'+window._placementBest.label+'</b> (CPL '+rpRp(window._placementBest.cpl)+')');
+  if(window._contentBest)sc.push('Konten <b>'+window._contentBest.ad_name+'</b> (CPL '+rpRp(window._contentBest.costPerResult)+')');
+  if(bocorClosing)fx.push('Closing rendah ('+crClose.toFixed(1)+'%): evaluasi skrip chat & follow-up admin');
+  if(bocorMatch)fx.push('Match rate '+match.toFixed(0)+'%: perbaiki pencatatan nomor HP ke CRM');
+  if(ctr<1)fx.push('CTR '+ctr.toFixed(2)+'%: uji hook/visual baru');
+  if(!roasMid&&spend>0)st.push('Kampanye keseluruhan ROAS '+roas.toFixed(1)+'x: tahan kenaikan budget sampai membaik');
+  if(!aud.length)fx.push('Buka tab Audience sekali agar rekomendasi audience/placement/konten ikut muncul');
+  const li=a=>(a.length?a:['Belum ada temuan']).map(x=>`<li>${x}</li>`).join('');
+  rpScale.innerHTML=li(sc);rpFix.innerHTML=li(fx);rpStop.innerHTML=li(st);
+
+  const todo=['Putuskan campaign/audience yang di-scale minggu ini','Tunjuk PIC perbaikan skrip chat & follow-up','Ganti 1–2 creative dengan CTR terendah','Jadwalkan sync ulang data H-2 (attribution Meta)','Tetapkan target closing & ROAS minggu depan'];
+  rpTodo.innerHTML=todo.map(t=>`<label><input type="checkbox"><span>${t}</span></label>`).join('');
+  RP_RINGKAS=`RINGKASAN RAPAT MARKETING\n${rpPeriode.textContent}\nSpend ${rpRp(spend)} | Reach ${rpFmt(reach)} | Leads ${lc} | Closing ${cl} | Omzet ${rpRp(omzet)} | ROAS ${roas.toFixed(1)}x\n${v.textContent}\n\nSCALE:\n- ${sc.map(s=>s.replace(/<[^>]+>/g,'')).join('\n- ')||'-'}\nPERBAIKI:\n- ${fx.join('\n- ')||'-'}\nHENTIKAN:\n- ${st.map(s=>s.replace(/<[^>]+>/g,'')).join('\n- ')||'-'}`;
+}
+function rpSalin(b){navigator.clipboard.writeText(RP_RINGKAS).then(()=>{b.textContent='✅ Tersalin';setTimeout(()=>b.textContent='📋 Salin Ringkasan Rapat',1500)})}
+
+/* render ulang tiap kali tab Marketing dirender / tab Rapat dibuka */
+window.addEventListener('load',()=>{
+  const ov=document.getElementById('globalLoadingOverlay');if(ov)setTimeout(()=>ov.remove(),1200);
+  const r=window.renderMarketingTab;
+  if(r)window.renderMarketingTab=function(){const x=r.apply(this,arguments);setTimeout(renderRapat,300);return x};
+  setTimeout(()=>{mktBukaSub('rapat');renderRapat()},900);
+});
+</script>
 </body>
 </html>
