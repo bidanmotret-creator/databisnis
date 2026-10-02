@@ -7,18 +7,15 @@
 
 async function tarikDataServer() {
   try {
-    const data = await fetchJsonAman(scriptURL + '?action=getData');
-
-    dataGlobal = data.clients || [];
+    const data = await fetchJsonAman(scriptURL + '?action=getFinanceOnly');
     dataFinance = data.finance || dataFinance;
     dataJurnalGlobal = dataFinance.journal || [];
     dataAnggaranBiaya = dataFinance.anggaran || [];
     if (typeof dataVendorGlobal !== 'undefined') dataVendorGlobal = dataFinance.vendors || [];
-
     inisialisasiTampilanKeuangan_();
   } catch (err) {
     console.error('Gagal memuat data dari server:', err);
-    alert('❌ Gagal memuat data dari server. Cek koneksi atau URL Apps Script (scriptURL) di index-keuangan.html.\n\n' + err);
+    alert('❌ Gagal memuat data dari server.\n\n' + err);
   } finally {
     const overlay = document.getElementById('globalLoadingOverlay');
     if (overlay) overlay.style.display = 'none';
