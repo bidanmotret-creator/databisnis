@@ -161,6 +161,7 @@
         <label style="display:block; font-size:11px; font-weight:700; color:#64748b; margin-bottom:6px;">📂 Pilih Menu Laporan</label>
         <select id="keuanganSubTabSelect" onchange="pilihSubTabKeuangan(this.value)" style="width:100%; max-width:420px; padding:11px 14px; border-radius:8px; border:1.5px solid #cbd5e1; font-size:13.5px; font-weight:700; color:#1e293b; background:#fff; cursor:pointer;">
             <option value="subJurnal">📝 Jurnal</option>
+            <option value="subAntrean">📥 Jurnal Antrean (Audit)</option>
             <option value="subLabaRugi">📈 Income Statement</option>
             <option value="subArusKas">💸 Cash Statement</option>
             <option value="subNeraca">⚖️ Neraca</option>
@@ -1193,6 +1194,59 @@
         </div>
     </div>
 
+    <div id="subAntrean" class="sub-content" style="display: none;">
+        <style>
+            .ant-chip{display:inline-block;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;margin-right:8px;}
+            .ant-menunggu{background:#dbeafe;color:#1e40af;} .ant-koreksi{background:#fef3c7;color:#92400e;}
+            .ant-ok{background:#dcfce7;color:#166534;} .ant-tolak{background:#fee2e2;color:#991b1b;}
+            .ant-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:14px 0;}
+            .ant-bar label,.ant-grid label{font-size:11px;font-weight:700;color:#64748b;display:block;}
+            .ant-bar input,.ant-bar select,.ant-grid input,.ant-grid select{display:block;width:100%;margin-top:4px;padding:9px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;box-sizing:border-box;}
+            .ant-grid input:disabled{background:#f8fafc;color:#475569;}
+            .ant-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:14px;}
+            .ant-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+            .ant-meta{font-size:12px;color:#64748b;font-weight:400;}
+            .ant-badge{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;height:fit-content;}
+            .ant-warn{background:#fffbeb;border-left:4px solid #f59e0b;padding:8px 12px;font-size:12.5px;margin-bottom:10px;color:#78350f;}
+            .ant-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+            .ant-full{grid-column:1/-1;}
+            .ant-ai{font-size:12.5px;color:#475569;margin:10px 0;}
+            .ant-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0;} .ant-tbl th,.ant-tbl td{border-bottom:1px solid #e2e8f0;padding:6px 8px;text-align:left;} .ant-num{text-align:right !important;}
+            .ant-lines input{width:100%;padding:6px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:12.5px;box-sizing:border-box;margin:0;}
+            .ant-lines td{padding:4px;} .ant-lines th:nth-child(2),.ant-lines th:nth-child(3){width:130px;} .ant-x{border:none;background:#fee2e2;color:#991b1b;border-radius:6px;cursor:pointer;padding:5px 8px;font-weight:700;}
+            .ant-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+            .ant-btn{padding:10px 16px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;color:#fff;}
+            .ant-b-simpan{background:#475569;} .ant-b-setuju{background:#059669;} .ant-b-tolak{background:#dc2626;}
+            .ant-empty{padding:30px;text-align:center;color:#64748b;background:#f8fafc;border-radius:12px;font-size:13px;}
+        </style>
+        <h3 style="margin:0;">📥 Jurnal Antrean (Audit)</h3>
+        <p style="color:#64748b;font-size:12.5px;margin:4px 0 0 0;">Draft dari Telegram (teks atau foto nota) ditinjau di sini. Revisi akun, nominal, atau tanggal bila perlu, lalu setujui agar masuk jurnal resmi.</p>
+        <div class="ant-card" style="background:#f8fafc;">
+            <b>➕ Catat transaksi dari web</b>
+            <p class="ant-meta" style="margin:4px 0 10px;">Sama seperti kirim ke Telegram: AI membaca teks atau foto nota, lalu drafnya masuk antrean di bawah.</p>
+            <div class="ant-grid">
+                <label>Pencatat<select id="antNamaPencatat"><option value="">Memuat daftar...</option></select></label>
+                <label class="ant-full">Tulis transaksi<textarea id="antTeksBaru" rows="2" placeholder="mis. kemarin beli kertas foto 50rb di Toko Maju, tunai" style="display:block;width:100%;margin-top:4px;padding:9px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:inherit;"></textarea></label>
+            </div>
+            <div class="ant-actions">
+                <button type="button" class="ant-btn ant-b-simpan" id="btnAntTeks" onclick="antBuatDariTeks()">🤖 Analisis teks</button>
+                <label class="ant-btn ant-b-setuju" style="margin:0;">📷 Pilih foto nota
+                    <input type="file" id="antFotoBaru" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="antBuatDariFoto(this)"></label>
+            </div>
+            <div id="antStatusBaru" class="ant-meta" style="margin-top:8px;"></div>
+        </div>
+        <div class="ant-bar">
+            <div style="min-width:150px;"><label>Status<select id="antFilterStatus" onchange="antreanMuat()">
+                <option>Menunggu Audit</option><option>Perlu Koreksi</option><option>Disetujui</option><option>Ditolak</option><option>Dibatalkan</option><option value="Semua">Semua</option></select></label></div>
+            <div style="min-width:180px;"><label>Auditor<select id="antNamaAuditor"><option value="">Memuat daftar...</option></select></label></div>
+            <div style="min-width:110px;"><label>PIN pribadi<input type="password" id="antPin" autocomplete="off" placeholder="PIN Anda"></label></div>
+            <button type="button" class="ant-btn" style="background:#059669;" onclick="antreanMuat()">🔄 Muat ulang</button>
+        </div>
+        <div id="antreanRingkas" style="margin-bottom:12px;"></div>
+        <datalist id="listVendorAntrean"></datalist>
+        <div id="antreanList"><div class="ant-empty">Memuat...</div></div>
+    </div>
+
     <div id="subTutupBuku" class="sub-content" style="display: none;">
         <style>
             .tb-status-badge { display:inline-block; padding:4px 12px; border-radius:14px; font-size:11.5px; font-weight:800; }
@@ -1310,6 +1364,7 @@
 
 <script src="utils.js"></script>
 <script src="ui-finance.js"></script>
+<script src="ui-antrean.js"></script>
 <script src="api-keuangan.js"></script>
 
 </body>

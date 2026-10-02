@@ -253,4 +253,5 @@ function pilihSubTabKeuangan(subId) {
     if (subId === 'subTutupBuku' && typeof renderTutupBuku === 'function') renderTutupBuku();
     if (subId === 'subDupont' && typeof hitungDupont === 'function') hitungDupont(dataJurnalGlobal);
     if (subId === 'subRosetta' && typeof renderRosettaWorksheet === 'function') renderRosettaWorksheet();
+    if (subId === 'subAntrean' && typeof antreanMuat === 'function') antreanMuat();
 }

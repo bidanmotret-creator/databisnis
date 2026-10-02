@@ -62,6 +62,7 @@ function inisialisasiTampilanKeuangan_() {
   try { if (typeof isiDatalistVendor_ === 'function') isiDatalistVendor_(); } catch (e) {}
   try { if (typeof isiDatalistCustomer_ === 'function') isiDatalistCustomer_(); } catch (e) {}
   try { if (typeof panduanRenderChat === 'function') panduanRenderChat(); } catch (e) {}
+  try { if (typeof antreanMuat === 'function') antreanMuat(); } catch (e) {}
 }
 
 // =========================================================================
