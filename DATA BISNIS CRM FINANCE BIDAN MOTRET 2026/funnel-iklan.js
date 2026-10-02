@@ -17,7 +17,8 @@ const fiX = n => (n === null || n === undefined) ? '-' : String(n).replace('.', 
 const FI_LABEL_STATUS = {
   tidak_terlacak: ['Chat tidak masuk CRM ini', '#7c3aed', '#f5f3ff'],
   spend_belum_sync: ['Spend belum tersinkron', '#b45309', '#fffbeb'],
-  sampel_kecil: ['Sampel kecil', '#64748b', '#f1f5f9']
+  sampel_kecil: ['Sampel kecil', '#64748b', '#f1f5f9'],
+  belum_matang: ['Belum matang (< 30 hari)', '#0369a1', '#f0f9ff']
 };
 function fiChips_(status) {
   return (status || []).map(s => {
@@ -69,6 +70,55 @@ function fiTabel_(judul, daftar, kolomNama, maks) {
     </tr></thead><tbody>${rows || '<tr><td colspan="10" style="padding:10px;color:#94a3b8;">Tidak ada data.</td></tr>'}</tbody></table></div></details>`;
 }
 
+
+// Rekonsiliasi Ad Spend: kartu atas (semua spend pada filter) vs panel ini (hanya iklan terlacak sejak pelacakan valid).
+function fiSpendLama_(per, kata) {
+  const val = id => (document.getElementById(id) || {}).value || '';
+  const fS = val('fMktStart'), fE = val('fMktEnd');
+  const sel = id => (typeof getMsFilterSelected === 'function' ? getMsFilterSelected(id) : []);
+  const selC = sel('msFilterMktCampaign'), selN = sel('msFilterMktNamaMeta');
+  const norm = typeof normalisasiMinat === 'function' ? normalisasiMinat : x => x;
+  const fmt = typeof formati === 'function' ? formati : x => String(x || '').slice(0, 10);
+  const kunci = (kata || []).map(k => String(k).toLowerCase()).filter(Boolean);
+  const data = typeof dataMarketing !== 'undefined' ? dataMarketing : [];
+  const o = { total: 0, sebelum: 0, tak: 0, terlacak: 0 };
+  (data || []).forEach(m => {
+    const t = fmt(m.tanggal);
+    if (fS && t < fS) return; if (fE && t > fE) return;
+    if (selC.length && selC.indexOf(norm(m.campaign)) === -1) return;
+    if (selN.length && selN.indexOf(m.nama_campaign_meta) === -1) return;
+    const s = Number(m.spend) || 0, nama = String(m.nama_campaign_meta || m.campaign || '').toLowerCase();
+    o.total += s;
+    if (per.since && t < per.since) o.sebelum += s;
+    else if (kunci.some(k => nama.indexOf(k) !== -1)) o.tak += s;
+    else o.terlacak += s;
+  });
+  return o;
+}
+function fiRekonHtml_(per, r) {
+  const o = fiSpendLama_(per, r.lini_lain && r.lini_lain.kata_kunci);
+  if (!o.total) return '';
+  const sel = o.terlacak - (Number(r.spend) || 0), cocok = Math.abs(sel) < 1000;
+  const baris = (a, b, tebal) => `<tr><td style="padding:2px 10px 2px 0;${tebal ? 'font-weight:700;' : ''}">${a}</td><td style="text-align:right;${tebal ? 'font-weight:700;' : ''}">${b}</td></tr>`;
+  const sub = document.getElementById('kpiSpendAwareness');
+  if (sub && sub.parentNode) {
+    let n = document.getElementById('kpiSpendRekon');
+    if (!n) { n = document.createElement('div'); n.id = 'kpiSpendRekon'; n.style.cssText = 'font-size:10.5px;opacity:.85;margin-top:3px;font-weight:500;'; sub.parentNode.appendChild(n); }
+    n.textContent = 'Termasuk ' + fiRp(o.sebelum) + ' sebelum ' + (per.since || '-') + ' dan ' + fiRp(o.tak) + ' lini tak terlacak. Rincian di panel Funnel Iklan.';
+  }
+  return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#334155;">
+    <div style="font-weight:700;margin-bottom:4px;">💰 Kenapa Ad Spend kartu atas berbeda dari panel ini</div>
+    <table style="border-collapse:collapse;">
+      ${baris('Spend seluruh periode filter (kartu atas)', fiRp(o.total), true)}
+      ${baris('− sebelum pelacakan iklan→lead valid (' + fiEsc(per.since || '-') + ')', fiRp(o.sebelum))}
+      ${baris('− lini yang chat-nya tidak masuk CRM ini', fiRp(o.tak))}
+      ${baris('= spend iklan terlacak (data harian)', fiRp(o.terlacak), true)}
+      ${baris('Spend di panel ini (backend)', fiRp(r.spend), true)}
+    </table>
+    <div style="margin-top:4px;color:${cocok ? '#047857' : '#b45309'};">${cocok ? '✓ Cocok.' : 'Selisih ' + fiRp(Math.abs(sel)) + ': kemungkinan sync hari terakhir atau pilihan campaign (panel ini belum mengikuti centang campaign).'}</div>
+  </div>`;
+}
+
 function fiRender() {
   const p = fiPastikanPanel_(); if (!p) return;
   const kepala = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -97,17 +147,12 @@ function fiRender() {
     peringatan.push('🧩 Lini <b>' + fiEsc((r.lini_lain.kata_kunci || []).join(', ')) + '</b>: spend ' + fiRp(r.lini_lain.spend) + ', CPL Meta ' + fiRp(r.lini_lain.cpl_meta) +
       '. Chat masuk CRM lain, jadi Real CPL tidak bisa dihitung dan tidak masuk total di bawah.');
   }
-  // Ambang hidup di dua tempat (MK_AMBANG di backend, tenant-config.js di frontend): deteksi selisih.
-  const cekAmbang = [['kontenMinSpendRp', 'minSpendRp'], ['kontenMinImpresi', 'minImpresi'], ['promoMinResults', 'minResults']];
-  const beda = cekAmbang.filter(c => typeof ambilThreshold === 'function' && d.ambang && d.ambang[c[1]] !== undefined &&
-    Number(ambilThreshold(c[0], d.ambang[c[1]])) !== Number(d.ambang[c[1]]))
-    .map(c => c[0] + ' (layar ' + ambilThreshold(c[0]) + ', server ' + d.ambang[c[1]] + ')');
-  if (beda.length) peringatan.push('⚙️ Ambang berbeda antara <code>tenant-config.js</code> dan backend <code>MK_AMBANG</code>: ' + fiEsc(beda.join('; ')) + '. Samakan keduanya agar vonis dashboard dan Telegram konsisten.');
+  // Ambang kini satu sumber (UI ⚙️ Ambang -> backend), jadi peringatan selisih tenant-config vs MK_AMBANG dihapus.
   const nol = d.diagnosis && d.diagnosis.campaign_terlacak_tapi_nol_lead || [];
   if (nol.length) peringatan.push('⚠️ ' + nol.length + ' campaign berspend tanpa lead CRM (sampel bisa kecil, jangan langsung dimatikan): ' + fiEsc(nol.join('; ')));
 
   const kartu = [
-    fiKartu_('Ad Spend', fiRp(r.spend), 'tanpa lini yang tidak terlacak'),
+    fiKartu_('Ad Spend iklan terlacak', fiRp(r.spend), 'sejak ' + fiEsc(per.since) + ', tanpa lini tak terlacak'),
     fiKartu_('CPL Meta', fiRp(r.cpl_meta), fiInt(r.results_meta) + ' chat versi Meta'),
     fiKartu_('Real CPL', fiRp(r.real_cpl_iklan), fiInt(r.lead_iklan_A) + ' lead iklan di CRM', '#4338ca'),
     fiKartu_('Kebocoran', fiInt(r.kebocoran_chat), 'chat Meta yang tidak jadi lead CRM', r.kebocoran_chat > 0 ? '#b45309' : '#047857'),
@@ -120,6 +165,7 @@ function fiRender() {
   p.innerHTML = kepala +
     `<div style="font-size:11.5px;color:#64748b;margin:6px 0 10px;">Dihitung ${fiEsc(FI.data.dibuat || '')} · cache: ${fiEsc(FI.data.cache || '-')} · Angka KPI funnel di bawah panel ini memakai metode lama (semua lead CRM ÷ semua spend), jadi boleh berbeda. Untuk biaya per lead iklan, pakai panel ini.</div>` +
     (peringatan.length ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12.5px;color:#78350f;">${peringatan.map(t => `<div style="margin:2px 0;">${t}</div>`).join('')}</div>` : '') +
+    fiRekonHtml_(per, r) +
     `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;">${kartu}</div>` +
     fiTabel_('Per campaign', d.per_campaign, x => x.campaign_name, 30) +
     fiTabel_('Per iklan (urut spend)', d.per_iklan, x => x.ad_name || x.ad_id, 40);
@@ -155,6 +201,7 @@ function fiJadwalMuat_() {
 
 document.addEventListener('DOMContentLoaded', () => {
   ['fMktStart', 'fMktEnd'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('change', fiJadwalMuat_); });
-  document.querySelectorAll('#grupPresetTglMkt button, .input-bulan-preset').forEach(el => el.addEventListener('click', fiJadwalMuat_));
+  document.querySelectorAll('#grupPresetTglMkt button').forEach(el => el.addEventListener('click', fiJadwalMuat_));
+  document.querySelectorAll('.input-bulan-preset').forEach(el => el.addEventListener('change', fiJadwalMuat_));
   setTimeout(() => fiMuat(false), 600);
 });

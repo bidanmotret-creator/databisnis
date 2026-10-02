@@ -5,14 +5,15 @@
 // Ide utama:
 //  1. Satu iklan = SATU paket penawaran (kombinasi label penawaran), jadi tidak
 //     ada lagi iklan yang sama dihitung di banyak baris.
-//  2. Label jenis format/trust/layanan/ajakan BUKAN penawaran: jadi "pendukung".
+//  2. Label jenis format/trust/layanan/ajakan/harga/dp/urgensi BUKAN penawaran: jadi "pendukung".
 //  3. Promo A vs B dibandingkan per MINAT dengan 3 tingkat bukti:
 //       adset sama (kuat) > campaign sama (sedang) > lintas campaign (lemah).
 //  4. Vonis dari aturan (ambang UI). AI hanya menjelaskan konteks dari caption.
 // =========================================================================
 
 const PA_TANPA = '(Tanpa penawaran)';
-const PA_PENDUKUNG = ['trust', 'layanan', 'ajakan'];
+// Selaras dengan PenawaranIklan.gs v2: harga dan DP adalah FILTER calon pelanggan, urgensi hanya pendukung; hanya insentif (diskon, bonus, gratis, program) yang menjadi penawaran.
+const PA_PENDUKUNG = ['trust', 'layanan', 'ajakan', 'harga', 'dp', 'lokasi', 'usia', 'urgensi'];   // sama dengan TP_FILTER + TP_PENDUKUNG di tes-penawaran.js
 const PA = { minat: '', hari: 30, A: '', B: '', ai: {}, aiMemuat: false };
 
 function paK_() {
@@ -54,7 +55,7 @@ function paKumpul_(hari) {
       paket: (typeof penPaketAtauAturan_ === 'function' ? penPaketAtauAturan_(r.id, r.nama, m.headline || '', m.caption || '') : paPaketDariTeks_(r.nama, m.headline || '', m.caption || '', PT.rules)),
       tipe: m.tipe || '', headline: m.headline || '', caption: m.caption || '', punyaTeks: !!(m.caption || m.headline),
       spend: r.spend, imp: r.imp, klik: r.klik, results: r.results,
-      leads: r.leads, closing: r.closing, terbayar: r.terbayar, qualified: (r.qualified === undefined ? null : r.qualified), atSpend: r.at ? r.at.spend : 0
+      leads: r.leads, closing: r.closing, terbayar: r.terbayar, atSpend: r.at ? r.at.spend : 0
     };
   }).filter(a => a.spend > 0);
 }

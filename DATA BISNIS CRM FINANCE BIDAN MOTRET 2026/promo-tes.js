@@ -231,6 +231,59 @@ function ptTutupKamus() { const ov = $m('ptOverlay'); if (ov) ov.style.display =
 
 function ptSemuaIklan_() { return kbHitung_({ semua: true, berjalan: false, cari: '' }); }
 
+// ------------------------------------------------------------ KAMUS PROMO (tampilan awam)
+// Jenis (nilai disimpan di sheet) -> nama yang mudah dibaca + kelompoknya. Nilai jenis TIDAK berubah.
+// Kelompok 'filter' = TP_FILTER dan 'bukti' = TP_PENDUKUNG di tes-penawaran.js; jaga tetap sama.
+const PT_JENIS = [
+  ['diskon', 'Diskon', 'insentif'], ['bonus', 'Bonus / free', 'insentif'], ['gratis', 'Gratis', 'insentif'],
+  ['program', 'Program / paket', 'insentif'], ['promo', 'Promo lain', 'insentif'],
+  ['harga', 'Harga yang tertulis', 'filter'], ['dp', 'DP / cara bayar', 'filter'], ['layanan', 'Layanan', 'filter'],
+  ['lokasi', 'Lokasi / area', 'filter'], ['usia', 'Usia bayi / syarat usia', 'filter'],
+  ['urgensi', 'Batas waktu / urgensi', 'bukti'], ['trust', 'Pembuktian / kepercayaan', 'bukti'], ['ajakan', 'Ajakan bertindak', 'bukti'],
+  ['format', 'Bentuk iklan (dari nama iklan)', 'format']
+];
+const PT_GRUP = [
+  { id: 'insentif', judul: '🎁 Penawaran (insentif)', jenisBaru: 'diskon', ket: 'Alasan orang tertarik: diskon, bonus, gratis, program. Inilah yang dibandingkan di Papan Tes Promo.' },
+  { id: 'filter', judul: '🔎 Filter calon pelanggan', jenisBaru: 'harga', ket: 'Informasi yang menyaring orang sebelum chat: harga, DP, area layanan. Bukan insentif.' },
+  { id: 'bukti', judul: '💬 Pembuktian dan ajakan', jenisBaru: 'trust', ket: 'Pendukung: kepercayaan, batas waktu, ajakan komen. Bukan penawaran.' },
+  { id: 'format', judul: '🎬 Bentuk iklan', jenisBaru: 'format', ket: 'Dibaca dari NAMA iklan (video, poster, carousel), bukan dari caption.' },
+  { id: 'lain', judul: '❔ Belum dikelompokkan', jenisBaru: '', ket: 'Jenisnya kosong atau tidak dikenal. Pilih jenis agar masuk kelompok yang tepat.' }
+];
+let PT_UJI_TEKS = '';
+
+function ptJenisKe_(j) { const k = String(j || '').toLowerCase().trim(); return PT_JENIS.find(x => x[0] === k) || null; }
+function ptGrupDari_(j) { const f = ptJenisKe_(j); return f ? f[2] : 'lain'; }
+
+// Pola regex sederhana -> daftar kata/frasa. null bila polanya lanjutan (grup, angka, variasi ejaan).
+function ptPolaKeKata_(p) {
+  const s0 = String(p || '');
+  if (!s0.trim()) return [];
+  const s = s0.replace(/\\b/g, '').replace(/\\s\*/g, ' ').replace(/\\([-/])/g, '$1').replace(/\\\+/g, '\uE000').replace(/\\\./g, '\uE001');
+  const bagian = s.split('|').map(x => x.replace(/\s+/g, ' ').trim());
+  if (bagian.some(x => !x || /[\\\[\](){}?*^$+.]/.test(x))) return null;
+  return bagian.map(x => x.replace(/\uE000/g, '+').replace(/\uE001/g, '.'));
+}
+// Daftar kata (dipisah koma) -> pola regex. Spasi jadi \s*; kata alfanumerik pendek diberi batas kata.
+function ptKataKePola_(teks) {
+  return String(teks || '').split(',').map(w => w.replace(/\s+/g, ' ').trim()).filter(Boolean).map(w => {
+    const e = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s*');
+    return /^[a-z0-9]{1,5}$/i.test(w) ? '\\b' + e + '\\b' : e;
+  }).join('|');
+}
+
+function ptUji(teks) {
+  PT_UJI_TEKS = teks;
+  const out = $m('ptUjiHasil'); if (!out) return;
+  const t = String(teks || '').trim();
+  if (!t) { out.innerHTML = '<span style="color:#94a3b8;">Tempel headline atau caption iklan di atas untuk melihat penawaran apa yang dikenali.</span>'; return; }
+  const rules = ptKompilasi_(PT_EDIT).filter(x => x.jenis !== 'format');
+  const kena = [], ada = {};
+  rules.forEach(x => { if (x.re.test(t) && !ada[x.label]) { ada[x.label] = 1; kena.push(x); } });
+  out.innerHTML = kena.length
+    ? kena.map(x => `<span style="display:inline-block; margin:2px 4px 2px 0; padding:2px 9px; border-radius:99px; background:#eef2ff; color:#4338ca; font-weight:700; font-size:12px;">${kbEsc(x.label)}</span>`).join('')
+    : '<span style="color:#b45309;">Tidak ada yang dikenali. Iklan seperti ini dikelompokkan sebagai "(Tanpa penawaran)" bila AI juga belum membacanya.</span>';
+}
+
 function ptRenderKamus_() {
   const ov = $m('ptOverlay'); if (!ov) return;
   const iklan = ptSemuaIklan_();
@@ -238,6 +291,7 @@ function ptRenderKamus_() {
   const dilabeli = iklan.map(r => ptLabelIklan_(r, rules));
   const hitung = PT_EDIT.map(x => {
     let re = null; try { re = new RegExp(x.pattern, 'i'); } catch (e) { return -1; }
+    if (!String(x.pattern || '').trim()) return 0;
     let c = 0;
     iklan.forEach(r => {
       const m = r.m || {};
@@ -248,7 +302,7 @@ function ptRenderKamus_() {
   });
   const belum = iklan.filter((r, i) => !dilabeli[i].some(l => l.jenis !== 'format'));
 
-  // saran baris promo yang belum tertangkap aturan mana pun
+  // kalimat bernuansa promo yang belum dikenali aturan mana pun
   const kataPromo = /diskon|promo|gratis|free|bonus|hemat|cashback|voucher|potongan|\d+\s*(rb|ribu|jt|juta|%)/i;
   const saran = {};
   iklan.forEach(r => {
@@ -262,63 +316,93 @@ function ptRenderKamus_() {
   });
   const saranList = Object.keys(saran).sort((a, b) => saran[b] - saran[a]).slice(0, 12);
 
-  const inp = 'padding:4px 6px; border:1px solid #cbd5e1; border-radius:5px; font-size:12px; width:100%; box-sizing:border-box;';
-  const baris = PT_EDIT.map((x, i) => `
-    <tr>
-      <td><input style="${inp} font-family:monospace;" value="${kbEsc(x.pattern)}" oninput="ptEdit(${i},'pattern',this.value)"></td>
-      <td><input style="${inp}" value="${kbEsc(x.label)}" oninput="ptEdit(${i},'label',this.value)"></td>
-      <td><input style="${inp}" value="${kbEsc(x.jenis)}" oninput="ptEdit(${i},'jenis',this.value)"></td>
-      <td style="text-align:center;"><input type="checkbox" ${x.aktif === false ? '' : 'checked'} onchange="ptEdit(${i},'aktif',this.checked)"></td>
-      <td style="text-align:center; font-size:12px; ${hitung[i] < 0 ? 'color:#b91c1c; font-weight:700;' : 'color:#475569;'}">${hitung[i] < 0 ? 'regex salah' : hitung[i] + ' iklan'}</td>
-      <td><button type="button" class="mkt-btn" onclick="ptHapusBaris(${i})">✕</button></td>
-    </tr>`).join('');
+  const inp = 'padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px; width:100%; box-sizing:border-box;';
+  const kartu = i => {
+    const x = PT_EDIT[i], kata = ptPolaKeKata_(x.pattern), sederhana = kata !== null;
+    const jenisSaatIni = String(x.jenis || '').toLowerCase().trim();
+    const opsi = PT_JENIS.map(j => `<option value="${j[0]}" ${jenisSaatIni === j[0] ? 'selected' : ''}>${j[1]}</option>`).join('') +
+      (ptJenisKe_(x.jenis) ? '' : `<option value="${kbEsc(x.jenis || '')}" selected>${kbEsc(x.jenis || '(pilih jenis)')}</option>`);
+    const nilaiKata = x._kata !== undefined ? x._kata : (sederhana ? kata.join(', ') : '');
+    const kolomKata = sederhana
+      ? `<input data-pt="${i}:kata" style="${inp}" placeholder="kata atau frasa, pisahkan dengan koma" value="${kbEsc(nilaiKata)}" oninput="ptEdit(${i},'kata',this.value)">
+         <div style="font-size:10.5px; color:#94a3b8; margin-top:2px;">Cocok bila iklan menyebut salah satu kata ini.</div>`
+      : `<input data-pt="${i}:pattern" style="${inp} font-family:monospace;" value="${kbEsc(x.pattern)}" oninput="ptEdit(${i},'pattern',this.value)">
+         <div style="font-size:10.5px; color:#b45309; margin-top:2px;">Pola lanjutan (mengenali angka atau variasi ejaan). Ubah hanya bila paham regex.</div>`;
+    const jml = hitung[i] < 0 ? '<span style="color:#b91c1c; font-weight:700;">pola salah</span>'
+      : hitung[i] === 0 ? '<span style="color:#94a3b8;">belum ada iklan</span>' : '<b>' + hitung[i] + '</b> iklan';
+    return `<div style="display:grid; grid-template-columns:22px minmax(150px,1.1fr) minmax(220px,2fr) minmax(150px,.9fr) 84px 30px; gap:8px; align-items:start; padding:8px 0; border-bottom:1px solid #f1f5f9; ${x.aktif === false ? 'opacity:.55;' : ''}">
+      <input type="checkbox" title="Aktif" ${x.aktif === false ? '' : 'checked'} onchange="ptEdit(${i},'aktif',this.checked)" style="margin-top:8px;">
+      <div><input data-pt="${i}:label" style="${inp} font-weight:600;" placeholder="Nama, mis. DP murah" value="${kbEsc(x.label)}" oninput="ptEdit(${i},'label',this.value)"></div>
+      <div>${kolomKata}</div>
+      <select data-pt="${i}:jenis" style="${inp}" onchange="ptEdit(${i},'jenis',this.value)">${opsi}</select>
+      <div style="font-size:12px; color:#475569; margin-top:7px;">${jml}</div>
+      <button type="button" class="mkt-btn" title="Hapus aturan" onclick="ptHapusBaris(${i})">✕</button>
+    </div>`;
+  };
+
+  const bagianGrup = PT_GRUP.map(g => {
+    const idx = PT_EDIT.map((x, i) => i).filter(i => ptGrupDari_(PT_EDIT[i].jenis) === g.id);
+    if (!idx.length && g.id === 'lain') return '';
+    return `<div style="margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <div><b style="font-size:13.5px;">${g.judul}</b> <span style="font-size:11.5px; color:#94a3b8;">(${idx.length})</span>
+          <div style="font-size:11.5px; color:#64748b;">${g.ket}</div></div>
+        ${g.jenisBaru ? `<button type="button" class="mkt-btn" onclick="ptTambahBaris('${g.jenisBaru}')">＋ Tambah</button>` : ''}
+      </div>
+      <div style="margin-top:4px;">${idx.length ? idx.map(kartu).join('') : '<div style="font-size:12px; color:#94a3b8; padding:8px 0;">Belum ada aturan di kelompok ini.</div>'}</div></div>`;
+  }).join('');
 
   ov.innerHTML = `
-  <div style="background:#fff; border-radius:12px; max-width:980px; width:100%; padding:16px 18px; box-shadow:0 20px 50px rgba(0,0,0,.3);">
+  <div style="background:#fff; border-radius:12px; max-width:1020px; width:100%; padding:16px 18px; box-shadow:0 20px 50px rgba(0,0,0,.3);">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <b style="font-size:16px;">📚 Kamus Promo</b>
+      <b style="font-size:16px;">📖 Kamus Promo</b>
       <button type="button" class="mkt-btn" onclick="ptTutupKamus()">Tutup</button>
     </div>
-    <p style="font-size:12px; color:#64748b; margin:0 0 10px;">
-      Pola = regex (tanpa peduli huruf besar/kecil). Jenis <b>format</b> dicocokkan ke <b>nama iklan</b>; jenis lain ke <b>headline + caption</b>.
-      Satu iklan boleh punya banyak label. Kolom "cocok" = jumlah iklan (semua periode) yang tertangkap aturan itu.
-    </p>
-    <div style="overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse;">
-      <thead><tr style="background:#f1f5f9; font-size:12px; text-align:left;"><th>Pola (regex)</th><th>Label promo</th><th>Jenis</th><th>Aktif</th><th>Cocok</th><th></th></tr></thead>
-      <tbody>${baris}</tbody>
-    </table></div>
-    <div style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap;">
-      <button type="button" class="mkt-btn" onclick="ptTambahBaris()">＋ Tambah aturan</button>
+    <div style="font-size:12.5px; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px; line-height:1.55;">
+      <b>Untuk apa kamus ini?</b> Daftar kata yang menandakan sebuah penawaran. Contoh: bila caption menyebut <i>free sesi</i>, iklan diberi nama penawaran
+      <i>Free sesi keluarga/sibling</i>.<br>
+      AI sudah membaca arti penawaran dari caption iklan. Kamus ini hanya <b>cadangan</b> untuk iklan yang belum dibaca AI atau belum punya caption.
+      Satu iklan boleh cocok dengan beberapa aturan. Kelompok <b>🎁 Penawaran</b> yang membedakan promo di Papan Tes Promo;
+      <b>🔎 Filter</b> dan <b>💬 Pembuktian</b> hanya pendukung.
+    </div>
+    <div style="margin-top:12px; border:1px dashed #c7d2fe; border-radius:8px; padding:9px 12px; background:#fafaff;">
+      <b style="font-size:13px;">🧪 Coba kalimat</b> <span style="font-size:11.5px; color:#64748b;">Tempel caption untuk melihat aturan mana yang mengenalinya (sebelum disimpan).</span>
+      <textarea id="ptUjiTeks" rows="2" style="${inp} margin-top:6px;" placeholder="Mis. Booking newborn cukup DP 100rb, free sesi keluarga!" oninput="ptUji(this.value)">${kbEsc(PT_UJI_TEKS)}</textarea>
+      <div id="ptUjiHasil" style="margin-top:6px; font-size:12.5px;"></div>
+    </div>
+    <div style="overflow-x:auto;">${bagianGrup}</div>
+    <div style="margin:12px 0; display:flex; gap:8px; flex-wrap:wrap;">
       <button type="button" class="mkt-btn" onclick="ptSimpanKamus(this)" style="background:#4f46e5; color:#fff;">💾 Simpan ke sheet</button>
       <span id="ptSimpanStatus" style="font-size:12px; align-self:center; color:#64748b;"></span>
     </div>
     <div style="border-top:1px solid #e2e8f0; padding-top:10px; display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px;">
-      <div><b style="font-size:13px;">Iklan belum terklasifikasi promo (${belum.length})</b>
+      <div><b style="font-size:13px;">Iklan yang belum dikenali kamus (${belum.length})</b>
+        <div style="font-size:11.5px; color:#94a3b8;">Wajar bila AI sudah membacanya. Daftar ini hanya relevan untuk cadangan.</div>
         <div style="font-size:12px; color:#475569; max-height:180px; overflow:auto; margin-top:4px;">
-        ${belum.length ? belum.slice(0, 30).map(r => '• ' + kbEsc(r.nama)).join('<br>') : '<span style="color:#047857;">Semua iklan sudah punya label promo. 🎉</span>'}</div></div>
-      <div><b style="font-size:13px;">Baris caption bernuansa promo yang belum tertangkap (${saranList.length})</b>
+        ${belum.length ? belum.slice(0, 30).map(r => '• ' + kbEsc(r.nama)).join('<br>') : '<span style="color:#047857;">Semua iklan sudah dikenali kamus. 🎉</span>'}</div></div>
+      <div><b style="font-size:13px;">Kalimat bernuansa promo yang belum dikenali (${saranList.length})</b>
+        <div style="font-size:11.5px; color:#94a3b8;">Klik "+ aturan" untuk menjadikannya aturan baru.</div>
         <div style="font-size:12px; color:#475569; max-height:180px; overflow:auto; margin-top:4px;">
-        ${saranList.length ? saranList.map(t => `• ${kbEsc(t)} <span style="color:#94a3b8;">(${saran[t]}×)</span> <a href="#" onclick="ptTambahDariSaran(${JSON.stringify(t).replace(/"/g, '&quot;')});return false;">+ aturan</a>`).join('<br>') : '<span style="color:#94a3b8;">Tidak ada.</span>'}</div></div>
+        ${saranList.length ? saranList.map(s => `• ${kbEsc(s)} <span style="color:#94a3b8;">(${saran[s]}×)</span> <a href="#" onclick="ptTambahDariSaran(${JSON.stringify(s).replace(/"/g, '&quot;')});return false;">+ aturan</a>`).join('<br>') : '<span style="color:#94a3b8;">Tidak ada.</span>'}</div></div>
     </div>
   </div>`;
+  ptUji(PT_UJI_TEKS);
 }
 
 function ptEdit(i, k, v) {
-  if (!PT_EDIT[i]) return;
-  PT_EDIT[i][k] = v;
-  if (k === 'pattern' || k === 'jenis' || k === 'aktif') {
-    // hitung ulang tanpa merusak fokus input: render ulang hanya kolom "cocok" tidak praktis, jadi tunda sebentar
-    clearTimeout(ptEdit._t);
-    ptEdit._t = setTimeout(() => {
-      const aktif = document.activeElement, idx = aktif && aktif.getAttribute ? aktif.getAttribute('oninput') : null;
-      const pos = aktif && aktif.selectionStart;
-      ptRenderKamus_();
-      if (idx) { const el = Array.from(document.querySelectorAll('#ptOverlay input')).find(e => e.getAttribute('oninput') === idx); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} } }
-    }, 500);
-  }
+  const x = PT_EDIT[i]; if (!x) return;
+  if (k === 'kata') { x._kata = v; x.pattern = ptKataKePola_(v); }
+  else if (k === 'pattern') { x.pattern = v; delete x._kata; }
+  else x[k] = v;
+  if (k === 'label') return;   // nama tidak memengaruhi hitungan
+  clearTimeout(ptEdit._t);
+  ptEdit._t = setTimeout(() => {
+    const a = document.activeElement, id = a && a.getAttribute ? a.getAttribute('data-pt') : null, pos = a && a.selectionStart;
+    ptRenderKamus_();
+    if (id) { const el = document.querySelector('#ptOverlay [data-pt="' + id + '"]'); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} } }
+  }, 500);
 }
-function ptTambahBaris() { PT_EDIT.push({ pattern: '', label: '', jenis: '', aktif: true }); ptRenderKamus_(); }
+function ptTambahBaris(jenis) { PT_EDIT.push({ pattern: '', label: '', jenis: jenis || 'diskon', aktif: true }); ptRenderKamus_(); }
 function ptHapusBaris(i) { PT_EDIT.splice(i, 1); ptRenderKamus_(); }
 function ptEscRegex_(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function ptTambahDariSaran(teks) {

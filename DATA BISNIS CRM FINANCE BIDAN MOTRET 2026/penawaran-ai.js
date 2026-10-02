@@ -19,7 +19,7 @@ function penPaketAtauAturan_(id, nama, headline, caption) {
   if (!p || !p.penawaran_utama) return dasar;
   return {
     kunci: p.penawaran_utama, penawaran: [p.penawaran_utama], pendukung: (p.pendukung || []).slice(),
-    format: dasar.format, dariAi: true, ajakan: p.ajakan || '', ciri: p.ciri_kreatif || '', cekAngka: p.sumber === 'ai-cek-angka'
+    format: dasar.format, dariAi: true, filterAi: Array.isArray(p.filter_leads) ? p.filter_leads.slice() : null, ajakan: p.ajakan || '', ciri: p.ciri_kreatif || '', cekAngka: p.sumber === 'ai-cek-angka'
   };
 }
 

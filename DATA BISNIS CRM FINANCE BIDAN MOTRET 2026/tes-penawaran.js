@@ -11,7 +11,9 @@
 // =========================================================================
 
 const TP_FILTER = ['harga', 'dp', 'layanan', 'lokasi', 'usia'];   // jenis kamus yang berperan sebagai filter leads
-const TP_PENDUKUNG = ['trust', 'ajakan'];                          // bukan penawaran, bukan filter
+const TP_PENDUKUNG = ['trust', 'ajakan', 'urgensi'];                // bukan penawaran, bukan filter (urgensi = bujukan waktu, bukan insentif)
+// Nama filter hasil baca AI (PenawaranIklan.gs v2, kolom filter_kualifikasi) -> label di matriks.
+const TP_LABEL_FILTER_AI = { harga_eksplisit: 'Harga tertulis', dp_nominal: 'DP nominal', area_layanan: 'Area / layanan', usia_bayi: 'Usia bayi', jadwal_kuota: 'Jadwal / kuota', syarat_lain: 'Syarat lain' };
 const TP_TANPA_OFFER = '(Tanpa penawaran)', TP_TANPA_FILTER = '(Tanpa filter)';
 
 function tpJenisOffer_(j) { return j !== 'format' && TP_FILTER.indexOf(j) === -1 && TP_PENDUKUNG.indexOf(j) === -1; }
@@ -21,7 +23,10 @@ function tpJenisOffer_(j) { return j !== 'format' && TP_FILTER.indexOf(j) === -1
 function tpFaktor_(a) {
   const labels = ptLabelIklan_({ nama: a.nama, m: { headline: a.headline, caption: a.caption } }, PT.rules);
   const offerRules = labels.filter(l => tpJenisOffer_(l.jenis)).map(l => l.label).sort();
-  const filter = labels.filter(l => TP_FILTER.indexOf(l.jenis) !== -1).map(l => l.label).sort();
+  const filterKamus = labels.filter(l => TP_FILTER.indexOf(l.jenis) !== -1).map(l => l.label).sort();
+  // Filter hasil baca AI dipakai bila iklan sudah dibaca ([] = dibaca, tidak ada filter); null = belum dibaca -> Kamus.
+  const filterAi = (a.paket && Array.isArray(a.paket.filterAi)) ? a.paket.filterAi.map(k => TP_LABEL_FILTER_AI[k] || k).sort() : null;
+  const filter = filterAi !== null ? filterAi : filterKamus;
   const offer = (a.paket && a.paket.dariAi && a.paket.kunci) ? a.paket.kunci : (offerRules.join(' + ') || TP_TANPA_OFFER);
   return { offer: offer, filter: filter.join(' + ') || TP_TANPA_FILTER, nOffer: offerRules.length, offerRules: offerRules };
 }
