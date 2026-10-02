@@ -77,12 +77,22 @@ function renderCrm() {
   const fStatus = document.getElementById('fStatus').value;
   const fStage = document.getElementById('fStage').value;
   const fSort = document.getElementById('fSort').value;
+  const fKeb = (document.getElementById('fKeb') || {}).value || '';
+  const fTipe = (document.getElementById('fTipe') || {}).value || '';
 
   let list = dataCrm.filter(r => {
     if (cari && !((r.nama || '').toLowerCase().includes(cari) || String(r.no_hp).includes(cari) || (r.kode_leads || '').toLowerCase().includes(cari))) return false;
     if (fMinat && r.minat !== fMinat) return false;
     if (fStatus && kategoriStatus_(r.status) !== fStatus) return false;
     if (fStage !== '') { const st = stageByHp[hpNorm(r.no_hp)]; if (!st || String(st.stage) !== fStage) return false; }
+    const aiF = aiByHp[hpNorm(r.no_hp)];
+    const tipeF = (aiF && aiF.tipe_kontak) || 'Customer';
+    if (fTipe === '' && tipeF !== 'Customer' && !(r.total > 0)) return false;   // sembunyikan Vendor/Pribadi (kecuali ada transaksi)
+    if (fTipe && fTipe !== 'semua' && tipeF !== fTipe) return false;
+    if (fKeb) {
+      const kebF = (aiF && Array.isArray(aiF.keberatan)) ? aiF.keberatan.filter(k => k.status !== 'resolved') : [];
+      if (fKeb === '__open' ? !kebF.length : !kebF.some(k => k.kategori === fKeb)) return false;
+    }
     return true;
   });
 
@@ -142,6 +152,13 @@ function renderCrm() {
       + (chatStat[h] ? `<br><small>💬 ${chatStat[h].n} pesan · ${esc((chatStat[h].last || '').substring(0, 16))}</small><br><small style="color:#334155; display:inline-block; max-width:220px; white-space:normal;">“${esc(chatStat[h].teks || '')}”</small>` : '')
       + (ai ? `<br><small>Intent: <b>${esc(ai.intent || '-')}</b>${ai.booking ? ' · 🔥 siap booking' : ''}</small><br><small style="color:#64748b; display:inline-block; max-width:220px; white-space:normal;">${esc((ai.summary || '').substring(0, 90))}</small>` : '')
       + windowHtml + dripHtml + capiHtml;
+    const kebOpen = (ai && Array.isArray(ai.keberatan)) ? ai.keberatan.filter(k => k.status !== 'resolved') : [];
+    const kebHtml = (ai && ai.tipe_kontak && ai.tipe_kontak !== 'Customer' ? `<span class="fu-badge b-yellow">⚠️ ${esc(ai.tipe_kontak)}</span><br>` : '')
+      + kebOpen.slice(0, 3).map(k => `<span style="display:inline-block; margin:0 3px 3px 0; padding:2px 7px; border-radius:10px; font-size:11px; font-weight:700; background:#fee2e2; color:#991b1b;">● ${esc(k.kategori)}</span>`).join('')
+      + (kebOpen.length > 3 ? `<small style="color:#94a3b8;"> +${kebOpen.length - 3}</small>` : '')
+      + (ai && ai.stage_funnel ? `<br><small style="color:#64748b;">Tahap: ${esc(ai.stage_funnel)}</small>` : '')
+      + (ai && ai.next_action ? `<br><small style="color:#14532d; display:inline-block; max-width:240px; white-space:normal;">🎯 ${esc(String(ai.next_action).substring(0, 110))}</small>` : '')
+      || '<small style="color:#94a3b8;">-</small>';
         return `<tr>
       <td><strong>${esc(r.kode_leads || '-')}</strong></td>
       <td><strong>${esc(r.nama || '-')}</strong><br><small style="color:#64748b;">${esc(r.no_hp)}</small></td>
@@ -149,6 +166,7 @@ function renderCrm() {
       <td><small>Chat: ${esc(r.tanggal_chat || '-')}</small><br><small>Sesi: ${esc(r.jadwal || '-')}</small>${hari}</td>
       <td>${rpC(r.total)}<br><span class="fu-badge ${bs}">${esc(r.status)}</span></td>
       <td>${fuHtml}</td>
+      <td>${kebHtml}</td>
       <td style="white-space:nowrap; position:relative;">
         <button class="row-btn" style="background:#f59e0b;" title="Edit" onclick="bukaModal('${esc(r.kode_leads)}')">✏️ Edit</button>
         <button class="row-btn" style="background:#0ea5e9;" title="Riwayat chat & analisis" onclick="bukaChat('${esc(r.no_hp)}','${esc((r.nama || '').replace(/'/g, ''))}')">💬 Chat</button>
@@ -163,7 +181,7 @@ function renderCrm() {
           <button type="button" onclick="hapusLead('${esc(r.kode_leads)}')" style="display:block; width:100%; text-align:left; padding:7px 10px; font-size:12.5px; color:#dc2626; background:none; border:none; cursor:pointer; border-radius:6px;">🗑️ Hapus Lead</button>
         </div>
       </td></tr>`;
-  }).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8;">Tidak ada data.</td></tr>';
+  }).join('') || '<tr><td colspan="8" style="text-align:center; padding:24px; color:#94a3b8;">Tidak ada data.</td></tr>';
 }
 
 function toggleAksiMenu(ev, kode) {
