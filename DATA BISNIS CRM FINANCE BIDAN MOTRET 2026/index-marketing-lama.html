@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisis Marketing — SentuhanMomen3D</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="marketing.css">
+<script src="nav.js"></script>
+<style>
+/* ===== RUANG RAPAT ===== */
+.rp-hero{background:linear-gradient(120deg,#4338ca,#db2777 55%,#f59e0b);color:#fff;border-radius:16px;padding:20px 22px;margin-bottom:16px;position:relative;overflow:hidden}
+.rp-hero:after{content:"📊";position:absolute;right:18px;top:6px;font-size:70px;opacity:.18}
+.rp-hero h2{margin:0 0 4px;font-size:20px}.rp-hero p{margin:0;font-size:12.5px;opacity:.95}
+.rp-verdict{display:inline-block;margin-top:10px;padding:6px 14px;border-radius:20px;font-weight:800;font-size:13px;background:rgba(255,255,255,.22)}
+.rp-story{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.rp-card{border-radius:14px;padding:14px;color:#fff;cursor:pointer;transition:.2s;position:relative}
+.rp-card:hover{transform:translateY(-4px);box-shadow:0 10px 22px rgba(0,0,0,.2)}
+.rp-card .ic{font-size:26px}.rp-card .bab{font-size:10px;letter-spacing:.6px;text-transform:uppercase;opacity:.9}
+.rp-card .big{font-size:24px;font-weight:900;margin:2px 0}.rp-card .kal{font-size:12px;line-height:1.5;opacity:.97}
+.rp-card .more{display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.35);font-size:11.5px}
+.rp-card.open .more{display:block}
+.rp-1{background:linear-gradient(145deg,#818cf8,#4338ca)}.rp-2{background:linear-gradient(145deg,#38bdf8,#0369a1)}
+.rp-3{background:linear-gradient(145deg,#fbbf24,#b45309)}.rp-4{background:linear-gradient(145deg,#34d399,#047857)}
+.rp-flow{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.rp-node{flex:1 1 120px;text-align:center;border-radius:12px;padding:12px 6px;color:#fff;font-weight:800}
+.rp-node small{display:block;font-weight:600;font-size:10.5px;opacity:.92}
+.rp-arrow{align-self:center;text-align:center;font-size:11px;font-weight:800;color:#475569;min-width:64px}
+.rp-arrow b{display:block;font-size:15px}.rp-leak{outline:3px dashed #ef4444;outline-offset:2px}
+.rp-dec{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:16px}
+.rp-col{border-radius:14px;padding:14px;border:2px solid}
+.rp-scale{background:#f0fdf4;border-color:#22c55e}.rp-fix{background:#fffbeb;border-color:#f59e0b}.rp-stop{background:#fef2f2;border-color:#ef4444}
+.rp-col h4{margin:0 0 8px;font-size:14px}.rp-col li{font-size:12.5px;line-height:1.6;margin-left:16px}
+.rp-todo{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:12px}
+.rp-todo label{display:flex;gap:8px;align-items:flex-start;font-size:13px;padding:6px 4px;border-radius:6px;cursor:pointer}
+.rp-todo label:hover{background:#eef2ff}.rp-todo input:checked+span{text-decoration:line-through;color:#94a3b8}
+.rp-btn{padding:10px 18px;border:none;border-radius:8px;background:#4338ca;color:#fff;font-weight:800;cursor:pointer;margin-right:8px}
+.rp-note{font-size:11.5px;background:#fef3c7;color:#92400e;border-radius:8px;padding:8px 12px;margin-bottom:12px}
+/* ===== widget .ms-filter & funnel (tetap) ===== */
+.ms-filter{position:relative}.ms-filter-btn{width:100%;text-align:left;padding:9px 12px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-size:12.5px;cursor:pointer;font-weight:600}
+.ms-filter-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;width:min(320px,90vw);max-height:320px;overflow-y:auto;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 10px 24px rgba(0,0,0,.14);padding:8px}
+.ms-filter-panel.open{display:block}.ms-filter-search{width:100%;padding:7px 10px;border-radius:6px;border:1px solid #e2e8f0;font-size:12px;margin-bottom:6px;box-sizing:border-box}
+.ms-filter-options{max-height:190px;overflow-y:auto}.ms-filter-option{display:flex;align-items:center;gap:8px;padding:6px;font-size:12.5px;cursor:pointer}
+.ms-filter-actions{display:flex;gap:6px;margin-top:6px;border-top:1px solid #f1f5f9;padding-top:6px}.ms-filter-actions button{flex:1;padding:6px;font-size:11px;font-weight:700;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="globalLoadingOverlay" style="position:fixed;inset:0;z-index:9999;background:#f8fafc;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="width:48px;height:48px;border:4px solid #e2e8f0;border-top-color:#4f46e5;border-radius:50%;animation:spinLoadingOverlay .8s linear infinite"></div>
+  <div style="font-size:14px;font-weight:600;color:#475569">Memuat data...</div>
+</div>
+<style>@keyframes spinLoadingOverlay{to{transform:rotate(360deg)}}</style>
+
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="sidebar-brand"><div class="brand-icon">📢</div><div class="brand-text"><strong>Analisis Marketing</strong><span>SentuhanMomen3D</span></div></div>
+  <nav class="sidebar-nav"></nav>
+  <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
+</aside>
+<main class="main-content">
+<div class="topbar"><button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button><div class="topbar-title" id="topbarTitle">Analisis Marketing</div></div>
+<div class="content-inner">
+<div id="tabMarketing" class="tab-content active">
+
+<h2>📢 Metrik Marketing & ROAS</h2>
+<p style="color:var(--text-light);margin-top:-10px">Dari <strong>dilihat iklannya</strong> sampai <strong>bayar DP</strong>, diceritakan bab demi bab.</p>
+
+<!-- FILTER (ID dipertahankan, dibaca renderMarketingTab) -->
+<div class="filter-panel" style="background:#e0e7ff;margin-bottom:18px"><div class="filter-grid">
+  <div class="form-group"><label>Minat Produk</label>
+    <div class="ms-filter" id="msFilterMktCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktCampaign')">Semua Minat ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari minat produk..." oninput="filterMsOptions('msFilterMktCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterMktCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterMktCampaign')">Bersihkan</button></div></div></div></div>
+  <div class="form-group"><label>Nama Campaign (Meta Ads)</label>
+    <div class="ms-filter" id="msFilterMktNamaMeta"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterMktNamaMeta')">Semua Campaign ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari campaign..." oninput="filterMsOptions('msFilterMktNamaMeta',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterMktNamaMeta')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterMktNamaMeta')">Bersihkan</button></div></div></div></div>
+  <div class="form-group" style="grid-column:1/-1"><label>Rentang Tgl Chat (Ads)</label>
+    <div class="preset-tgl-row" id="grupPresetTglMkt">
+      <button type="button" class="btn-preset-tgl" data-preset="hari_ini" onclick="terapkanRentangCepat('fMktStart','fMktEnd','hari_ini',renderMarketingTab,'grupPresetTglMkt')">Hari Ini</button>
+      <button type="button" class="btn-preset-tgl" data-preset="7_hari" onclick="terapkanRentangCepat('fMktStart','fMktEnd','7_hari',renderMarketingTab,'grupPresetTglMkt')">7 Hari</button>
+      <button type="button" class="btn-preset-tgl" data-preset="30_hari" onclick="terapkanRentangCepat('fMktStart','fMktEnd','30_hari',renderMarketingTab,'grupPresetTglMkt')">30 Hari</button>
+      <button type="button" class="btn-preset-tgl" data-preset="bulan_ini" onclick="terapkanRentangCepat('fMktStart','fMktEnd','bulan_ini',renderMarketingTab,'grupPresetTglMkt')">Bulan Ini</button>
+      <input type="month" class="input-bulan-preset" onchange="terapkanBulanPilihan('fMktStart','fMktEnd',this.value,renderMarketingTab,'grupPresetTglMkt')"></div>
+    <div style="display:flex;gap:5px"><input type="date" id="fMktStart" onchange="renderMarketingTab()"><input type="date" id="fMktEnd" onchange="renderMarketingTab()"></div></div>
+  <div class="form-group" style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
+    <button type="button" class="btn-submit" style="margin:0;background:#4338ca;width:auto;padding:10px 18px" onclick="tmBukaPengaturan()">⚙️ Atur Target Mingguan</button>
+    <button type="button" style="padding:10px 16px;background:#7c3aed;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700" onclick="msBukaModal()">🏷️ Mapping Minat</button>
+    <button type="button" id="btnRefreshMarketing" onclick="refreshDataMarketingManual()" style="padding:10px 16px;background:#059669;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700">🔄 Refresh</button>
+  </div></div></div>
+
+<div class="mkt-subnav" id="mktSubNav">
+<button type="button" class="mkt-chip" data-sub="rapat" onclick="mktBukaSub('rapat')">🧭 Ruang Rapat</button>
+<button type="button" class="mkt-chip" data-sub="funnel" onclick="mktBukaSub('funnel')">🎯 Funnel & Insight</button><button type="button" class="mkt-chip" data-sub="produk" onclick="mktBukaSub('produk')">🏆 Produk</button><button type="button" class="mkt-chip" data-sub="tren" onclick="mktBukaSub('tren')">📈 Tren</button><button type="button" class="mkt-chip" data-sub="adset" onclick="mktBukaSub('adset')">🧩 Adset</button><button type="button" class="mkt-chip" data-sub="creative" onclick="mktBukaSub('creative')">🎨 Creative</button><button type="button" class="mkt-chip" data-sub="konten" onclick="mktBukaSub('konten')">🎬 Konten Berjalan</button><button type="button" class="mkt-chip" data-sub="promo" onclick="mktBukaSub('promo')">🧪 Tes Promo</button><button type="button" class="mkt-chip" data-sub="iklan" onclick="mktBukaSub('iklan')">🔍 Analisis Iklan</button><button type="button" class="mkt-chip" data-sub="drill" onclick="mktBukaSub('drill')">🔎 Drill-down</button><button type="button" class="mkt-chip" data-sub="sync" onclick="mktBukaSub('sync')">🔗 Sinkronisasi Meta</button><button type="button" class="mkt-chip" data-sub="capi" onclick="mktBukaSub('capi')">👥 CAPI & Audience</button></div>
+
+<!-- ============ SUB BARU: RUANG RAPAT ============ -->
+<div class="mkt-sub" id="mktSub_rapat">
+<div class="rp-hero"><h2>🧭 Ruang Rapat: Cerita Iklan Periode Ini</h2><p id="rpPeriode">Pilih rentang tanggal di atas, lalu klik Refresh.</p><span class="rp-verdict" id="rpVerdict">Menunggu data…</span></div>
+<div class="rp-note" id="rpCatatan" style="display:none"></div>
+<div class="rp-story" id="rpStory"></div>
+<h3 class="mkt-section-title">🌊 Di tahap mana calon klien menghilang?</h3>
+<div class="rp-flow" id="rpFlow"></div>
+<h3 class="mkt-section-title">⚖️ Keputusan Rapat yang Disarankan</h3>
+<p style="font-size:11.5px;color:#64748b;margin-top:-4px">Disusun otomatis dari aturan sederhana (ambang bisa diubah di <code>RP_CFG</code>). Ini bahan diskusi, bukan vonis.</p>
+<div class="rp-dec">
+  <div class="rp-col rp-scale"><h4>🟢 Scale (tambah budget)</h4><ul id="rpScale"></ul></div>
+  <div class="rp-col rp-fix"><h4>🟡 Perbaiki (uji ulang)</h4><ul id="rpFix"></ul></div>
+  <div class="rp-col rp-stop"><h4>🔴 Hentikan / Evaluasi</h4><ul id="rpStop"></ul></div>
+</div>
+<div class="rp-todo"><b>✅ Checklist Rapat</b><div id="rpTodo"></div></div>
+<button class="rp-btn" onclick="rpSalin(this)">📋 Salin Ringkasan Rapat</button><button class="rp-btn" style="background:#db2777" onclick="mktBukaSub('funnel')">Lihat angka detail →</button>
+</div>
+
+<!--SPLICE_FUNNEL_DAN_SUB_LAIN: tempel blok mktSub_funnel, produk, tren, adset, creative, konten, promo, iklan, drill, sync, capi, dan #tmModalSet dari file lama di sini-->
+<!-- TEMPEL di marketing.html, tepat SEBELUM <div class="mkt-sub" id="mktSub_sync"> -->
+<div class="mkt-sub" id="mktSub_audience">
+<div class="mkt-toolbar">
+  <div><b class="mkt-toolbar-title">👥 Audience: Siapa, Di Mana, Lewat Mana</b><span class="mkt-stamp"></span></div>
+  <div class="mkt-toolbar-btns">
+    <button type="button" class="mkt-btn" onclick="muatDataAudience(this)">🔄 Refresh data</button>
+    <button type="button" class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_audience','Audience',this)">📥 PDF</button>
+  </div>
+</div>
+<style>
+.au-ch{display:flex;gap:10px;align-items:center;color:#fff;border-radius:10px;padding:10px 14px;margin:22px 0 10px}
+.au-ch .n{background:rgba(255,255,255,.25);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900}
+.au-ch b{font-size:14px}.au-ch small{display:block;font-size:11px;opacity:.92}
+.au-c1{background:linear-gradient(135deg,#6366f1,#4338ca)}.au-c2{background:linear-gradient(135deg,#0ea5e9,#0369a1)}
+.au-c3{background:linear-gradient(135deg,#db2777,#9d174d)}.au-c4{background:linear-gradient(135deg,#f59e0b,#b45309)}
+.au-c5{background:linear-gradient(135deg,#10b981,#047857)}
+.au-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.au-kpi div{background:#eef2ff;border-radius:10px;padding:12px;text-align:center}
+.au-kpi span{display:block;font-size:10px;color:#64748b;text-transform:uppercase}.au-kpi strong{font-size:16px;color:#4338ca}
+.au-2col{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:12px}
+.au-box{border-radius:10px;padding:12px;border:1px solid #e2e8f0}
+.au-good{background:#f0fdf4;border-color:#86efac}.au-bad{background:#fef2f2;border-color:#fca5a5}
+.rekomendasi-item{padding:8px 0;border-bottom:1px dashed #cbd5e1;font-size:12.5px}.rekomendasi-item .judul{font-weight:800}
+.rekomendasi-item .detail{color:#475569;font-size:11.5px}.skor{font-size:10px;padding:2px 8px;border-radius:10px;color:#fff}
+.skor-tinggi{background:#16a34a}.skor-rendah{background:#dc2626}
+.empty-state{text-align:center;color:#94a3b8;padding:14px}
+.au-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.au-hint{font-size:12px;color:#64748b;margin:-4px 0 10px}
+.au-final{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:18px;font-size:13.5px;line-height:1.6}
+</style>
+
+<!-- BAB 1: SIAPA -->
+<div class="au-ch au-c1"><div class="n">1</div><div><b>Siapa yang paling responsif?</b><small>Profil audience (usia, gender, interest) diberi skor: CTR 30% · CPL 40% · Volume 30%</small></div></div>
+<div class="au-kpi">
+  <div><span>Profil Aktif</span><strong id="aiTotalProfile">-</strong></div>
+  <div><span>Rata-rata CPL</span><strong id="aiAvgCPL">-</strong></div>
+  <div><span>Rata-rata CTR</span><strong id="aiAvgCTR">-</strong></div>
+  <div><span>Total Spend</span><strong id="aiTotalSpend">-</strong></div>
+</div>
+<div class="au-2col">
+  <div class="au-box au-good"><b style="color:#166534">🏆 Layak di-Scale</b><div id="aiRekomendasiTerbaik"></div></div>
+  <div class="au-box au-bad"><b style="color:#991b1b">⚠️ Pertimbangkan Dihentikan</b><div id="aiRekomendasiHentikan"></div></div>
+</div>
+<div class="au-2col" id="aiClusterGrid"></div>
+<div class="table-responsive table-compact-wrap" style="max-height:340px">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Profil</th><th>Usia</th><th>Gender</th><th>Interest</th><th>Platform</th><th>Adset</th><th>Spend</th><th>Impresi</th><th>CTR</th><th>Leads</th><th>CPL</th><th>Video 100%</th><th>Skor</th><th>Aksi</th></tr></thead>
+<tbody id="bAudienceProfile"></tbody></table></div>
+
+<!-- BAB 2: TIPE TARGETING -->
+<div class="au-ch au-c2"><div class="n">2</div><div><b>Pakai Custom Audience atau Lookalike?</b><small>Ringkasan 4 kategori, lalu detail kombinasi persis</small></div></div>
+<div class="table-responsive table-compact-wrap">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Kategori</th><th>Adset</th><th>Spend</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead><tbody id="bAudTypeSimple"></tbody></table></div>
+<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:#0369a1">Lihat detail kombinasi audience & exclusion</summary>
+<div class="table-responsive table-compact-wrap"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Custom Audience</th><th>Exclusion</th><th>Adset</th><th>Spend</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead><tbody id="bAudType"></tbody></table></div></details>
+
+<!-- BAB 3: DI MANA -->
+<div class="au-ch au-c3"><div class="n">3</div><div><b>Di mana mereka berada?</b><small>Provinsi (data delivery asli Meta) dan kota (estimasi dari targeting)</small></div></div>
+<div class="au-2col">
+ <div><label style="font-size:11px;font-weight:700">Campaign (Provinsi)</label>
+  <div class="ms-filter" id="msFilterRegionCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterRegionCampaign')">Semua ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari..." oninput="filterMsOptions('msFilterRegionCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterRegionCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterRegionCampaign')">Bersihkan</button></div></div></div>
+  <div style="display:flex;gap:5px;margin-top:6px"><input type="date" id="fRegionStart" onchange="renderRegionTab()"><input type="date" id="fRegionEnd" onchange="renderRegionTab()"></div></div>
+ <div><label style="font-size:11px;font-weight:700">Campaign (Kota)</label>
+  <div class="ms-filter" id="msFilterCityCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterCityCampaign')">Semua ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari..." oninput="filterMsOptions('msFilterCityCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterCityCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterCityCampaign')">Bersihkan</button></div></div></div>
+  <div style="display:flex;gap:5px;margin-top:6px"><input type="date" id="fCityStart" onchange="renderCityEstimateTab()"><input type="date" id="fCityEnd" onchange="renderCityEstimateTab()"></div></div>
+</div>
+<div class="au-2col">
+ <div class="chart-container" style="height:300px"><canvas id="chartRegionReach"></canvas></div>
+ <div class="chart-container" style="height:300px"><canvas id="chartCityReach"></canvas></div>
+</div>
+<div class="au-2col">
+ <div class="table-responsive table-compact-wrap" style="max-height:300px"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Negara</th><th>Provinsi</th><th>Reach</th><th>Impresi</th><th>Spend</th><th>CTR</th><th>Results</th><th>Cost/Result</th></tr></thead><tbody id="bRegion"></tbody></table></div>
+ <div class="table-responsive table-compact-wrap" style="max-height:300px"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Kota/Kab</th><th>Adset</th><th>Spend</th><th>Impresi</th><th>Reach</th><th>Results</th><th>Cost/Result</th></tr></thead><tbody id="bCity"></tbody></table></div>
+</div>
+
+<!-- BAB 4: LEWAT MANA (PLACEMENT) -->
+<div class="au-ch au-c4"><div class="n">4</div><div><b>Lewat mana iklan paling efektif?</b><small>Placement asli dari sheet Placement_Performance (Feed, Reels, Stories, dst)</small></div></div>
+<div class="au-2col" id="plCards"></div>
+<div class="chart-container" style="height:300px;margin-bottom:12px"><canvas id="chartPlacement"></canvas></div>
+<div class="table-responsive table-compact-wrap" style="max-height:320px">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Platform</th><th>Posisi</th><th>Spend</th><th>% Spend</th><th>Impresi</th><th>CTR</th><th>Results</th><th>CPL</th><th>Status</th></tr></thead><tbody id="bPlacement"></tbody></table></div>
+<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:#b45309">Placement versi estimasi dari profil audience</summary>
+<div class="table-responsive table-compact-wrap"><table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Placement</th><th>Profil</th><th>Spend</th><th>CTR</th><th>Leads</th><th>CPL</th></tr></thead><tbody id="bPlacementAudience"></tbody></table></div></details>
+
+<!-- BAB 5: PAKAI APA -->
+<div class="au-ch au-c5"><div class="n">5</div><div><b>Pakai konten apa?</b><small>Jenis konten dulu, lalu kartu per iklan</small></div></div>
+<div class="table-responsive table-compact-wrap">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Jenis</th><th>Jml Konten</th><th>Spend</th><th>CTR</th><th>Results</th><th>CPL</th><th>Video Completion</th></tr></thead><tbody id="bCreativeType"></tbody></table></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin:12px 0">
+ <div><label style="font-size:11px;font-weight:700">Campaign</label>
+  <div class="ms-filter" id="msFilterContentCampaign"><button type="button" class="ms-filter-btn" onclick="toggleMsFilter('msFilterContentCampaign')">Semua ▾</button><div class="ms-filter-panel"><input type="text" class="ms-filter-search" placeholder="Cari..." oninput="filterMsOptions('msFilterContentCampaign',this.value)"><div class="ms-filter-options"></div><div class="ms-filter-actions"><button type="button" onclick="msFilterSelectAll('msFilterContentCampaign')">Pilih Semua</button><button type="button" onclick="msFilterClearAll('msFilterContentCampaign')">Bersihkan</button></div></div></div></div>
+ <select id="fContentSort" onchange="renderContentTab()" style="padding:8px;border-radius:6px;border:1px solid #cbd5e1"><option value="results_desc">Results terbanyak</option><option value="cost_asc">Cost/Result termurah</option><option value="ctr_desc">CTR tertinggi</option><option value="spend_desc">Spend terbesar</option></select>
+</div>
+<div class="au-grid" id="grid-konten-cards"></div>
+
+<!-- BAB 6: SISTEM -->
+<div class="au-ch au-c1"><div class="n">6</div><div><b>Kelelahan Iklan & Racikan Optimal</b><small>Deteksi fatigue, lalu gabungan faktor terbaik untuk campaign berikutnya</small></div></div>
+<div class="table-responsive table-compact-wrap" style="max-height:280px">
+<table style="width:100%"><thead><tr style="background:#f1f5f9"><th>Adset</th><th>Campaign</th><th>Freq Lalu</th><th>Freq Kini</th><th>CTR Lalu</th><th>CTR Kini</th><th>Status</th></tr></thead><tbody id="bFatigue"></tbody></table></div>
+<div class="au-final" style="margin-top:14px"><b style="font-size:15px">🧪 Rekomendasi Kombinasi Optimal</b><div id="aiRekomendasiOptimalIsi" style="margin-top:10px"></div></div>
+</div>
+
+
+</div></div></main></div>
+
+<script>
+const scriptURL='https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+let dataGlobal=[],dataMarketing=[],dataAdsetPerformance=[],dataAdsetCityTargeting=[],dataContent=[];
+let STUDIO_CONFIG={sumber:[],minat:[],lokasi:[],promo:[],paketMap:{},varianMap:{},waTemplate:''};
+let dataTargetMingguanMarketing={global:null,perProduk:{}};
+</script>
+<script src="tenant-config.js"></script><script src="ambang-ui.js"></script><script src="utils.js"></script>
+<script src="ui-marketing.js"></script><script src="minat-settings-ui.js"></script><script src="mkt-extra.js"></script>
+<script src="konten-berjalan.js"></script><script src="promo-tes.js"></script><script src="promo-analisis.js"></script>
+<script src="drill-promo.js"></script><script src="penawaran-ai.js"></script><script src="tes-penawaran.js"></script>
+<script src="keputusan.js"></script><script src="api-marketing.js"></script><script src="funnel-iklan.js"></script>
+<script src="audience-render.js"></script><script src="audience-story.js"></script>
+
+<script>
+/* ===== RUANG RAPAT: membaca angka dari KPI funnel yang sudah dirender ===== */
+const RP_CFG={roasBagus:3,roasMin:1.5,matchMin:70,closingRateMin:10,closingCukup:10};
+const rpInt=id=>{const t=(document.getElementById(id)||{}).textContent||'';return parseInt(t.replace(/[^\d]/g,''),10)||0};
+const rpDec=id=>{const t=(document.getElementById(id)||{}).textContent||'';const m=t.replace(/\./g,'').replace(',','.').match(/[\d.]+/);return m?parseFloat(m[0]):0};
+const rpRp=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
+const rpFmt=n=>Math.round(n).toLocaleString('id-ID');
+let RP_RINGKAS='';
+
+function renderRapat(){
+  const spend=rpInt('kpiSpendAwareness'),reach=rpInt('kpiReach'),imp=rpInt('kpiImpresi'),ctr=rpDec('kpiCTR'),
+    lm=rpInt('kpiLeadsMeta'),lc=rpInt('kpiLeads'),match=rpDec('kpiMatchRate'),cl=rpInt('kpiClosing'),
+    cac=rpInt('kpiCAC'),omzet=rpInt('kpiOmzet'),roas=rpDec('kpiROAS');
+  if(!spend&&!lc){document.getElementById('rpVerdict').textContent='Belum ada data. Klik 🔄 Refresh dulu.';return}
+  const crClose=lc?cl/lc*100:0,crLead=reach?lc/reach*100:0;
+  const f=document.getElementById('fMktStart'),g=document.getElementById('fMktEnd');
+  document.getElementById('rpPeriode').textContent='Periode chat: '+((f&&f.value)||'awal')+' s/d '+((g&&g.value)||'sekarang');
+
+  const roasOk=roas>=RP_CFG.roasBagus,roasMid=roas>=RP_CFG.roasMin;
+  const v=document.getElementById('rpVerdict');
+  v.textContent=roasOk?'🟢 Iklan menghasilkan: ROAS '+roas.toFixed(1)+'x':roasMid?'🟡 Tipis: ROAS '+roas.toFixed(1)+'x, perlu diperbaiki':'🔴 Boros: ROAS '+roas.toFixed(1)+'x';
+  const cat=document.getElementById('rpCatatan');
+  cat.style.display=cl<RP_CFG.closingCukup?'block':'none';
+  cat.textContent='⚠️ Closing baru '+cl+'. Sampel kecil: CAC, ROAS, dan konversi belum layak jadi vonis final.';
+
+  const kartu=[
+   ['rp-1','👁️','Bab 1 · Dilihat',rpFmt(reach)+' orang','Iklan tayang '+rpFmt(imp)+' kali dengan modal '+rpRp(spend)+'. Daya tarik (CTR) '+ctr.toFixed(2)+'%.','Reach = orang unik. Impresi = total tayang, satu orang bisa melihat berkali-kali.'],
+   ['rp-2','💬','Bab 2 · Chat',rpFmt(lc)+' leads','Dari '+rpFmt(lm)+' chat versi Meta, '+rpFmt(lc)+' berhasil dicocokkan ke CRM (match '+match.toFixed(0)+'%).',match<RP_CFG.matchMin?'Match rendah: banyak chat tidak masuk CRM. Cek pencatatan nomor HP.':'Pencocokan data sehat.'],
+   ['rp-3','🤝','Bab 3 · Bayar DP',cl+' closing','Hanya '+crClose.toFixed(1)+'% leads yang bayar. Biaya iklan per closing '+(cac?rpRp(cac):'-')+'.','CAC memakai metode lama (semua spend ÷ closing).'],
+   ['rp-4','💰','Bab 4 · Uang masuk',rpRp(omzet),'Tiap Rp 1 iklan kembali Rp '+roas.toFixed(1)+' omzet.',roasOk?'Di atas target '+RP_CFG.roasBagus+'x.':'Target sehat: ≥ '+RP_CFG.roasBagus+'x.']];
+  document.getElementById('rpStory').innerHTML=kartu.map(k=>`<div class="rp-card ${k[0]}" onclick="this.classList.toggle('open')"><div class="ic">${k[1]}</div><div class="bab">${k[2]}</div><div class="big">${k[3]}</div><div class="kal">${k[4]}</div><div class="more">${k[5]}</div></div>`).join('');
+
+  const bocorClosing=crClose<RP_CFG.closingRateMin, bocorMatch=match<RP_CFG.matchMin;
+  document.getElementById('rpFlow').innerHTML=
+   `<div class="rp-node rp-1" style="background:#4338ca">👁️ ${rpFmt(reach)}<small>dilihat</small></div><div class="rp-arrow"><b>${crLead.toFixed(2)}%</b>jadi chat</div>`+
+   `<div class="rp-node ${bocorMatch?'rp-leak':''}" style="background:#0369a1">💬 ${rpFmt(lc)}<small>leads CRM</small></div><div class="rp-arrow"><b>${crClose.toFixed(1)}%</b>jadi bayar</div>`+
+   `<div class="rp-node ${bocorClosing?'rp-leak':''}" style="background:#b45309">🤝 ${cl}<small>closing</small></div><div class="rp-arrow"><b>${roas.toFixed(1)}x</b>ROAS</div>`+
+   `<div class="rp-node" style="background:#047857">💰 ${rpRp(omzet)}<small>omzet</small></div>`;
+
+  const aud=(window._audienceScored||[]),sc=[],fx=[],st=[];
+  aud.filter(a=>a.skor>=65).slice(0,3).forEach(a=>sc.push(`Audience <b>${a.profile_id}</b> (skor ${a.skor}, CPL ${rpRp(a.cpl)})`));
+  aud.filter(a=>a.skor<35&&a.total_spend>0).slice(0,3).forEach(a=>st.push(`Audience <b>${a.profile_id}</b> (skor ${a.skor}, spend ${rpRp(a.total_spend)})`));
+  if(window._placementBest)sc.push('Placement <b>'+window._placementBest.label+'</b> (CPL '+rpRp(window._placementBest.cpl)+')');
+  if(window._contentBest)sc.push('Konten <b>'+window._contentBest.ad_name+'</b> (CPL '+rpRp(window._contentBest.costPerResult)+')');
+  if(bocorClosing)fx.push('Closing rendah ('+crClose.toFixed(1)+'%): evaluasi skrip chat & follow-up admin');
+  if(bocorMatch)fx.push('Match rate '+match.toFixed(0)+'%: perbaiki pencatatan nomor HP ke CRM');
+  if(ctr<1)fx.push('CTR '+ctr.toFixed(2)+'%: uji hook/visual baru');
+  if(!roasMid&&spend>0)st.push('Kampanye keseluruhan ROAS '+roas.toFixed(1)+'x: tahan kenaikan budget sampai membaik');
+  if(!aud.length)fx.push('Buka tab Audience sekali agar rekomendasi audience/placement/konten ikut muncul');
+  const li=a=>(a.length?a:['Belum ada temuan']).map(x=>`<li>${x}</li>`).join('');
+  rpScale.innerHTML=li(sc);rpFix.innerHTML=li(fx);rpStop.innerHTML=li(st);
+
+  const todo=['Putuskan campaign/audience yang di-scale minggu ini','Tunjuk PIC perbaikan skrip chat & follow-up','Ganti 1–2 creative dengan CTR terendah','Jadwalkan sync ulang data H-2 (attribution Meta)','Tetapkan target closing & ROAS minggu depan'];
+  rpTodo.innerHTML=todo.map(t=>`<label><input type="checkbox"><span>${t}</span></label>`).join('');
+  RP_RINGKAS=`RINGKASAN RAPAT MARKETING\n${rpPeriode.textContent}\nSpend ${rpRp(spend)} | Reach ${rpFmt(reach)} | Leads ${lc} | Closing ${cl} | Omzet ${rpRp(omzet)} | ROAS ${roas.toFixed(1)}x\n${v.textContent}\n\nSCALE:\n- ${sc.map(s=>s.replace(/<[^>]+>/g,'')).join('\n- ')||'-'}\nPERBAIKI:\n- ${fx.join('\n- ')||'-'}\nHENTIKAN:\n- ${st.map(s=>s.replace(/<[^>]+>/g,'')).join('\n- ')||'-'}`;
+}
+function rpSalin(b){navigator.clipboard.writeText(RP_RINGKAS).then(()=>{b.textContent='✅ Tersalin';setTimeout(()=>b.textContent='📋 Salin Ringkasan Rapat',1500)})}
+
+/* render ulang tiap kali tab Marketing dirender / tab Rapat dibuka */
+window.addEventListener('load',()=>{
+  const r=window.renderMarketingTab;
+  if(r)window.renderMarketingTab=function(){const x=r.apply(this,arguments);setTimeout(renderRapat,300);return x};
+  setTimeout(()=>{mktBukaSub('rapat');renderRapat()},900);
+});
+</script>
+</body>
+</html>
