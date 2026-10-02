@@ -89,6 +89,21 @@
               <option value="">Semua</option><option value="0">Belum Qualifying</option><option value="1">Menunggu Jawaban</option>
               <option value="2">PL Terkirim</option><option value="3">Perlu Review CS</option><option value="100">Repeat Customer</option>
             </select></div>
+
+                      <div class="form-group"><label>Keberatan</label>
+            <select id="fKeb" onchange="renderCrm()">
+              <option value="">Semua</option>
+              <option value="__open">Ada keberatan open</option>
+              <option>Harga paket</option><option>Biaya transport/lokasi</option><option>Slot/jadwal</option>
+              <option>Izin pasangan/keluarga</option><option>Belum waktunya</option><option>Bandingkan studio lain</option>
+              <option>Ragu keamanan bayi</option><option>Bingung pilih paket</option><option>Lainnya</option>
+            </select></div>
+          <div class="form-group"><label>Tipe Kontak</label>
+            <select id="fTipe" onchange="renderCrm()">
+              <option value="">Customer (default)</option><option value="semua">Semua</option>
+              <option>Vendor</option><option>Pribadi</option><option>Lainnya</option>
+            </select></div>
+            
           <div class="form-group"><label>Urutkan</label>
             <select id="fSort" onchange="renderCrm()">
               <option value="chat_desc">Chat Terbaru</option><option value="chat_asc">Chat Terlama</option>
@@ -259,7 +274,7 @@
         <div class="table-responsive table-compact-wrap">
           <table>
             <thead><tr style="background:#f1f5f9;">
-              <th>Kode</th><th>Klien</th><th>Minat / Paket</th><th>Tanggal</th><th>Total / Status</th><th>Follow-up & AI</th><th>Aksi</th>
+              <th>Kode</th><th>Klien</th><th>Minat / Paket</th><th>Tanggal</th><th>Total / Status</th><th>Follow-up & AI</th><th>Keberatan & Tindakan</th><th>Aksi</th>
             </tr></thead>
             <tbody id="crmBody"><tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">Memuat...</td></tr></tbody>
           </table>
