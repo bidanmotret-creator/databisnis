@@ -112,10 +112,59 @@ function kbBacaAnalisis_(res) {
 }
 
 // ------------------------------------------------------------ A1: PEMUATAN LAZY
-function kbPeriodeHari_() {
-  const v = ($m('kbPeriode') || {}).value || '14';
-  return v === 'semua' ? 0 : Number(v);
+function kbPeriodeHari_() {   // jumlah hari pada filter atas; 0 = tanpa batas awal
+  const fa = kbFilterAtas_();
+  if (!fa.since) return 0;
+  const akhir = fa.until ? new Date(fa.until) : new Date();
+  const hari = Math.round((akhir - new Date(fa.since)) / 86400000) + 1;
+  return isNaN(hari) || hari < 1 ? 0 : Math.min(hari, 90);
 }
+
+// ------------------------------------------------------------ FILTER ATAS (satu sumber)
+// Periode dan campaign semua sub-menu (Konten Berjalan, Tes Promo, Drill-down) mengikuti filter di atas halaman.
+function kbFilterAtas_() {
+  const v = id => (($m(id) || {}).value || '').trim();
+  const camp = typeof getMsFilterSelected === 'function' ? getMsFilterSelected('msFilterMktNamaMeta') : [];
+  return { since: v('fMktStart'), until: v('fMktEnd'), campaigns: camp || [] };
+}
+// Nama campaign dari sumber berbeda tidak selalu identik: cocokkan sama longgarnya dengan Analisis Iklan (ikAmbilBaris_).
+function kbCocokCampaign_(nama, daftar) {
+  if (!daftar || !daftar.length) return true;
+  const b = String(nama || '').toLowerCase();
+  return daftar.some(s => { const a = String(s).toLowerCase(); return a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1; });
+}
+function kbTglLabel_(s) { const p = String(s || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; }
+function kbIsiLabelAtas_(fa) {
+  fa = fa || kbFilterAtas_();
+  const per = (fa.since || fa.until) ? (kbTglLabel_(fa.since) || '...') + ' s/d ' + (kbTglLabel_(fa.until) || 'sekarang') : 'semua tanggal';
+  const camp = fa.campaigns.length ? fa.campaigns.length + ' campaign dipilih' : 'semua campaign';
+  document.querySelectorAll('.mkt-ikut-atas').forEach(el => {
+    el.innerHTML = '🔗 Mengikuti filter di atas: <b>' + per + '</b> · <b>' + camp + '</b>';
+  });
+}
+// Ganti kontrol lama (dropdown campaign dan periode per tab) dengan label, tanpa mengubah HTML.
+function kbGantiKontrolLama_() {
+  const label = id => { const s = document.createElement('span'); s.id = id; s.className = 'mkt-ikut-atas'; s.style.cssText = 'font-size:12px; color:#475569; background:#eef2ff; border-radius:8px; padding:5px 10px;'; return s; };
+  const kb = $m('kbCampaign'), pt = $m('ptCampaign');
+  if (kb && kb.parentNode && !$m('kbLabelAtas')) kb.parentNode.insertBefore(label('kbLabelAtas'), kb);
+  if (pt && pt.parentNode && !$m('ptLabelAtas')) pt.parentNode.insertBefore(label('ptLabelAtas'), pt);
+  ['kbCampaign', 'kbPeriode', 'ptCampaign', 'ptPeriode'].forEach(id => { const e = $m(id); if (e) e.remove(); });
+  kbIsiLabelAtas_();
+}
+document.addEventListener('DOMContentLoaded', kbGantiKontrolLama_);
+(function () {   // tab aktif ikut digambar ulang saat filter atas berubah
+  const asli = window.renderMarketingTab;
+  if (typeof asli !== 'function') return;
+  window.renderMarketingTab = function () {
+    const hasil = asli.apply(this, arguments);
+    try {
+      const aktif = id => $m(id) && $m(id).classList.contains('active');
+      if (aktif('mktSub_konten') && typeof kbRender === 'function') kbRender();
+      if (aktif('mktSub_promo') && typeof ptRender === 'function') ptRender();
+    } catch (e) { console.error(e); }
+    return hasil;
+  };
+})();
 // Web App Apps Script kadang membalas 404 HTML secara sporadis; coba ulang sekali sebelum menyerah
 async function kbFetchUlang_(url) {
   try { return await fetchJsonAman(url); }
@@ -235,12 +284,13 @@ function kbIsiFilterCampaign_() {
   if (nama.indexOf(cur) !== -1) sel.value = cur;
 }
 
-function kbHitung_(f) {   // f (opsional): {campaign, hari, berjalan, cari} menggantikan kontrol tab Konten
+function kbHitung_(f) {   // f (opsional): {berjalan, cari, semua}. Periode dan campaign selalu dari filter atas
   const peta = kbPetaCampaign_();
-  const hari = f ? f.hari : kbPeriodeHari_();
-  const batasAwal = hari ? kbHariLalu(hari) : '';
+  const semua = !!(f && f.semua);   // semua:true = abaikan filter atas (mis. hitung cakupan aturan kamus)
+  const fa = semua ? { since: '', until: '', campaigns: [] } : kbFilterAtas_();
+  if (!semua) kbIsiLabelAtas_(fa);
+  const batasAwal = fa.since, batasAkhir = fa.until;
   const batasBerjalan = kbHariLalu(3);
-  const fCamp = f ? f.campaign : (($m('kbCampaign') || {}).value || '');
   const fCari = f ? String(f.cari || '').toLowerCase() : String(($m('kbCari') || {}).value || '').trim().toLowerCase();
   const hanyaBerjalan = f ? !!f.berjalan : !!($m('kbBerjalan') || {}).checked;
   const minSpend = ambilThreshold_('kontenMinSpendRp', 150000);
@@ -252,14 +302,14 @@ function kbHitung_(f) {   // f (opsional): {campaign, hari, berjalan, cari} meng
     if (!id) return;
     const tgl = kbTgl(r.tanggal);
     const camp = kbNamaCampaign_(r, peta);
-    if (fCamp && camp !== fCamp) return;
+    if (!kbCocokCampaign_(camp, fa.campaigns)) return;
     const a = agg[id] || (agg[id] = {
       id, nama: r.ad_name || '(tanpa nama)', campaign: camp, tipeRow: String(r.creative_type || '').toUpperCase(),
       spendSemua: 0, spend: 0, imp: 0, klik: 0, outbound: 0, results: 0, v3s: 0, thru: 0, frekBobot: 0, spend3h: 0
     });
     a.spendSemua += kbNum(r.spend);                               // untuk ROAS (atribusi kumulatif)
     if (tgl >= batasBerjalan) a.spend3h += kbNum(r.spend);        // untuk definisi "berjalan" (tidak ikut filter periode)
-    if (batasAwal && tgl < batasAwal) return;
+    if ((batasAwal && tgl < batasAwal) || (batasAkhir && tgl > batasAkhir)) return;
     a.spend += kbNum(r.spend);
     a.imp += kbNum(r.impressions);
     a.klik += kbNum(r.link_clicks);

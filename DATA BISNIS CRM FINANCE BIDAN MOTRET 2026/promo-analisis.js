@@ -38,7 +38,7 @@ function paPaketDariTeks_(nama, headline, caption, rules) {
 
 // Satu baris per iklan (agregat periode), lengkap dengan paket, adset, minat.
 function paKumpul_(hari) {
-  const iklan = kbHitung_({ campaign: '', hari: hari, berjalan: false, cari: '' });
+  const iklan = kbHitung_({ berjalan: false, cari: '' });
   const meta = {};
   (dataContent || []).forEach(r => {
     const id = String(r.ad_id || '').trim();
@@ -100,6 +100,9 @@ function paLevel_(sA, sB, unit, K) {
   }
   return { unit, sA, sB, cplA, cplB, selisih, kode };
 }
+
+function paKunciPeriode_() { const f = kbFilterAtas_(); return f.since + '..' + f.until + '|' + f.campaigns.join(','); }
+function paLabelPeriode_() { const f = kbFilterAtas_(); return (f.since || f.until) ? (f.since || '...') + ' s/d ' + (f.until || 'sekarang') : 'semua'; }
 
 function paBandingkan_(iklanMinat, kA, kB, K) {
   const cell = {}, camp = {}, tot = { A: paSisi_(), B: paSisi_() };
@@ -176,7 +179,7 @@ function paPasangPanel_() {
   const sub = $m('mktSub_promo');
   if (!sub) return null;
   const tb = sub.querySelector('.mkt-toolbar');
-  const sel = $m('ptCampaign');
+  const sel = $m('ptLabelAtas');
   if (!tb || !sel) return null;
   box = document.createElement('div');
   box.id = 'paPanel';
@@ -225,7 +228,7 @@ function paRender() {
     PA.A = dasar[0] ? dasar[0].kunci : ''; PA.B = dasar[1] ? dasar[1].kunci : '';
   }
   const cplMinat = M.results > 0 ? M.spend / M.results : 0;
-  const aiKey = PA.minat + '|' + PA.hari, ai = PA.ai[aiKey] || null;
+  const aiKey = PA.minat + '|' + paKunciPeriode_(), ai = PA.ai[aiKey] || null;
   const aiArti = {};
   if (ai && ai.paket) ai.paket.forEach(p => { aiArti[p.label] = p; });
 
@@ -277,7 +280,7 @@ function paRender() {
     '<div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px;">' +
       '<b style="font-size:14px;">⚖️ Perbandingan promo per minat</b>' +
       '<select onchange="paGanti(\'minat\', this.value)" style="' + selCss + '">' + minatList.map(m => '<option value="' + kbEsc(m) + '"' + (m === PA.minat ? ' selected' : '') + '>' + kbEsc(m) + ' (' + kbRp(agg[m].spend) + ')</option>').join('') + '</select>' +
-      '<select onchange="paGanti(\'hari\', this.value)" style="' + selCss + '">' + [7, 14, 30, 60, 0].map(v => '<option value="' + v + '"' + (v === PA.hari ? ' selected' : '') + '>' + (v ? v + ' hari' : 'Semua') + '</option>').join('') + '</select>' +
+      '<span class="mkt-ikut-atas" style="font-size:12px; color:#475569;"></span>' +
     '</div>' +
     '<p style="font-size:11.5px; color:#64748b; margin:0 0 8px;">Satu iklan hanya masuk <b>satu</b> paket (kombinasi penawaran), jadi angka antar baris tidak tumpang tindih. Format, bukti, dan ajakan tampil sebagai label pendukung. Vonis memakai ambang dari ⚙️ Ambang: spend ≥ ' + kbRp(K.minSpend) + ', leads Meta ≥ ' + K.minRes + ', batas setara ±' + Math.round(K.band * 100) + '%. Rata-rata CPL ' + kbEsc(PA.minat) + ': ' + (cplMinat > 0 ? kbRp(cplMinat) : '-') + '.</p>' +
     (KB.master === null ? '<div style="background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:6px; font-size:12px; margin-bottom:8px;">⚠️ Caption belum dimuat, sebagian iklan mungkin masuk "(Tanpa penawaran)". Klik 🔄 Refresh data.</div>' : '') +
@@ -295,8 +298,7 @@ function paRender() {
 }
 
 function paGanti(k, v) {
-  if (k === 'hari') PA.hari = Number(v);
-  else if (k === 'minat') { PA.minat = v; PA.A = ''; PA.B = ''; }
+  if (k === 'minat') { PA.minat = v; PA.A = ''; PA.B = ''; }
   else PA[k] = v;
   paRender();
 }
@@ -337,7 +339,7 @@ function paBangunPayload_() {
     });
   }
   return {
-    minat: PA.minat, periode_hari: PA.hari || 'semua',
+    minat: PA.minat, periode_hari: paLabelPeriode_(),
     ambang: { spend_min: K.minSpend, leads_meta_min: K.minRes, batas_setara_persen: Math.round(K.band * 100) },
     cpl_rata_minat: M.results > 0 ? Math.round(M.spend / M.results) : null,
     pakets: pakets, pembanding: pembanding
@@ -361,7 +363,7 @@ async function paJalankanAI(btn) {
     const a = res.analisis || {};
     a.paket = (a.paket || []).map(p => Object.assign({}, p, { label: peta[p.kode] })).filter(p => p.label);
     a.angka_tak_terverifikasi = res.angka_tak_terverifikasi || [];
-    PA.ai[PA.minat + '|' + PA.hari] = a;
+    PA.ai[PA.minat + '|' + paKunciPeriode_()] = a;
     paRender();
   } catch (e) {
     alert('❌ Analisis AI gagal: ' + (e && e.message ? e.message : e));
@@ -376,6 +378,6 @@ async function paJalankanAI(btn) {
   const asli = window.ptRender;
   window.ptRender = function () {
     if (typeof asli === 'function') asli.apply(this, arguments);
-    try { paRender(); } catch (e) { console.error('paRender gagal:', e); }
+    try { paRender(); kbIsiLabelAtas_(); } catch (e) { console.error('paRender gagal:', e); }
   };
 })();

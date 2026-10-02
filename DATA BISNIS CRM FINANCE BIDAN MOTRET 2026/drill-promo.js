@@ -29,7 +29,7 @@ function mktDrillBangunTree_() {
   let rows = (dataContent || []).filter(r => r.campaign_name && r.ad_name);
   if (fStart) rows = rows.filter(r => formati(r.tanggal) >= fStart);
   if (fEnd) rows = rows.filter(r => formati(r.tanggal) <= fEnd);
-  if (selNamaMeta.length > 0) rows = rows.filter(r => selNamaMeta.includes(r.campaign_name));
+  if (selNamaMeta.length > 0) rows = rows.filter(r => kbCocokCampaign_(r.campaign_name, selNamaMeta));
 
   const paketAd = {};
   const tree = {};

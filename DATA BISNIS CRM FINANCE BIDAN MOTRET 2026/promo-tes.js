@@ -117,13 +117,7 @@ function ptIsiCampaign_() {
   if (nama.indexOf(cur) !== -1) sel.value = cur;
 }
 function ptFilter_() {
-  const p = ($m('ptPeriode') || {}).value || '14';
-  return {
-    campaign: ($m('ptCampaign') || {}).value || '',
-    hari: p === 'semua' ? 0 : Number(p),
-    berjalan: !!($m('ptBerjalan') || {}).checked,
-    cari: ''
-  };
+  return { berjalan: !!($m('ptBerjalan') || {}).checked, cari: '' };   // periode & campaign: filter atas
 }
 
 function ptStatusHtml_(kode) {
@@ -235,7 +229,7 @@ function ptBukaKamus() {
 }
 function ptTutupKamus() { const ov = $m('ptOverlay'); if (ov) ov.style.display = 'none'; }
 
-function ptSemuaIklan_() { return kbHitung_({ campaign: '', hari: 0, berjalan: false, cari: '' }); }
+function ptSemuaIklan_() { return kbHitung_({ semua: true, berjalan: false, cari: '' }); }
 
 function ptRenderKamus_() {
   const ov = $m('ptOverlay'); if (!ov) return;
