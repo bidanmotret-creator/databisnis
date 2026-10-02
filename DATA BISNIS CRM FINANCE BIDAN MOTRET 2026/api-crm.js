@@ -35,6 +35,7 @@ async function tarikDataCrm() {
     stageByHp = data.stageByHp || {};
     aiByHp = data.aiByHp || {};
     chatStat = data.chatStat || {};
+    window.chatArah = data.chatArah || {};
     capiByKode = data.capiByKode || {};
     dripByHp = data.dripByHp || {};
     dataPengaturanFollowUpProduk = data.pengaturanFollowUpPerProduk || [];
