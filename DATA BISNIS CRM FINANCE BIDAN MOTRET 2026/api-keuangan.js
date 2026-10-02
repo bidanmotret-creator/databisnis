@@ -12,13 +12,24 @@ async function tarikDataServer() {
     dataJurnalGlobal = dataFinance.journal || [];
     dataAnggaranBiaya = dataFinance.anggaran || [];
     if (typeof dataVendorGlobal !== 'undefined') dataVendorGlobal = dataFinance.vendors || [];
-    inisialisasiTampilanKeuangan_();
+       inisialisasiTampilanKeuangan_();
+    muatDaftarKlien_(); // tanpa await: jalan di latar belakang
   } catch (err) {
     console.error('Gagal memuat data dari server:', err);
     alert('❌ Gagal memuat data dari server.\n\n' + err);
   } finally {
     const overlay = document.getElementById('globalLoadingOverlay');
     if (overlay) overlay.style.display = 'none';
+  }
+}
+
+async function muatDaftarKlien_() {
+  try {
+    const d = await fetchJsonAman(scriptURL + '?action=getKlienRingkas');
+    dataGlobal = d.clients || [];
+    if (typeof isiDatalistCustomer_ === 'function') isiDatalistCustomer_();
+  } catch (err) {
+    console.error('Gagal memuat daftar klien:', err);
   }
 }
 
