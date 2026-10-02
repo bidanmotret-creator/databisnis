@@ -17,6 +17,7 @@ function isiDropdownAkun(daftarAkun) {
     });
 }
 
+
 async function simpanJurnal(btn) {
     // 1. Ambil elemen input
     const inputUtama = document.getElementById('jAkunUtama');
@@ -2979,9 +2980,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
 })();
 
-function refreshDatalistCustomerManual() {
-    isiDatalistCustomer_();
-    alert('Datalist Customer di-refresh ulang. Coba ketik nama/No HP lagi di kotak Customer.');
+async function refreshDatalistCustomerManual() {
+    if (typeof muatDaftarKlien_ === 'function') {
+        await muatDaftarKlien_();
+    } else {
+        isiDatalistCustomer_();
+    }
+    alert(Array.isArray(dataGlobal) && dataGlobal.length
+        ? '✅ Daftar customer dimuat: ' + dataGlobal.length + ' klien. Coba ketik nama/No HP lagi.'
+        : '⚠️ Daftar customer masih kosong. Cek koneksi atau Console.');
 }
 
 
