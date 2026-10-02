@@ -51,7 +51,7 @@ function paKumpul_(hari) {
     const campaign = mt.campaign || r.campaign;
     return {
       id: r.id, nama: r.nama, campaign: campaign, adset: mt.adset || '(tanpa adset)', minat: paMinat_(campaign),
-      paket: paPaketDariTeks_(r.nama, m.headline || '', m.caption || '', PT.rules),
+      paket: (typeof penPaketAtauAturan_ === 'function' ? penPaketAtauAturan_(r.id, r.nama, m.headline || '', m.caption || '') : paPaketDariTeks_(r.nama, m.headline || '', m.caption || '', PT.rules)),
       tipe: m.tipe || '', headline: m.headline || '', caption: m.caption || '', punyaTeks: !!(m.caption || m.headline),
       spend: r.spend, imp: r.imp, klik: r.klik, results: r.results,
       leads: r.leads, closing: r.closing, terbayar: r.terbayar, atSpend: r.at ? r.at.spend : 0
@@ -66,7 +66,7 @@ function paAgregasi_(iklan) {
     M.spend += a.spend; M.results += a.results; M.imp += a.imp; M.klik += a.klik; M.iklan.push(a);
     const P = M.pakets[a.paket.kunci] || (M.pakets[a.paket.kunci] = {
       kunci: a.paket.kunci, penawaran: a.paket.penawaran, pendukung: {}, n: 0, spend: 0, imp: 0, klik: 0, results: 0,
-      leads: 0, closing: 0, terbayar: 0, atSpend: 0, adaAtr: false, tanpaTeks: 0, ads: []
+      leads: 0, closing: 0, terbayar: 0, atSpend: 0, adaAtr: false, tanpaTeks: 0, ciri: a.paket.ciri || '', dariAi: !!a.paket.dariAi, ads: []
     });
     P.n++; P.spend += a.spend; P.imp += a.imp; P.klik += a.klik; P.results += a.results; P.ads.push(a);
     a.paket.pendukung.forEach(x => { P.pendukung[x] = true; });
@@ -242,7 +242,7 @@ function paRender() {
       '<td style="text-align:left; max-width:340px; white-space:normal;"><b>' + kbEsc(p.kunci) + '</b>' +
         (pend.length ? '<div>' + pend.map(x => paChip_(x)).join('') + '</div>' : '') +
         (a && a.arti_awam ? '<div style="font-size:11.5px; color:#4338ca; margin-top:3px;">🧠 ' + kbEsc(a.arti_awam) + '</div>' : '') +
-        (a && a.ciri_kreatif ? '<div style="font-size:11px; color:#64748b;">🎬 ' + kbEsc(a.ciri_kreatif) + '</div>' : '') +
+        (a && a.ciri_kreatif ? '<div style="font-size:11px; color:#64748b;">🎬 ' + kbEsc(a.ciri_kreatif) + '</div>' : (p.ciri ? '<div style="font-size:11px; color:#64748b;">🎬 ' + kbEsc(p.ciri) + '</div>' : '')) +
         (p.tanpaTeks ? '<div style="font-size:10.5px; color:#b45309;">⚠️ ' + p.tanpaTeks + ' iklan tanpa caption</div>' : '') +
       '</td>' +
       '<td>' + p.n + '</td><td>' + kbRp(p.spend) + '</td><td>' + kbInt(p.results) + '</td>' +
@@ -378,6 +378,6 @@ async function paJalankanAI(btn) {
   const asli = window.ptRender;
   window.ptRender = function () {
     if (typeof asli === 'function') asli.apply(this, arguments);
-    try { paRender(); kbIsiLabelAtas_(); } catch (e) { console.error('paRender gagal:', e); }
+    try { paRender(); kbIsiLabelAtas_(); if (typeof penRenderPanel_ === 'function') penRenderPanel_(); } catch (e) { console.error('paRender gagal:', e); }
   };
 })();

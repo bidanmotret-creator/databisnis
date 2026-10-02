@@ -43,7 +43,7 @@ function mktDrillBangunTree_() {
     let p = paketAd[kunciAd];
     if (!p) {
       const m = (KB.master && KB.master[String(r.ad_id || '').trim()]) || {};
-      p = paketAd[kunciAd] = paPaketDariTeks_(r.ad_name, m.headline || r.headline || '', m.caption || r.body_lengkap || '', PT.rules);
+      p = paketAd[kunciAd] = (typeof penPaketAtauAturan_ === 'function' ? penPaketAtauAturan_(r.ad_id, r.ad_name, m.headline || r.headline || '', m.caption || r.body_lengkap || '') : paPaketDariTeks_(r.ad_name, m.headline || r.headline || '', m.caption || r.body_lengkap || '', PT.rules));
     }
 
     const M = tree[minat] || (tree[minat] = { spend: 0, results: 0, purchases: 0, pakets: {} });
