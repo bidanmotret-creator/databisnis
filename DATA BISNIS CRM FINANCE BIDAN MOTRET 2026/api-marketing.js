@@ -293,3 +293,91 @@ async function jalankanSyncMetaAdsRentang() {
 document.addEventListener('DOMContentLoaded', () => {
   tarikDataServer();
 });
+
+// ===== PANEL SYNC META — rentang hari per jenis =====
+const SYNC_META_JENIS = [
+  { key: 'campaign',  label: '📊 Campaign Harian (Data_Ads)', hari: 2, chunk: 10 },
+  { key: 'adsetperf', label: '🔍 Adset Performance',          hari: 2, chunk: 5 },
+  { key: 'content',   label: '🎨 Ad Content Performance',     hari: 2, chunk: 3 },
+  { key: 'region',    label: '🗺️ Region Performance',         hari: 2, chunk: 7 },
+  { key: 'placement', label: '📍 Placement Performance',      hari: 7, chunk: 31 },
+  { key: 'targeting', label: '🎯 Adset Targeting (snapshot)', noDays: true },
+  { key: 'creative',  label: '🖼️ Ad Creative Master',         noDays: true }
+];
+
+function renderPanelSyncMeta() {
+  const el = document.getElementById('panelSyncMeta');
+  if (!el) return;
+  el.innerHTML = SYNC_META_JENIS.map(j => {
+    let simpan = null;
+    try { simpan = localStorage.getItem('syncHari_' + j.key); } catch (e) {}
+    const nilai = simpan || j.hari || '';
+    return `<div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:8px 0; border-bottom:1px dashed #bae6fd;">
+      <div style="flex:1; min-width:200px; font-size:12.5px; font-weight:700; color:#0369a1;">${j.label}</div>
+      ${j.noDays ? '<div style="font-size:11px; color:#64748b; width:150px;">tanpa rentang tanggal</div>' : `
+      <div style="display:flex; align-items:center; gap:6px;">
+        <input type="number" id="hariSync_${j.key}" min="1" max="365" value="${nilai}" style="width:70px; padding:7px; border-radius:6px; border:1px solid #7dd3fc;"
+               onchange="try{localStorage.setItem('syncHari_${j.key}', this.value)}catch(e){}">
+        <span style="font-size:11.5px; color:#0369a1;">hari ke belakang</span>
+      </div>`}
+      <button type="button" id="btnSyncRentang_${j.key}" onclick="jalankanSyncRentangMeta('${j.key}')"
+        style="padding:8px 16px; background:#0369a1; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;">🔄 Sync</button>
+    </div>`;
+  }).join('') + `<p style="font-size:10.5px; color:#0369a1; margin:8px 0 0;">💡 Rentang berakhir kemarin. Contoh: 7 hari = 7 hari terakhir sampai kemarin. Rentang panjang diproses bertahap otomatis.</p>`;
+}
+
+function _tglLokal(d) { return formatDateLocal_(d); }
+
+function _bagiRentang(hari, chunk) {
+  const akhir = new Date(); akhir.setDate(akhir.getDate() - 1);
+  const awal = new Date(akhir); awal.setDate(awal.getDate() - (hari - 1));
+  const hasil = [];
+  let cur = new Date(awal);
+  while (cur <= akhir) {
+    const sampai = new Date(cur); sampai.setDate(sampai.getDate() + chunk - 1);
+    const batas = sampai > akhir ? akhir : sampai;
+    hasil.push({ since: _tglLokal(cur), until: _tglLokal(batas) });
+    cur = new Date(batas); cur.setDate(cur.getDate() + 1);
+  }
+  return hasil;
+}
+
+async function jalankanSyncRentangMeta(key) {
+  const j = SYNC_META_JENIS.find(x => x.key === key);
+  const btn = document.getElementById('btnSyncRentang_' + key);
+  const outEl = document.getElementById('hasilSyncMetaAds');
+  const teksAsli = btn ? btn.innerText : '';
+  const tampil = (bg, color, teks) => { if (outEl) { outEl.style.display = 'block'; outEl.style.background = bg; outEl.style.color = color; outEl.innerText = teks; } };
+
+  let potongan = [{}];
+  if (!j.noDays) {
+    const hari = Math.max(1, Math.min(365, Number(document.getElementById('hariSync_' + key).value) || 0));
+    if (!hari) { alert('Isi jumlah hari dulu.'); return; }
+    potongan = _bagiRentang(hari, j.chunk);
+  }
+
+  if (btn) btn.disabled = true;
+  try {
+    for (let i = 0; i < potongan.length; i++) {
+      const p = potongan[i];
+      if (btn) btn.innerText = `⏳ ${i + 1}/${potongan.length}`;
+      tampil('#f1f5f9', '#334155', `⏳ ${j.label}: bagian ${i + 1}/${potongan.length}` + (p.since ? ` (${p.since} s/d ${p.until})` : '') + ' ...');
+      const fd = new FormData();
+      fd.append('action', 'syncMetaRentangWeb');
+      fd.append('jenis', key);
+      if (p.since) { fd.append('since', p.since); fd.append('until', p.until); }
+      const res = await fetch(scriptURL, { method: 'POST', body: fd });
+      const result = await res.json();
+      if (result.result !== 'success') throw new Error(result.message || 'Gagal (cek handler di Code.gs)');
+    }
+    tampil('#dcfce7', '#166534', `✅ ${j.label} selesai (${potongan.length} bagian).`);
+    await tarikDataServer();
+    if (typeof renderMarketingTab === 'function') renderMarketingTab();
+  } catch (err) {
+    tampil('#fee2e2', '#991b1b', '❌ ' + j.label + ': ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = teksAsli; }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', renderPanelSyncMeta);
