@@ -57,7 +57,7 @@
 
 <div class="app-shell">
 <aside class="sidebar">
-  <div class="sidebar-brand"><div class="brand-icon">📢</div><div class="brand-text"><strong>Analisis Marketing</strong><span>SentuhanMomen3D</span></div></div>
+  <div class="sidebar-brand"><div class="brand-icon">📢</div><div class="brand-text"><strong>Analisis Marketing</strong><span data-kamus="nama_bisnis">SentuhanMomen3D</span></div></div>
   <nav class="sidebar-nav"></nav>
   <div class="sidebar-footer">Mirror Web (Vercel) · Data live dari Apps Script</div>
 </aside>
@@ -934,8 +934,10 @@
 
 </div></div></main></div>
 
+<script src="server-config.js"></script>
+<script src="kamus.js"></script>
 <script>
-const scriptURL='https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+
 let dataGlobal=[],dataMarketing=[],dataAdsetPerformance=[],dataAdsetCityTargeting=[],dataContent=[];
 let STUDIO_CONFIG={sumber:[],minat:[],lokasi:[],promo:[],paketMap:{},varianMap:{},waTemplate:''};
 let dataTargetMingguanMarketing={global:null,perProduk:{}};
@@ -2121,5 +2123,6 @@ window.addEventListener('load',()=>{
   };
 })();
 </script>
+<script>document.addEventListener('kamusSiap',function(){var n=(window.KAMUS||{}).nama_bisnis;if(n)document.title='Analisis Marketing â€” '+n;});</script>
 </body>
 </html>

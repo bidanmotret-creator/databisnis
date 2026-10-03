@@ -312,11 +312,12 @@ textarea{width:100%;min-height:110px;resize:vertical}
   </div>
 </div>
 
+<script src="server-config.js"></script>
 <script>
 /* =========================================================================
    KONFIGURASI & HELPER BERSAMA
    ========================================================================= */
-const scriptURL='https://script.google.com/macros/s/AKfycbzlRmMs01Ll7f_xQJ4obD5NfWQjXquAH8cYLgRfHXHcCUr0z7lSR1DbafsUIy8MfIea/exec';
+
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nh=p=>{let d=String(p||'').replace(/\D/g,'');if(!d)return'';if(d[0]==='0')d='62'+d.slice(1);if(d.indexOf('62')!==0)d='62'+d;return d};
