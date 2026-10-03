@@ -168,6 +168,7 @@
           <li>${ringkasan.kamus_diterapkan} istilah kustom tersimpan</li>
           <li>${ringkasan.produk_ditambah} produk/layanan ditambahkan (total ${ringkasan.produk_total})</li>
           <li>Target EOS: ${ringkasan.target_diterapkan ? 'diterapkan' : 'tidak diubah (sudah pernah diatur)'}</li>
+          <li>Marketing: ${ringkasan.marketing_rules || 0} aturan mapping minat dan ${ringkasan.marketing_minat || 0} kategori minat (CAPI) diterapkan</li>
         </ul>
         <b style="display:block; margin-top:10px;">Langkah berikutnya:</b>
         <ol style="margin:4px 0 0 18px; padding:0; font-size:13px;">
@@ -175,6 +176,7 @@
           <li>Sesuaikan isi pesan tiap produk dengan gaya bahasa bisnis klien.</li>
           <li>Cek <a href="kamus.html">Kamus Istilah</a> untuk memoles istilah yang masih kurang pas.</li>
           <li>Cek target di <a href="eos.html">EOS Dashboard</a> sesuai skala bisnis klien.</li>
+          <li>Buka <a href="index-marketing.html">Analisis Marketing</a> &gt; <b>Mapping Minat</b>, cocokkan aturan dengan nama campaign Meta klien (aturan bawaan hanya contoh awal).</li>
         </ol>
       </div>`;
   }

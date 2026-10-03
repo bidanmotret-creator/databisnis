@@ -17,7 +17,6 @@ const MENU_APLIKASI = [
   { grup: 'Utama',      href: 'eos.html',             ico: '🎯', teks: 'EOS Dashboard',       kamus: 'menu_eos' },
   { grup: 'Pengaturan', href: 'alur.html',            ico: '🧭', teks: 'Alur Klasifikasi' },
   { grup: 'Pengaturan', href: 'crm.html?fieldkustom=1', ico: '🧩', teks: 'Field Kustom', aksi: 'fieldkustom' },
-  { grup: 'Pengaturan', href: 'followup-pengaturan.html', ico: '⚙️', teks: 'Pengaturan AI' },
   { grup: 'Pengaturan', href: 'pengaturan.html',      ico: '🛠️', teks: 'Pengaturan',          kamus: 'menu_pengaturan' },
   { grup: 'Pengaturan', href: 'kamus.html',           ico: '🗂️', teks: 'Kamus Istilah' },
   { grup: 'Pengaturan', href: 'onboarding.html',      ico: '🚀', teks: 'Setup Klien Baru' }

@@ -1999,7 +1999,7 @@ function renderPlacementTab() {
 
 <script>
 /* ===== RUANG RAPAT: membaca angka dari KPI funnel yang sudah dirender ===== */
-const RP_CFG={roasBagus:3,roasMin:1.5,matchMin:70,closingRateMin:10,closingCukup:10};
+const RP_CFG={get roasBagus(){return ambilThreshold('roasSehat',2)},get roasMin(){return ambilThreshold('roasTipisBawah',1)},get matchMin(){return ambilThreshold('matchRateSehatPersen',70)},get closingRateMin(){return ambilThreshold('crWaspadaPersen',8)},closingCukup:10};
 const rpInt=id=>{const t=(document.getElementById(id)||{}).textContent||'';return parseInt(t.replace(/[^\d]/g,''),10)||0};
 const rpDec=id=>{const t=(document.getElementById(id)||{}).textContent||'';const m=t.match(/\d+(\.\d+)?/);return m?parseFloat(m[0]):0}; /* ui-marketing.js memakai titik desimal (toFixed) */
 const rpRp=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
