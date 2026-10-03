@@ -231,6 +231,35 @@
 <button class="mkt-btn mkt-btn-pdf" onclick="mktPdf('mktSub_sync', 'Sinkronisasi Meta Ads', this)" type="button">📥 PDF</button>
 </div>
 </div>
+<!-- ===== PENGATURAN KONEKSI META (UI, tanpa hardcode) ===== -->
+<div class="funnel-legend" id="mcPanel" style="border-left:4px solid #0f766e;background:#f0fdfa">
+  <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="mcToggle()">
+    <h3 style="margin:0;font-size:14.5px;color:#0f766e">⚙️ Pengaturan Koneksi Meta <span id="mcRingkas" style="font-size:11px;font-weight:600;color:#475569"></span></h3>
+    <span id="mcPanah" style="font-size:18px">▾</span>
+  </div>
+  <div id="mcIsi" style="display:none;margin-top:12px">
+    <p style="font-size:11.5px;color:#475569;margin:0 0 10px">Token dan ID disimpan aman di server (Script Properties). Token tidak pernah ditampilkan ulang; kosongkan kolom token bila tidak ingin mengubahnya.</p>
+    <div style="font-size:11px;font-weight:800;color:#0f766e;margin-bottom:6px">🏢 AKUN IKLAN</div>
+    <div id="mcAkun"></div>
+    <button type="button" class="mkt-btn" onclick="mcTambah()">➕ Tambah akun iklan</button>
+    <div style="font-size:11px;font-weight:800;color:#0f766e;margin:16px 0 6px">📡 PIXEL & CONVERSIONS API</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <div><label class="mc-l">Pixel ID</label><input id="mcPixel" class="mc-i" inputmode="numeric"></div>
+      <div><label class="mc-l">Token CAPI (opsional)</label><input id="mcCapi" class="mc-i" type="password" autocomplete="off" placeholder="kosong = pakai token akun pertama"></div>
+      <div><label class="mc-l">Test Event Code (opsional)</label><input id="mcTest" class="mc-i" placeholder="TEST12345"></div>
+      <div><label class="mc-l">Versi API Graph</label><input id="mcVer" class="mc-i" placeholder="v21.0"></div>
+    </div>
+    <div style="margin-top:10px"><label class="mc-l">Bagikan Custom Audience ke akun iklan (ID, pisahkan koma/baris)</label><textarea id="mcShare" class="mc-i" rows="2"></textarea></div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button type="button" class="mkt-btn" style="background:#0f766e;color:#fff" id="mcSimpan" onclick="mcSimpan()">💾 Simpan Pengaturan</button>
+      <span id="mcPesan" style="font-size:12px"></span>
+    </div>
+  </div>
+</div>
+<style>.mc-l{display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:3px}.mc-i{width:100%;padding:8px;border:1px solid #99f6e4;border-radius:6px;font-size:12.5px;box-sizing:border-box}
+.mc-row{display:grid;grid-template-columns:1fr 1.2fr 1.6fr auto;gap:8px;margin-bottom:8px;align-items:end}.mc-st{font-size:11px;margin-top:2px}
+@media(max-width:700px){.mc-row{grid-template-columns:1fr 1fr}}</style>
+
 <div class="funnel-legend" style="border-left:4px solid #0ea5e9; background:#f0f9ff;">
 <h3 style="margin-top:0; font-size:14.5px; color:#0369a1;">🔗 Sinkronisasi Meta Ads</h3>
 <p style="font-size:11.5px; color:#0369a1; margin:4px 0 14px;">Tarik data terbaru langsung dari Meta Ads API ke Google Sheets, tanpa perlu buka Apps Script editor.</p>
@@ -2033,6 +2062,64 @@ window.addEventListener('load',()=>{
   if(r)window.renderMarketingTab=function(){const x=r.apply(this,arguments);setTimeout(renderRapat,300);return x};
   setTimeout(()=>{mktBukaSub('rapat');renderRapat()},900);
 });
+</script>
+<script>
+/* ===== PENGATURAN KONEKSI META ===== */
+(function () {
+  var cfg = null;
+  // SESUAIKAN: ambil token login dari mekanisme auth yang sudah dipakai halaman ini.
+  function tok() { try { return (window.getAuthToken && getAuthToken()) || window.authToken || localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token') || ''; } catch (e) { return ''; } }
+  function url(a, ex) { return scriptURL + '?action=' + a + '&token=' + encodeURIComponent(tok()) + (ex || ''); }
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var $ = function (id) { return document.getElementById(id); };
+  function pesan(t, ok) { var p = $('mcPesan'); p.style.color = ok ? '#166534' : '#991b1b'; p.textContent = t; }
+
+  window.mcToggle = function () { var b = $('mcIsi'), o = b.style.display === 'none'; b.style.display = o ? 'block' : 'none'; $('mcPanah').textContent = o ? '▴' : '▾'; if (o && !cfg) muat(); };
+
+  function muat() {
+    fetch(url('getMetaConfig')).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.result !== 'success') throw new Error(j.message || 'Ditolak server (cek token login).');
+      cfg = j.config; render();
+    }).catch(function (e) { pesan('Gagal memuat: ' + e.message, false); });
+  }
+  function baris(a, i) {
+    a = a || {};
+    return '<div class="mc-row" data-i="' + i + '" data-id0="' + esc(a.id || '') + '">' +
+      '<div><label class="mc-l">Label</label><input class="mc-i m-label" value="' + esc(a.label) + '" placeholder="Akun Utama"></div>' +
+      '<div><label class="mc-l">ID Akun Iklan</label><input class="mc-i m-id" value="' + esc(a.id) + '" placeholder="2086721335172480" inputmode="numeric"></div>' +
+      '<div><label class="mc-l">Access Token ' + (a.hasToken ? '<span style="color:#166534">(tersimpan ' + esc(a.tokenMask) + ')</span>' : '') + '</label><input class="mc-i m-tok" type="password" autocomplete="off" placeholder="' + (a.hasToken ? 'kosongkan bila tidak diubah' : 'tempel token baru') + '"></div>' +
+      '<div><button type="button" class="mkt-btn" onclick="mcTes(this)">🔌 Tes</button> <button type="button" class="mkt-btn" onclick="this.closest(\'.mc-row\').remove()">🗑️</button><div class="mc-st"></div></div></div>';
+  }
+  function render() {
+    $('mcAkun').innerHTML = cfg.accounts.map(baris).join('');
+    $('mcPixel').value = cfg.pixelId || ''; $('mcTest').value = cfg.testEventCode || ''; $('mcVer').value = cfg.apiVersion || 'v21.0';
+    $('mcShare').value = (cfg.shareTo || []).join('\n');
+    $('mcCapi').placeholder = cfg.hasCapiToken ? 'tersimpan ' + cfg.capiTokenMask + ' (kosongkan bila tidak diubah)' : 'kosong = pakai token akun pertama';
+    $('mcRingkas').textContent = '· ' + cfg.accounts.length + ' akun' + (cfg.pixelId ? ' · pixel ' + cfg.pixelId : '');
+  }
+  window.mcTambah = function () { $('mcAkun').insertAdjacentHTML('beforeend', baris({}, 'x')); };
+  window.mcTes = function (btn) {
+    var r = btn.closest('.mc-row'), id = r.querySelector('.m-id').value.replace(/\D/g, ''), st = r.querySelector('.mc-st');
+    if (r.querySelector('.m-tok').value) { st.style.color = '#92400e'; st.textContent = 'Simpan dulu, baru tes.'; return; }
+    st.style.color = '#475569'; st.textContent = 'Menguji…';
+    fetch(url('testMetaConnection', '&id=' + id)).then(function (x) { return x.json(); }).then(function (j) {
+      if (j.result === 'success') { st.style.color = '#166534'; st.textContent = '✅ ' + j.name + ' · ' + j.status + ' · ' + j.currency; }
+      else { st.style.color = '#991b1b'; st.textContent = '❌ ' + j.message; }
+    }).catch(function (e) { st.style.color = '#991b1b'; st.textContent = '❌ ' + e.message; });
+  };
+  window.mcSimpan = function () {
+    var accounts = [].map.call(document.querySelectorAll('#mcAkun .mc-row'), function (r) {
+      return { label: r.querySelector('.m-label').value, id: r.querySelector('.m-id').value, token: r.querySelector('.m-tok').value };
+    });
+    var body = { accounts: accounts, pixelId: $('mcPixel').value, capiToken: $('mcCapi').value, testEventCode: $('mcTest').value,
+      apiVersion: $('mcVer').value.trim(), shareTo: $('mcShare').value.split(/[\s,]+/).filter(Boolean) };
+    var b = $('mcSimpan'); b.disabled = true; pesan('Menyimpan…', true);
+    fetch(url('saveMetaConfig'), { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.result !== 'success') throw new Error(j.message || 'Gagal');
+      pesan('✅ Tersimpan. Token tidak ditampilkan ulang.', true); $('mcCapi').value = ''; muat();
+    }).catch(function (e) { pesan('❌ ' + e.message, false); }).then(function () { b.disabled = false; });
+  };
+})();
 </script>
 </body>
 </html>
