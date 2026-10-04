@@ -305,7 +305,7 @@ function resetFilterCrm() {
 
 function gantiTabCrm(t) {
   tabCrm = t;
-  ['master', 'produk', 'kohort', 'evaluasi', 'insight', 'setupcapi'].forEach(k => {
+  ['hariini', 'master', 'insight', 'produk', 'kohort', 'evaluasi', 'setupcapi'].forEach(k => {
     document.getElementById('panel_' + k).style.display = (k === t) ? 'block' : 'none';
     document.getElementById('tabBtn_' + k).className = (k === t) ? 'btn-co-primary' : 'btn-co-secondary';
   });
@@ -322,12 +322,16 @@ const pc = (p, t) => t ? (p / t * 100).toFixed(1) + '%' : '0%';
 const tglAnak = r => { const m = String(r.data_anak || '').match(/\d{4}-\d{2}-\d{2}/); return m ? m[0] : ''; };
 function gambar(id, cfg) { if (charts[id]) charts[id].destroy(); if (typeof Chart !== 'undefined') charts[id] = new Chart(document.getElementById(id), cfg); }
 
+
 function renderAnalitik() {
-  if (tabCrm === 'produk') renderProdukKeuangan();
+  if (tabCrm === 'hariini') renderHariIni();
+  else if (tabCrm === 'produk') renderProdukKeuangan();
   else if (tabCrm === 'kohort') renderKohort();
   else if (tabCrm === 'evaluasi') renderEvaluasi();
   else if (tabCrm === 'insight') renderInsight();
 }
+
+
 
 function renderInsight() {
   const el = document.getElementById('insightBody');
