@@ -2070,7 +2070,7 @@ window.addEventListener('load',()=>{
 (function () {
   var cfg = null;
   // SESUAIKAN: ambil token login dari mekanisme auth yang sudah dipakai halaman ini.
-  function tok() { try { return (window.getAuthToken && getAuthToken()) || window.authToken || localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token') || ''; } catch (e) { return ''; } }
+  function tok() { try { return (typeof ambilTokenApp_ === 'function' && ambilTokenApp_()) || (window.getAuthToken && getAuthToken()) || window.authToken || localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || localStorage.getItem('token') || ''; } catch (e) { return ''; } }
   function url(a, ex) { return scriptURL + '?action=' + a + '&token=' + encodeURIComponent(tok()) + (ex || ''); }
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var $ = function (id) { return document.getElementById(id); };

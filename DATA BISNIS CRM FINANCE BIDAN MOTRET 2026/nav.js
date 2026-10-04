@@ -8,9 +8,11 @@
 //  - aksi : 'fieldkustom' = buka editor Field Kustom (di crm.html langsung terbuka)
 // =========================================================================
 
+const NAV_BASE = /\/crm\/[^\/]*$/i.test(location.pathname) ? '../' : '';
 const MENU_APLIKASI = [
   { grup: 'Utama',      href: 'index.html',           ico: '🏠', teks: 'Menu Utama' },
   { grup: 'Utama',      href: 'crm.html',             ico: '👥', teks: 'CRM Leads',           kamus: 'menu_crm' },
+  { grup: 'Utama',      href: 'crm/rekap.html',       ico: '🧾', teks: 'Rekap Order', sub: true },
   { grup: 'Utama',      href: 'followup.html',        ico: '🤖', teks: 'AI Chat & Follow-up', kamus: 'menu_followup' },
   { grup: 'Utama',      href: 'index-marketing.html', ico: '📈', teks: 'Analisis Marketing' },
   { grup: 'Utama',      href: 'index-keuangan.html',  ico: '💰', teks: 'Laporan Keuangan',    kamus: 'menu_keuangan' },
@@ -42,6 +44,30 @@ function pasangTokenApp_(url, opts, token) {
   return { url, opts };                            // body JSON/lain (form publik): tidak disentuh
 }
 
+// FETCH-TOKEN: semua fetch ke Apps Script otomatis membawa token (GET dan POST)
+(function () {
+  const asli = window.fetch.bind(window);
+  function urlDari(a) { return typeof a === 'string' ? a : (a && a.url) || ''; }
+  function denganToken(u, tk) {
+    if (!tk || !untukAppsScript_(u) || /[?&]token=/.test(u)) return u;
+    return u + (u.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(tk);
+  }
+  window.fetch = async function (input, init) {
+    const u = urlDari(input);
+    if (!untukAppsScript_(u) || typeof input !== 'string') return asli(input, init);
+    const kirim = () => asli(denganToken(u, ambilTokenApp_()), init);
+    const res = await kirim();
+    try {
+      const j = JSON.parse(await res.clone().text());
+      if (j && j.result === 'error' && j.code === 'AUTH') {
+        simpanTokenApp_('');
+        const tk = tanyaTokenApp_('Token akses diperlukan atau salah. Masukkan token:');
+        if (tk) return kirim();
+      }
+    } catch (e) {}
+    return res;
+  };
+})();
 // Ambil JSON dari Apps Script. Kalau server membalas HTML (halaman error /
 // login / action tidak dikenal), tampilkan pesan yang jelas, bukan SyntaxError.
 // Kalau server menolak token (code:'AUTH'), minta token sekali lalu ulangi.
@@ -82,6 +108,8 @@ async function fetchJsonAman(url, opts, sudahCobaToken) {
       body.nav-open .nav-backdrop { display:block; }
       .topbar { z-index:20; }
     }
+    .nav-item.nav-sub { padding-left:34px; font-size:.92em; }
+    .nav-dd-panel a.nav-sub { padding-left:26px; }
     .nav-item.nav-aktif { background:rgba(255,255,255,.14); color:#fff; font-weight:700; }
     .nav-judul { font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; opacity:.55; padding:10px 14px 4px; }
     /* menu tarik-turun untuk halaman tanpa sidebar (mis. followup.html) */
@@ -128,7 +156,7 @@ async function fetchJsonAman(url, opts, sudahCobaToken) {
     wadah.innerHTML = kelompok().map(g =>
       `<div class="nav-group"><div class="nav-judul">${g.nama}</div>` +
       g.item.map(m =>
-        `<a class="nav-item${aktifKah(m) ? ' active nav-aktif' : ''}" href="${m.href}"` +
+        `<a class="nav-item${m.sub ? ' nav-sub' : ''}${aktifKah(m) ? ' active nav-aktif' : ''}" href="${m.href.indexOf('crm/')===0 && NAV_BASE ? m.href.slice(4) : NAV_BASE + m.href}"` +
         (m.aksi ? ` data-nav-aksi="${m.aksi}"` : '') +
         ` style="text-decoration:none; display:flex;"><span class="nav-ico">${m.ico}</span> ${labelHtml(m)}</a>`
       ).join('') + '</div>'
@@ -150,7 +178,7 @@ async function fetchJsonAman(url, opts, sudahCobaToken) {
       kelompok().map(g =>
         `<div class="nav-judul">${g.nama}</div>` +
         g.item.map(m =>
-          `<a href="${m.href}"${m.aksi ? ` data-nav-aksi="${m.aksi}"` : ''} class="${aktifKah(m) ? 'aktif' : ''}">${m.ico} ${labelHtml(m)}</a>`
+          `<a href="${m.href.indexOf('crm/')===0 && NAV_BASE ? m.href.slice(4) : NAV_BASE + m.href}"${m.aksi ? ` data-nav-aksi="${m.aksi}"` : ''} class="${m.sub ? 'nav-sub ' : ''}${aktifKah(m) ? 'aktif' : ''}">${m.ico} ${labelHtml(m)}</a>`
         ).join('')
       ).join('') + '</div>';
     const h1 = header.querySelector('h1');

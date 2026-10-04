@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pengguna & Peran</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mu:#6b7280;--bd:#d9dde4;--ac:#2f6fed;--er:#c62828;--ok:#2e7d32}
+@media(prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--tx:#e8ebf1;--mu:#98a1b2;--bd:#2c3340;--ac:#5b8def;--er:#ef7a7a;--ok:#6fcf8a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif;padding:20px}
+.wrap{max-width:1000px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:20px;margin:0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px;overflow-x:auto}
+h2{font-size:15px;margin:0 0 12px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);vertical-align:middle}
+th{color:var(--mu);font-weight:600;font-size:12px}
+button{padding:7px 12px;border:1px solid var(--bd);border-radius:7px;background:transparent;color:var(--tx);font:inherit;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);font-size:12px}
+.off{color:var(--mu)}
+#info{min-height:20px;margin-bottom:10px;font-size:13px}
+.er{color:var(--er)}.ok{color:var(--ok)}
+dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);width:min(420px,92vw);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+label{display:block;font-size:12px;color:var(--mu);margin:10px 0 3px}
+input,select{width:100%;padding:9px;border:1px solid var(--bd);border-radius:7px;background:transparent;color:var(--tx);font:inherit}
+select option{background:var(--card);color:var(--tx)}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+code{font-size:16px;padding:6px 10px;border:1px dashed var(--bd);border-radius:6px;display:inline-block;user-select:all}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Pengguna & Peran</h1>
+    <div><span id="aku" class="off"></span> <button id="keluar">Keluar</button></div>
+  </header>
+  <div id="info"></div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">Pengguna</h2>
+      <button class="p" id="tambah">+ Tambah pengguna</button>
+    </div>
+    <table>
+      <thead><tr><th>Username</th><th>Nama</th><th>Peran</th><th>Atasan</th><th>Shift</th><th>Telegram</th><th>Status</th><th></th></tr></thead>
+      <tbody id="tbUser"><tr><td colspan="8" class="off">Memuat...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Peran</h2>
+    <table>
+      <thead><tr><th>Peran</th><th>Keterangan</th></tr></thead>
+      <tbody id="tbRole"><tr><td colspan="2" class="off">Memuat...</td></tr></tbody>
+    </table>
+    <p class="off" style="margin:10px 0 0;font-size:12px">Matriks akses per peran menyusul setelah format datanya dicocokkan.</p>
+  </div>
+</div>
+
+<dialog id="dlgUser">
+  <h2 id="jdl">Pengguna</h2>
+  <label>Username</label><input id="fU">
+  <label>Nama</label><input id="fN">
+  <label>Peran</label><select id="fR"></select>
+  <label>Atasan (username, opsional)</label><input id="fA">
+  <label>Shift (opsional)</label><input id="fS">
+  <label>Status</label><select id="fAk"><option value="ya">Aktif</option><option value="tidak">Nonaktif</option></select>
+  <div id="errU" class="er" style="margin-top:8px;font-size:13px"></div>
+  <div class="row"><button id="batalU">Batal</button><button class="p" id="simpanU">Simpan</button></div>
+</dialog>
+
+<dialog id="dlgPw">
+  <h2>Password sementara</h2>
+  <p id="pwUser" class="off"></p>
+  <code id="pwNilai"></code>
+  <p class="off" style="font-size:12px">Berikan ke pengguna lewat jalur aman. Password ini tidak ditampilkan lagi setelah dialog ditutup.</p>
+  <div class="row"><button class="p" id="tutupPw">Tutup</button></div>
+</dialog>
+
+<script src="server-config.js"></script>
+<script>
+var URL_API = (typeof scriptURL !== 'undefined') ? scriptURL : '';
+var $ = function (i) { return document.getElementById(i); };
+var TOKEN = localStorage.getItem('app_api_token') || '';
+var daftarUser = [], editBaru = true;
+if (!TOKEN) location.href = 'login.html?next=pengguna.html';
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function info(t, ok) { $('info').className = ok ? 'ok' : 'er'; $('info').textContent = t || ''; }
+
+async function api(action, params) {
+  var j;
+  if (params) {
+    var f = new FormData(); f.set('action', action); f.set('token', TOKEN);
+    Object.keys(params).forEach(function (k) { f.set(k, params[k]); });
+    j = await (await fetch(URL_API, { method: 'POST', body: f })).json();
+  } else {
+    j = await (await fetch(URL_API + '?action=' + action + '&token=' + encodeURIComponent(TOKEN))).json();
+  }
+  if (j.code === 'AUTH') { localStorage.removeItem('app_api_token'); location.href = 'login.html?next=pengguna.html'; throw new Error('Sesi berakhir.'); }
+  if (j.result !== 'success') throw new Error(j.message || 'Permintaan gagal.');
+  return j.data;
+}
+
+function namaRole(r) { return typeof r === 'string' ? r : (r.role || r.nama || ''); }
+function ketRole(r) { return typeof r === 'string' ? '' : (r.keterangan || r.deskripsi || r.catatan || ''); }
+
+async function muat() {
+  info('');
+  try {
+    daftarUser = await api('getUsers') || [];
+    $('tbUser').innerHTML = daftarUser.length ? daftarUser.map(function (u, i) {
+      return '<tr><td>' + esc(u.username) + '</td><td>' + esc(u.nama) + '</td><td><span class="tag">' + esc(u.role) + '</span></td><td>' + esc(u.atasan) +
+        '</td><td>' + esc(u.shift) + '</td><td>' + (u.telegram ? 'Terhubung' : '-') + '</td><td class="' + (u.aktif ? '' : 'off') + '">' + (u.aktif ? 'Aktif' : 'Nonaktif') +
+        '</td><td style="white-space:nowrap"><button data-e="' + i + '">Ubah</button> <button data-r="' + i + '">Reset password</button></td></tr>';
+    }).join('') : '<tr><td colspan="8" class="off">Belum ada pengguna.</td></tr>';
+  } catch (e) { info(e.message); $('tbUser').innerHTML = '<tr><td colspan="8" class="off">Gagal memuat.</td></tr>'; }
+  try {
+    var roles = await api('getRoles') || [];
+    $('tbRole').innerHTML = roles.map(function (r) { return '<tr><td><span class="tag">' + esc(namaRole(r)) + '</span></td><td>' + esc(ketRole(r)) + '</td></tr>'; }).join('');
+    $('fR').innerHTML = roles.map(function (r) { return '<option>' + esc(namaRole(r)) + '</option>'; }).join('');
+  } catch (e) { $('tbRole').innerHTML = '<tr><td colspan="2" class="off">Tidak bisa memuat peran: ' + esc(e.message) + '</td></tr>'; }
+}
+
+function bukaForm(u) {
+  editBaru = !u; $('errU').textContent = '';
+  $('jdl').textContent = u ? 'Ubah pengguna' : 'Tambah pengguna';
+  $('fU').value = u ? u.username : ''; $('fU').disabled = !!u;
+  $('fN').value = u ? u.nama : ''; $('fA').value = u ? (u.atasan || '') : ''; $('fS').value = u ? (u.shift || '') : '';
+  if (u) $('fR').value = u.role;
+  $('fAk').value = (!u || u.aktif) ? 'ya' : 'tidak';
+  $('dlgUser').showModal();
+}
+
+$('tambah').onclick = function () { bukaForm(null); };
+$('batalU').onclick = function () { $('dlgUser').close(); };
+$('simpanU').onclick = async function () {
+  var d = { username: $('fU').value.trim().toLowerCase(), nama: $('fN').value.trim(), role: $('fR').value, atasan: $('fA').value.trim(), shift: $('fS').value.trim(), aktif: $('fAk').value };
+  if (!d.username || !d.nama || !d.role) { $('errU').textContent = 'Username, nama, dan peran wajib diisi.'; return; }
+  $('simpanU').disabled = true;
+  try {
+    var hasil = await api('simpanUser', { data: JSON.stringify(d) });
+    $('dlgUser').close(); await muat();
+    if (hasil && hasil.password_sementara) tampilPw(d.username, hasil.password_sementara);
+    else info('Tersimpan.', true);
+  } catch (e) { $('errU').textContent = e.message; }
+  $('simpanU').disabled = false;
+};
+
+function tampilPw(user, pw) { $('pwUser').textContent = 'Akun: ' + user; $('pwNilai').textContent = pw; $('dlgPw').showModal(); }
+$('tutupPw').onclick = function () { $('pwNilai').textContent = ''; $('dlgPw').close(); };
+
+$('tbUser').addEventListener('click', async function (ev) {
+  var b = ev.target.closest('button'); if (!b) return;
+  if (b.dataset.e != null) return bukaForm(daftarUser[b.dataset.e]);
+  if (b.dataset.r != null) {
+    var u = daftarUser[b.dataset.r];
+    if (!confirm('Reset password untuk "' + u.username + '"? Password lama tidak berlaku lagi.')) return;
+    try { var h = await api('resetPasswordUser', { username: u.username }); tampilPw(u.username, h.password_sementara); }
+    catch (e) { info(e.message); }
+  }
+});
+
+$('keluar').onclick = async function () {
+  try { await api('logout', {}); } catch (e) {}
+  localStorage.removeItem('app_api_token'); localStorage.removeItem('app_user'); location.href = 'login.html';
+};
+try { var me = JSON.parse(localStorage.getItem('app_user') || 'null'); if (me) $('aku').textContent = me.nama + ' (' + me.role + ')'; } catch (e) {}
+if (TOKEN) muat();
+</script>
+</body>
+</html>

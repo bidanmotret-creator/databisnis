@@ -119,7 +119,7 @@ function htmlRingkasanAsetCrm_() {
     ${tabel('Komposisi kontak WhatsApp', ['Tipe', 'Jumlah', '%'], Object.keys(a.tipe).map(k => `<tr><td>${esc(k)}</td><td>${a.tipe[k]}</td><td>${pct(a.tipe[k], a.kontak)}</td></tr>`).join(''))}
     ${tabel('Produk terlaris (omzet)', ['Produk', 'Order', 'Omzet'], a.topProduk.map(p => `<tr><td>${esc(p.m)}</td><td>${p.n}</td><td>${rpC(p.s)}</td></tr>`).join(''))}
     ${tabel('Keberatan open terbanyak (lead belum bayar)', ['Kategori', 'Lead'], a.topKeb.map(k => `<tr><td>${esc(k[0])}</td><td>${k[1]}</td></tr>`).join(''))}
-    ${tabel('10 lead paling mendesak hari ini', ['Lead', 'Alasan'], a.top.map(x => `<tr><td><b>${esc(x.r.nama || x.r.no_hp)}</b><br><small>${esc((x.ai.produk && x.ai.produk !== 'Unknown') ? x.ai.produk : (x.r.minat || '-'))}</small></td><td>${x.alasan.map(z => esc(z.t)).join('<br>')}</td></tr>`).join(''))}
+    <div style="grid-column:1/-1;">${tabel('10 lead paling mendesak hari ini', ['Lead', 'No. WA', 'Status / Lokasi', 'Tagihan', 'Alasan'], a.top.map(x => `<tr><td><b>${esc(x.r.nama || x.r.no_hp)}</b><br><small>${esc((x.ai.produk && x.ai.produk !== 'Unknown') ? x.ai.produk : (x.r.minat || '-'))}</small></td><td>+${x.h}</td><td>${esc(x.r.status || '-')}<br><small>${esc((x.r.lokasi && x.r.lokasi !== '-') ? x.r.lokasi : (x.ai.lokasi || '-'))}</small></td><td>Total ${rpC(Number(x.r.total) || 0)}<br>Bayar ${rpC((Number(x.r.jml_bayar1) || 0) + (Number(x.r.jml_bayar2) || 0))}<br>Sisa ${rpC(Number(x.r.sisa_hutang) || 0)}${x.r.jadwal ? '<br>Sesi ' + esc(String(x.r.jadwal).slice(0, 10)) : ''}</td><td>${x.alasan.map(z => esc(z.t)).join('<br>')}</td></tr>`).join(''))}</div>
   </div>
 
   <div class="card"><h3 style="margin:0 0 6px; font-size:13px;">Kualitas data</h3>

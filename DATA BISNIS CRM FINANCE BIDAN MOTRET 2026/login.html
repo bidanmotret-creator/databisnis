@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Masuk</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mu:#6b7280;--bd:#d9dde4;--ac:#2f6fed;--er:#c62828}
+@media(prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--tx:#e8ebf1;--mu:#98a1b2;--bd:#2c3340;--ac:#5b8def;--er:#ef7a7a}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif}
+.card{width:min(360px,92vw);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:28px}
+h1{font-size:20px;margin:0 0 4px}
+p{color:var(--mu);margin:0 0 20px;font-size:13px}
+label{display:block;font-size:13px;margin:12px 0 4px}
+input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);font:inherit}
+button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:8px;background:var(--ac);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button:disabled{opacity:.6}
+#pesan{color:var(--er);font-size:13px;min-height:18px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Masuk</h1>
+  <p>Gunakan akun yang diberikan owner.</p>
+  <label for="u">Username</label>
+  <input id="u" autocomplete="username" autofocus>
+  <label for="p">Password</label>
+  <input id="p" type="password" autocomplete="current-password">
+  <button id="b">Masuk</button>
+  <div id="pesan"></div>
+</div>
+<script src="server-config.js"></script>
+<script>
+var URL_API = (typeof scriptURL !== 'undefined') ? scriptURL : '';
+var $ = function (i) { return document.getElementById(i); };
+async function masuk() {
+  var pesan = $('pesan'); pesan.textContent = '';
+  if (!URL_API) { pesan.textContent = 'scriptURL tidak ditemukan. Pastikan server-config.js dimuat.'; return; }
+  var u = $('u').value.trim(), p = $('p').value;
+  if (!u || !p) { pesan.textContent = 'Isi username dan password.'; return; }
+  $('b').disabled = true; $('b').textContent = 'Memeriksa...';
+  try {
+    var f = new FormData(); f.set('action', 'login'); f.set('username', u); f.set('password', p);
+    var j = await (await fetch(URL_API, { method: 'POST', body: f })).json();
+    if (j.result !== 'success' || !j.data) throw new Error(j.message || 'Login gagal.');
+    localStorage.setItem('app_api_token', j.data.token);
+    localStorage.setItem('app_user', JSON.stringify({ username: j.data.username, nama: j.data.nama, role: j.data.role }));
+    var next = new URLSearchParams(location.search).get('next');
+    location.href = (next && /^[\w./-]+\.html$/.test(next)) ? next : 'index.html';
+  } catch (e) {
+    pesan.textContent = e.message;
+    $('b').disabled = false; $('b').textContent = 'Masuk';
+  }
+}
+$('b').onclick = masuk;
+document.addEventListener('keydown', function (e) { if (e.key === 'Enter') masuk(); });
+</script>
+</body>
+</html>

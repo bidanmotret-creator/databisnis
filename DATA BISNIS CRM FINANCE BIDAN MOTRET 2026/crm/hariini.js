@@ -157,6 +157,10 @@ function renderHariIni() {
     return `<div style="border-top:1px solid #e2e8f0; padding:10px 0;">
       <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
         <div><b>${i + 1}. ${esc(x.r.nama || x.r.no_hp)}</b> <small style="color:#64748b;">${esc(produk)} · ${esc(x.ai.timeline || '-')} · Intent ${esc(x.ai.intent || '-')}</small></div>
+        <div style="font-size:12px; color:#334155; margin-top:2px; line-height:1.5;">
+          📱 <b>+${x.h}</b> · ${esc(x.r.status || '-')} · ${esc(x.r.minat || '-')} · 📍 ${esc((x.r.lokasi && x.r.lokasi !== '-') ? x.r.lokasi : (x.ai.lokasi || '-'))}<br>
+          Total ${(Number(x.r.total) || 0).toLocaleString('id-ID')} · DP/Bayar ${((Number(x.r.jml_bayar1) || 0) + (Number(x.r.jml_bayar2) || 0)).toLocaleString('id-ID')} · Sisa ${(Number(x.r.sisa_hutang) || 0).toLocaleString('id-ID')}${x.r.jadwal ? ' · Sesi ' + esc(String(x.r.jadwal).slice(0, 10)) : ''}${x.r.tanggal_chat ? ' · Chat ' + esc(String(x.r.tanggal_chat).slice(0, 16)) : ''}
+        </div>
         <div style="white-space:nowrap;"><button class="row-btn" style="background:#0ea5e9;" onclick="bukaChat('${esc(x.r.no_hp)}','${esc((x.r.nama || '').replace(/'/g, ''))}')">💬 Chat</button>
           <a class="row-btn" style="background:#16a34a; text-decoration:none; display:inline-block;" href="https://wa.me/${x.h}" target="_blank">📲 WA</a></div></div>
       <div style="margin-top:4px;">${tags}</div>
