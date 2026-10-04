@@ -47,7 +47,7 @@ async function masuk() {
     localStorage.setItem('app_api_token', j.data.token);
     localStorage.setItem('app_user', JSON.stringify({ username: j.data.username, nama: j.data.nama, role: j.data.role }));
     var next = new URLSearchParams(location.search).get('next');
-    location.href = (next && /^[\w./-]+\.html$/.test(next)) ? next : 'index.html';
+    location.href = (next && /^\/?[\w.-][\w./-]*(\?[\w=&%.-]*)?$/.test(next)) ? next : 'index.html';
   } catch (e) {
     pesan.textContent = e.message;
     $('b').disabled = false; $('b').textContent = 'Masuk';

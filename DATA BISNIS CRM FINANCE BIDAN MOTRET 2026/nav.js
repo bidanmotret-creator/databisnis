@@ -29,10 +29,15 @@ const KUNCI_TOKEN_APP = 'app_api_token';
 function ambilTokenApp_() { try { return localStorage.getItem(KUNCI_TOKEN_APP) || ''; } catch (e) { return ''; } }
 function simpanTokenApp_(t) { try { if (t) localStorage.setItem(KUNCI_TOKEN_APP, t); else localStorage.removeItem(KUNCI_TOKEN_APP); } catch (e) {} }
 function tanyaTokenApp_(pesan) {
-  const t = (window.prompt(pesan || 'Masukkan token akses aplikasi:') || '').trim();
-  if (t) simpanTokenApp_(t);
-  return t;
+  // Tanpa kotak token: sesi tidak ada atau ditolak -> ke halaman login.
+  try { simpanTokenApp_(''); localStorage.removeItem('app_user'); } catch (e) {}
+  if (!/^\/login(\.html)?$/.test(location.pathname)) {
+    location.href = '/login.html?next=' + encodeURIComponent(location.pathname + location.search);
+  }
+  return '';
 }
+// Penjaga halaman: belum login -> langsung ke login.
+if (!ambilTokenApp_() && !/^\/login(\.html)?$/.test(location.pathname)) tanyaTokenApp_();
 function untukAppsScript_(url) { return /^https:\/\/script\.google(usercontent)?\.com\//.test(String(url)); }
 
 function pasangTokenApp_(url, opts, token) {
