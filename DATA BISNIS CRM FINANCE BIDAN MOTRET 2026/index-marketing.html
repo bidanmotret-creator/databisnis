@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Analisis Marketing — SentuhanMomen3D</title>
+<title>Analisis Marketing</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="marketing.css">
+<link rel="stylesheet" href="marketing/marketing.css">
 <script src="nav.js"></script>
 <style>
 /* ===== RUANG RAPAT ===== */
@@ -108,7 +108,7 @@
   <div class="rp-col rp-stop"><h4>🔴 Hentikan / Evaluasi</h4><ul id="rpStop"></ul></div>
 </div>
 <div class="rp-todo"><b>✅ Checklist Rapat</b><div id="rpTodo"></div></div>
-<button class="rp-btn" onclick="rpSalin(this)">📋 Salin Ringkasan Rapat</button><button class="rp-btn" style="background:#db2777" onclick="mktBukaSub('funnel')">Lihat angka detail →</button>
+<button class="rp-btn" onclick="rpSalin(this)">📋 Salin Ringkasan Rapat</button><button class="rp-btn" style="background:#0f766e" onclick="ambBuka()">&#9881; Atur Ambang</button><button class="rp-btn" style="background:#db2777" onclick="mktBukaSub('funnel')">Lihat angka detail →</button>
 </div>
 
 <style>
@@ -292,7 +292,7 @@
 <button id="btnBuatAudienceSaja" onclick="jalankanSyncMetaAds('buataudience')" style="padding:9px 16px; background:#be185d; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;" type="button">🆕 Buat Audience Saja</button>
 <button id="btnShareUlangAudience" onclick="jalankanSyncMetaAds('shareaudience')" style="padding:9px 16px; background:#9d174d; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:12.5px;" type="button">🔗 Share Ulang Audience</button>
 </div>
-<p style="font-size:10.5px; color:#9d174d; margin:10px 0 0;">💡 <b>Sync Audience &amp; CAPI</b> = jalankan rutin (proses utama, ambil semua Leads baru/berubah). <b>Buat Audience Saja</b> = cuma bikin audience kosong per kategori Minat kalau belum ada (jarang perlu). <b>Share Ulang Audience</b> = kirim ulang permintaan share ke akun WL319/WL319A kalau share sebelumnya gagal/belum di-approve.</p>
+<p style="font-size:10.5px; color:#9d174d; margin:10px 0 0;">💡 <b>Sync Audience &amp; CAPI</b> = jalankan rutin (proses utama, ambil semua Leads baru/berubah). <b>Buat Audience Saja</b> = cuma bikin audience kosong per kategori Minat kalau belum ada (jarang perlu). <b>Share Ulang Audience</b> = kirim ulang permintaan share ke akun lain di grup yang sama kalau share sebelumnya gagal/belum di-approve.</p>
 <div id="hasilSyncAudienceCapi" style="display:none; margin-top:12px; padding:10px 14px; border-radius:8px; font-size:12px;"></div>
 </div>
 <div class="funnel-legend" style="border-left:4px solid #7c3aed; background:#f5f3ff;">
@@ -668,7 +668,7 @@
 </div>
 <p style="color:var(--text-light); font-size:12px; margin:0 0 10px;">
   Iklan yang sedang tayang beserta hasil riilnya di CRM (leads, closing, terbayar). "Berjalan" = ada spend dalam 3 hari terakhir dan status Meta ACTIVE.
-  Atribusi first-touch via chat CTWA; data CTWA baru ada sejak 16 Sep 2026, jadi angka lead/closing masih sampel kecil.
+  Atribusi first-touch via chat CTWA; data CTWA hanya ada sejak pelacakan CTWA dipasang, jadi angka lead/closing masih sampel kecil.
 </p>
 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
 <select id="kbCampaign" onchange="kbGantiFilter(false)" style="padding:6px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12.5px; max-width:260px;"><option value="">Semua campaign</option></select>
@@ -942,11 +942,11 @@ let dataGlobal=[],dataMarketing=[],dataAdsetPerformance=[],dataAdsetCityTargetin
 let STUDIO_CONFIG={sumber:[],minat:[],lokasi:[],promo:[],paketMap:{},varianMap:{},waTemplate:''};
 let dataTargetMingguanMarketing={global:null,perProduk:{}};
 </script>
-<script src="tenant-config.js"></script><script src="ambang-ui.js"></script><script src="utils.js"></script>
-<script src="ui-marketing.js"></script><script src="minat-settings-ui.js"></script><script src="mkt-extra.js"></script>
-<script src="konten-berjalan.js"></script><script src="promo-tes.js"></script><script src="promo-analisis.js"></script>
-<script src="drill-promo.js"></script><script src="penawaran-ai.js"></script><script src="tes-penawaran.js"></script>
-<script src="keputusan.js"></script><script src="api-marketing.js"></script><script src="funnel-iklan.js"></script>
+<script src="marketing/tenant-config.js"></script><script src="marketing/ambang-ui.js"></script><script src="utils.js"></script>
+<script src="marketing/ui-marketing.js"></script><script src="marketing/minat-settings-ui.js"></script><script src="marketing/mkt-extra.js"></script>
+<script src="marketing/konten-berjalan.js"></script><script src="marketing/promo-tes.js"></script><script src="marketing/promo-analisis.js"></script>
+<script src="marketing/drill-promo.js"></script><script src="marketing/penawaran-ai.js"></script><script src="marketing/tes-penawaran.js"></script>
+<script src="marketing/keputusan.js"></script><script src="marketing/api-marketing.js"></script><script src="marketing/funnel-iklan.js"></script>
 <script>
 /* AUDIENCE: render */
 
@@ -2004,8 +2004,8 @@ function renderPlacementTab() {
 const RP_CFG={get roasBagus(){return ambilThreshold('roasSehat',2)},get roasMin(){return ambilThreshold('roasTipisBawah',1)},get matchMin(){return ambilThreshold('matchRateSehatPersen',70)},get closingRateMin(){return ambilThreshold('crWaspadaPersen',8)},closingCukup:10};
 const rpInt=id=>{const t=(document.getElementById(id)||{}).textContent||'';return parseInt(t.replace(/[^\d]/g,''),10)||0};
 const rpDec=id=>{const t=(document.getElementById(id)||{}).textContent||'';const m=t.match(/\d+(\.\d+)?/);return m?parseFloat(m[0]):0}; /* ui-marketing.js memakai titik desimal (toFixed) */
-const rpRp=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
-const rpFmt=n=>Math.round(n).toLocaleString('id-ID');
+const rpRp=n=>formatUang(n);
+const rpFmt=n=>Math.round(Number(n)||0).toLocaleString((window.TENANT_CONFIG&&TENANT_CONFIG.meta&&TENANT_CONFIG.meta.localeAngka)||'id-ID');
 let RP_RINGKAS='';
 
 function renderRapat(){
@@ -2088,7 +2088,7 @@ window.addEventListener('load',()=>{
     a = a || {};
     return '<div class="mc-row" data-i="' + i + '" data-id0="' + esc(a.id || '') + '">' +
       '<div><label class="mc-l">Label</label><input class="mc-i m-label" value="' + esc(a.label) + '" placeholder="Akun Utama"></div>' +
-      '<div><label class="mc-l">ID Akun Iklan</label><input class="mc-i m-id" value="' + esc(a.id) + '" placeholder="2086721335172480" inputmode="numeric"></div>' +
+      '<div><label class="mc-l">ID Akun Iklan</label><input class="mc-i m-id" value="' + esc(a.id) + '" placeholder="ID akun iklan (angka)" inputmode="numeric"></div>' +
       '<div><label class="mc-l">Access Token ' + (a.hasToken ? '<span style="color:#166534">(tersimpan ' + esc(a.tokenMask) + ')</span>' : '') + '</label><input class="mc-i m-tok" type="password" autocomplete="off" placeholder="' + (a.hasToken ? 'kosongkan bila tidak diubah' : 'tempel token baru') + '"></div>' +
       '<div><button type="button" class="mkt-btn" onclick="mcTes(this)">🔌 Tes</button> <button type="button" class="mkt-btn" onclick="this.closest(\'.mc-row\').remove()">🗑️</button><div class="mc-st"></div></div></div>';
   }
@@ -2123,6 +2123,5 @@ window.addEventListener('load',()=>{
   };
 })();
 </script>
-<script>document.addEventListener('kamusSiap',function(){var n=(window.KAMUS||{}).nama_bisnis;if(n)document.title='Analisis Marketing â€” '+n;});</script>
 </body>
 </html>

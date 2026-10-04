@@ -190,3 +190,11 @@ async function fetchJsonAman(url, opts, sudahCobaToken) {
     pasangBackdrop();
   });
 })();
+
+// Judul tab ikut nama bisnis dari kamus (dipasang oleh rapikan-teks.ps1)
+document.addEventListener('kamusSiap', function () {
+  var n = (window.KAMUS || {}).nama_bisnis;
+  if (!n) return;
+  var dasar = document.title.split(' \u2014 ')[0].split(' - ')[0];
+  document.title = dasar + ' \u2014 ' + n;
+});

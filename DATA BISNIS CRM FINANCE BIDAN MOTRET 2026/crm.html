@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM Leads — SentuhanMomen3D</title>
+<title>CRM Leads</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .fu-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
@@ -70,6 +70,8 @@
       <div class="topbar-title">CRM Leads</div>
       <button type="button" onclick="tarikDataCrm()" style="margin-left:auto; padding:8px 14px; background:#f1f5f9; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🔄 Refresh</button>
       <button type="button" onclick="bukaImportMassal()" style="margin-left:8px; padding:8px 14px; background:#4f46e5; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">📥 Import Massal WA</button>
+            <button type="button" onclick="eksporPdfCrm('tab')" style="margin-left:8px; padding:8px 14px; background:#0f172a; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">📄 PDF Menu Ini</button>
+      <button type="button" onclick="eksporPdfCrm('semua')" style="margin-left:8px; padding:8px 14px; background:#b45309; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">📚 PDF Semua</button>
       <button type="button" onclick="bukaEditorFieldKustom()" style="margin-left:8px; padding:8px 14px; background:#0f766e; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:12.5px; cursor:pointer;">🧩 Field Kustom</button>
     </div>
     <div class="content-inner">
@@ -130,6 +132,7 @@
       </div>
 
       <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+         <button type="button" class="btn-co-secondary" id="tabBtn_hariini" onclick="gantiTabCrm('hariini')">📌 Prioritas Hari Ini</button>
         <button type="button" class="btn-co-primary" id="tabBtn_master" onclick="gantiTabCrm('master')">📋 Master Data</button>
         <button type="button" class="btn-co-secondary" id="tabBtn_produk" onclick="gantiTabCrm('produk')">💰 Produk & Keuangan</button>
         <button type="button" class="btn-co-secondary" id="tabBtn_kohort" onclick="gantiTabCrm('kohort')">📊 Kohort</button>
@@ -208,7 +211,7 @@
           <div class="table-responsive"><table><thead><tr style="background:#f1f5f9;"><th>Minat</th><th>Paket</th><th>Varian</th><th>Trx</th><th>Closing</th><th>Close Rate</th><th>Omzet</th><th>Rata-rata</th></tr></thead><tbody id="bPaketEval"></tbody></table></div>
         </div>
       </div>
-
+                <div id="panel_hariini" style="display:none;"><div id="hariIniBody"></div></div>
             <div id="panel_insight" style="display:none;"><div id="insightBody"></div></div>
             
       <div id="panel_setupcapi" style="display:none;">
@@ -444,5 +447,9 @@
 <script src="crm/api-crm.js"></script>
 <script src="crm/fieldkustom.js"></script>
  <script src="crm/objection-ui.js"></script>
+ <script src="crm/fieldkustom.js"></script>
+ <script src="crm/hariini.js"></script>
+<script src="crm/pdf-crm.js"></script>
+
 </body>
 </html>
